@@ -8,6 +8,7 @@ import { addDenseLayers, addCnnLayers } from './model'
 import ModelInfo from '../common/tensor/ModelInfo'
 import HistoryWidgetTfvis from '../common/tensor/HistoryWidgetTfvis'
 import SampleDataVis from '../common/tensor/SampleDataVis'
+import ModelWidgetTfvis from '../common/tensor/ModelWidgetTfvis'
 
 const { Option } = Select
 
@@ -274,7 +275,7 @@ const Mnist = (): JSX.Element => {
                         })}
                     </Select>
 
-                    {model ? <ModelInfo model={model}/> : ''}
+                    <ModelWidgetTfvis model={model}/>
                     <p>backend: {tfBackend}</p>
                 </Card>
             </Col>

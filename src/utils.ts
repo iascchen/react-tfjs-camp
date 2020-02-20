@@ -4,7 +4,7 @@ import * as zlib from 'zlib'
 export const logger = console.log
 
 export type ITensor = tf.Tensor | undefined
-export type IModel = tf.Sequential | tf.LayersModel | undefined
+export type IModel = tf.LayersModel | undefined
 export type IDataSet = tf.data.Dataset<tf.TensorContainer>
 export type IArray = any[]
 

@@ -134,7 +134,7 @@ const Iris = (): JSX.Element => {
                     logger('onEpochEnd', epoch)
 
                     // const secPerEpoch = (performance.now() - beginMs) / (1000 * (epoch + 1))
-                    logs && addTrainInfo({ step: epoch, logs })
+                    logs && addTrainInfo({ iteration: epoch, logs })
                     predictModel(_model, predictSet?.xs)
                 }
             }
@@ -206,7 +206,7 @@ const Iris = (): JSX.Element => {
             </Col>
             <Col span={12}>
                 <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <HistoryWidget infos={trainInfos} totalEpochs={totalEpochs} />
+                    <HistoryWidget infos={trainInfos} totalIterations={totalEpochs} debug />
                 </Card>
             </Col>
         </Row>

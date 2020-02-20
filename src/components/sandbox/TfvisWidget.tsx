@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react'
-// import * as tf from '@tensorflow/tfjs'
-// import tfvis from '@tensorflow/tfjs-vis'
 import { Button } from 'antd'
 import { logger } from '../../utils'
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const tfvis = require('@tensorflow/tfjs-vis')
 
 const data = [
     { index: 0, value: 50 },
@@ -15,7 +16,7 @@ const logs = {
 }
 
 const TfvisWidget = (): JSX.Element => {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
+    const canvasRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         draw()
@@ -25,16 +26,17 @@ const TfvisWidget = (): JSX.Element => {
         if (!canvasRef.current) {
             return
         }
-        logger('in draw')
+        console.log(tfvis)
 
-        // const drawable = canvasRef.current as HTMLElement
-        // tfvis.show.history(drawable, logs, ['loss', 'val_loss']).then(
-        //     () => {
-        //         // ignore
-        //     },
-        //     (e) => {
-        //         logger(e)
-        //     })
+        const drawable = canvasRef.current as HTMLElement
+        tfvis.show.history(drawable, logs, ['loss', 'val_loss']).then(
+            () => {
+                // ignore
+                console.log('drawn')
+            },
+            (e: any) => {
+                logger(e)
+            })
     }
 
     const handleClick = (): void => {
@@ -48,7 +50,7 @@ const TfvisWidget = (): JSX.Element => {
             {JSON.stringify(logs)}
             <Button onClick={handleClick}>Draw</Button>
 
-            <canvas ref={canvasRef} ></canvas>
+            <div style={{ height: 400, width: 400 }} ref={canvasRef} ></div>
         </div>
     )
 }

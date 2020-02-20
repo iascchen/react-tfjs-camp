@@ -6,7 +6,7 @@ import { ITrainDataSet, IModel, ITensor, ITrainInfo, STATUS, logger } from '../.
 import { MnistDataset } from './data'
 import { addDenseLayers, addCnnLayers } from './model'
 import ModelInfo from '../common/tensor/ModelInfo'
-import HistoryWidget from '../common/tensor/HistoryWidget'
+import HistoryWidgetTfvis from '../common/tensor/HistoryWidgetTfvis'
 import SampleDataVis from '../common/tensor/SampleDataVis'
 
 const { Option } = Select
@@ -33,7 +33,8 @@ const Mnist = (): JSX.Element => {
 
     const [modelName, setModelName] = useState('dense')
     const [model, setModel] = useState<IModel>()
-    const [trainInfos, setTrainInfos] = useState<ITrainInfo[]>([])
+    // const [trainInfos, setTrainInfos] = useState<ITrainInfo[]>([])
+    const [logMsg, setLogMsg] = useState<ITrainInfo>()
 
     const [predictSet, setPredictSet] = useState<ITrainDataSet>()
     const [predictResult, setPredictResult] = useState<ITensor>()
@@ -157,7 +158,7 @@ const Mnist = (): JSX.Element => {
         const { epochs, batchSize, validationSplit } = options
 
         setStatus(STATUS.TRAINING)
-        resetTrainInfo()
+        // resetTrainInfo()
 
         // We'll keep a buffer of loss and accuracy values over time.
         let trainBatchCount = 0
@@ -171,20 +172,24 @@ const Mnist = (): JSX.Element => {
             batchSize: batchSize || BATCH_SIZE,
             validationSplit: validationSplit || VALID_SPLIT,
             callbacks: {
-                onEpochEnd: (epoch, logs) => {
+                onEpochEnd: async (epoch, logs) => {
                     logger('onEpochEnd', epoch)
 
                     // const secPerEpoch = (performance.now() - beginMs) / (1000 * (epoch + 1))
-                    logs && addTrainInfo({ step: epoch, logs })
+                    logs && addTrainInfo({ iteration: epoch, logs })
                     predictModel(_model, predictSet?.xs)
-                    // await tf.nextFrame()
+
+                    await tf.nextFrame()
                 },
-                onBatchEnd: (batch) => {
+                onBatchEnd: async (batch, logs) => {
+                    logger('onBatchEnd', batch)
                     trainBatchCount++
+                    logs && addTrainInfo({ iteration: batch, logs })
                     if (batch % 50 === 0) {
                         logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
                         predictModel(_model, predictSet?.xs)
                     }
+                    await tf.nextFrame()
                 }
             }
         }).then(
@@ -222,15 +227,17 @@ const Mnist = (): JSX.Element => {
 
     const addTrainInfo = (info: ITrainInfo): void => {
         // logger('addTrainInfo', trainInfos, info)
-        trainInfos.push(info)
-        setTrainInfos([...trainInfos])
+        // trainInfos.push(info)
+        // setTrainInfos([...trainInfos])
+        setLogMsg(info)
     }
 
-    const resetTrainInfo = (): void => {
-        logger('resetTrainInfo')
-        trainInfos.splice(0, trainInfos.length)
-        setTrainInfos([...trainInfos])
-    }
+    // const resetTrainInfo = (): void => {
+    //     logger('resetTrainInfo')
+    //     trainInfos.splice(0, trainInfos.length)
+    //     setTrainInfos([...trainInfos])
+    //     setLogMsg(info)
+    // }
 
     const handleTrain = (): void => {
         if (!model || !trainSet) {
@@ -285,7 +292,7 @@ const Mnist = (): JSX.Element => {
             </Col>
             <Col span={12}>
                 <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <HistoryWidget infos={trainInfos} totalEpochs={totalEpochs} />
+                    <HistoryWidgetTfvis logMsg={logMsg} debug />
                 </Card>
             </Col>
             <Col span={12}>

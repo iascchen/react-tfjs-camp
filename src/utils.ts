@@ -28,7 +28,7 @@ export interface ITrainDataSet {
 }
 
 export interface ITrainInfo {
-    step?: number
+    iteration?: number
     logs: tf.Logs
 }
 

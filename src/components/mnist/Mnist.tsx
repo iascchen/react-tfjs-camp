@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Row, Select } from 'antd'
 
-import { ITrainDataSet, IModel, ITensor, ITrainInfo, STATUS, logger } from '../../utils'
+import { ILayer, IModel, ITensor, ITrainDataSet, ITrainInfo, logger, STATUS } from '../../utils'
 import { MnistDataset } from './data'
-import { addDenseLayers, addCnnLayers } from './model'
-import ModelInfo from '../common/tensor/ModelInfo'
-import HistoryWidgetTfvis from '../common/tensor/HistoryWidgetTfvis'
+import { addCnnLayers, addDenseLayers } from './model'
+import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
+import TfvisModelWidget from '../common/tensor/TfvisModelWidget'
+import TfvisLayerWidget from '../common/tensor/TfvisLayerWidget'
 import SampleDataVis from '../common/tensor/SampleDataVis'
-import ModelWidgetTfvis from '../common/tensor/ModelWidgetTfvis'
 
 const { Option } = Select
 
@@ -17,6 +17,11 @@ const BATCH_SIZE = 500
 const VALID_SPLIT = 0.15
 
 const Models = ['dense', 'cnn']
+
+interface ILayerSelectOption {
+    name: string
+    index: number
+}
 
 const Mnist = (): JSX.Element => {
     /***********************
@@ -34,7 +39,8 @@ const Mnist = (): JSX.Element => {
 
     const [modelName, setModelName] = useState('dense')
     const [model, setModel] = useState<IModel>()
-    // const [trainInfos, setTrainInfos] = useState<ITrainInfo[]>([])
+    const [layersOption, setLayersOption] = useState<ILayerSelectOption[]>()
+    const [curLayer, setCurLayer] = useState<ILayer>()
     const [logMsg, setLogMsg] = useState<ITrainInfo>()
 
     const [predictSet, setPredictSet] = useState<ITrainDataSet>()
@@ -50,9 +56,7 @@ const Mnist = (): JSX.Element => {
         tf.backend()
         setTfBackend(tf.getBackend())
 
-        // const _model = createDenseModel()
         const _model = tf.sequential()
-
         switch (modelName) {
             case 'dense' :
                 addDenseLayers(_model)
@@ -65,7 +69,12 @@ const Mnist = (): JSX.Element => {
         const optimizer = tf.train.adam(0.5)
         _model.compile({ optimizer, loss: 'categoricalCrossentropy', metrics: ['accuracy'] })
 
+        const _layerOptions: ILayerSelectOption[] = _model?.layers.map((l, index) => {
+            return { name: l.name, index }
+        })
+
         setModel(_model)
+        setLayersOption(_layerOptions)
 
         return () => {
             logger('Model Dispose')
@@ -227,18 +236,8 @@ const Mnist = (): JSX.Element => {
     }
 
     const addTrainInfo = (info: ITrainInfo): void => {
-        // logger('addTrainInfo', trainInfos, info)
-        // trainInfos.push(info)
-        // setTrainInfos([...trainInfos])
         setLogMsg(info)
     }
-
-    // const resetTrainInfo = (): void => {
-    //     logger('resetTrainInfo')
-    //     trainInfos.splice(0, trainInfos.length)
-    //     setTrainInfos([...trainInfos])
-    //     setLogMsg(info)
-    // }
 
     const handleTrain = (): void => {
         if (!model || !trainSet) {
@@ -260,6 +259,12 @@ const Mnist = (): JSX.Element => {
         setModelName(value)
     }
 
+    const handleLayerChange = (value: number): void => {
+        logger('handleLayerChange', value)
+        const _layer = model?.getLayer(undefined, value)
+        setCurLayer(_layer)
+    }
+
     /***********************
      * Render
      ***********************/
@@ -269,13 +274,23 @@ const Mnist = (): JSX.Element => {
             <h1>MNIST</h1>
             <Col span={12}>
                 <Card title='Model' style={{ margin: '8px' }} size='small'>
-                    Select Model : <Select onChange={handleModelChange} defaultValue={'dense'}>
-                        {Models.map((v) => {
-                            return <Option key={v} value={v}>{v}</Option>
-                        })}
-                    </Select>
+                    <div>
+                        Select Model : <Select onChange={handleModelChange} defaultValue={'dense'}>
+                            {Models.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                        <TfvisModelWidget model={model}/>
+                    </div>
+                    <div>
+                        Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
+                            {layersOption?.map((v) => {
+                                return <Option key={v.index} value={v.index}>{v.name}</Option>
+                            })}
+                        </Select>
+                        <TfvisLayerWidget layer={curLayer}/>
+                    </div>
 
-                    <ModelWidgetTfvis model={model}/>
                     <p>backend: {tfBackend}</p>
                 </Card>
             </Col>
@@ -293,7 +308,7 @@ const Mnist = (): JSX.Element => {
             </Col>
             <Col span={12}>
                 <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <HistoryWidgetTfvis logMsg={logMsg} debug />
+                    <TfvisHistoryWidget logMsg={logMsg} debug />
                 </Card>
             </Col>
             <Col span={12}>

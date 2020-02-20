@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#################
+# MNIST
+#################
+
 BASE_URL="https://storage.googleapis.com/cvdf-datasets/mnist"
 
 TRAIN_IMAGES_FILE="${BASE_URL}/train-images-idx3-ubyte.gz"

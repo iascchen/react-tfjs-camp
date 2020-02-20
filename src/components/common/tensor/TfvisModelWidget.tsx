@@ -12,7 +12,7 @@ interface IProps {
     debug?: boolean
 }
 
-const ModelWidgetTfvis = (props: IProps): JSX.Element => {
+const TfvisModelWidget = (props: IProps): JSX.Element => {
     const elementRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -28,4 +28,4 @@ const ModelWidgetTfvis = (props: IProps): JSX.Element => {
     )
 }
 
-export default ModelWidgetTfvis
+export default TfvisModelWidget

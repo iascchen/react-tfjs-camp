@@ -22,6 +22,8 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 ## 第二章：从零开始 Start from scratch
 
+### 环境安装
+
 安装 Node环境
 
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash    
@@ -61,7 +63,7 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 Tensor 基础，
 
-* 数据的生成。曲线生成。。。
+* 数据的生成。曲线生成。。。, Tensor 运算
 * ES Array：Iterator，Array 的区别和转化
 * Buffer 的使用
 

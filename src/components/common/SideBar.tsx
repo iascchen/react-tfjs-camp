@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Icon, Menu } from 'antd'
 import { ClickParam } from 'antd/es/menu'
 
-import logo from '../../logo.svg'
+import logo from '../../react_logo.svg'
 
 const { Item, SubMenu } = Menu
 

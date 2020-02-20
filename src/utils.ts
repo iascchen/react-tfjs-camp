@@ -5,6 +5,7 @@ export const logger = console.log
 
 export type ITensor = tf.Tensor | undefined
 export type IModel = tf.LayersModel | undefined
+export type ILayer = tf.layers.Layer | undefined
 export type IDataSet = tf.data.Dataset<tf.TensorContainer>
 export type IArray = any[]
 

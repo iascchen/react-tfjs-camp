@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs-core'
 import { Button, Card, Col, Row } from 'antd'
 
 import { ITrainInfo, logger, STATUS } from '../../utils'
-import { MnistDatasetCore } from './dataCore'
+import { MnistCoreDataset } from './dataCore'
 import * as modelCore from './modelCore'
 
 import SampleDataVis from '../common/tensor/SampleDataVis'
@@ -19,7 +19,7 @@ const MnistWeb = (): JSX.Element => {
     const [status, setStatus] = useState<STATUS>(STATUS.INIT)
     const [errors, setErrors] = useState()
 
-    const [dataSet, setDataSet] = useState<MnistDatasetCore>()
+    const [dataSet, setDataSet] = useState<MnistCoreDataset>()
 
     const [trainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [validSet, setValidSet] = useState<tf.TensorContainerObject>()
@@ -40,7 +40,7 @@ const MnistWeb = (): JSX.Element => {
 
         setStatus(STATUS.LOADING)
 
-        const mnistDataset = new MnistDatasetCore()
+        const mnistDataset = new MnistCoreDataset()
 
         let tSet: tf.TensorContainerObject
         let vSet: tf.TensorContainerObject
@@ -111,7 +111,7 @@ const MnistWeb = (): JSX.Element => {
         predictModel(predictSet?.xs as tf.Tensor)
     }
 
-    const trainModel = (_dataset: MnistDatasetCore): void => {
+    const trainModel = (_dataset: MnistCoreDataset): void => {
         if (!_dataset) {
             return
         }

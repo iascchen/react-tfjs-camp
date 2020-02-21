@@ -155,7 +155,7 @@ export class MnistGzDataset {
 
         return {
             xs: tf.tensor4d(images, imagesShape),
-            ys: tf.oneHot(tf.tensor1d(labels, 'int32'), LABEL_FLAT_SIZE).toFloat()
+            ys: tf.oneHot(tf.tensor1d(labels, 'int32'), LABEL_FLAT_SIZE)
         }
     }
 }

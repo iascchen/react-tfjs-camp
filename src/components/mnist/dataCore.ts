@@ -37,7 +37,7 @@ const NUM_CLASSES = 10
  * NOTE: This will get much easier. For now, we do data fetching and
  * manipulation manually.
  */
-export class MnistDatasetCore extends MnistWebDataset {
+export class MnistCoreDataset extends MnistWebDataset {
     shuffledTrainIndex: number
     shuffledTestIndex: number
 

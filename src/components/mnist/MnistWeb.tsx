@@ -3,8 +3,8 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Row, Select } from 'antd'
 
 import { ITrainInfo, logger, STATUS } from '../../utils'
-import { addCnnLayers, addDenseLayers } from './model'
-import { MnistWebDataset } from './data'
+import { addCnnLayers, addDenseLayers, addSimpleConvLayers } from './model'
+import { MnistCoreDataset } from './dataCore'
 
 import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
@@ -15,11 +15,11 @@ import TfvisDatasetInfoWidget from '../common/tensor/TfvisDatasetInfoWidget'
 const { Option } = Select
 
 const EPOCHS = 10
-const BATCH_SIZE = 320
+const BATCH_SIZE = 64
 const VALID_SPLIT = 0.15
 const LEARNING_RATE = 0.1
 
-const Models = ['dense', 'cnn']
+const Models = ['simple', 'dense', 'cnn']
 
 interface ILayerSelectOption {
     name: string
@@ -62,6 +62,9 @@ const MnistWeb = (): JSX.Element => {
             case 'dense' :
                 addDenseLayers(_model)
                 break
+            case 'simple' :
+                addSimpleConvLayers(_model)
+                break
             case 'cnn' :
                 addCnnLayers(_model)
                 break
@@ -86,7 +89,7 @@ const MnistWeb = (): JSX.Element => {
         logger('init data set ...')
 
         setStatus(STATUS.LOADING)
-        const mnistDataset = new MnistWebDataset()
+        const mnistDataset = new MnistCoreDataset()
 
         let tSet: tf.TensorContainerObject
         let vSet: tf.TensorContainerObject

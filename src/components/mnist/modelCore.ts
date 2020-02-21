@@ -17,7 +17,7 @@
 
 import * as tf from '@tensorflow/tfjs'
 
-import { MnistDatasetCore } from './dataCore'
+import { MnistCoreDataset } from './dataCore'
 
 // Hyperparameters.
 const LEARNING_RATE = 0.1
@@ -76,7 +76,7 @@ export const model = (inputXs: tf.Tensor): tf.Tensor => {
 }
 
 // Train the model.
-export const train = async (data: MnistDatasetCore, log: Function): Promise<void> => {
+export const train = async (data: MnistCoreDataset, log: Function): Promise<void> => {
     const returnCost = true
 
     for (let i = 0; i < TRAIN_STEPS; i++) {

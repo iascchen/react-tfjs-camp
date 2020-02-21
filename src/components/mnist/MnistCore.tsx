@@ -41,56 +41,49 @@ const MnistWeb = (): JSX.Element => {
         setStatus(STATUS.LOADING)
 
         const mnistDataset = new MnistDatasetCore()
+
+        let tSet: tf.TensorContainerObject
+        let vSet: tf.TensorContainerObject
         mnistDataset.loadData().then(
             () => {
                 setDataSet(mnistDataset)
-                setTrainSet({ xs: mnistDataset.datasetImages, ys: mnistDataset.datasetLabels })
-                setValidSet({ xs: mnistDataset.testImages, ys: mnistDataset.testLabels })
+
+                tSet = mnistDataset.getTrainData()
+                vSet = mnistDataset.getTestData()
+
+                setTrainSet(tSet)
+                setValidSet(vSet)
 
                 setStatus(STATUS.LOADED)
             },
-            () => {
-                // ignore
-            })
+            (error) => {
+                logger(error)
+            }
+        )
+
+        return () => {
+            logger('Data Set Dispose')
+            tf.dispose([tSet.xs, tSet.ys])
+            tf.dispose([vSet.xs, vSet.ys])
+        }
     }, [])
 
     useEffect(() => {
         logger('init predict data set ...')
 
-        const testExamples = 50
-        const batch = dataSet?.nextTestBatch(testExamples)
-
-        const xTest = batch?.xs
-        const yTest = batch?.labels as tf.Tensor
+        const xTest = validSet?.xs as tf.Tensor
+        const yTest = validSet?.ys as tf.Tensor
 
         const [ys] = tf.tidy(() => {
             const ys = yTest?.argMax(-1)
             return [ys]
         })
         setPredictSet({ xs: xTest, ys })
-    }, [dataSet])
+    }, [validSet])
 
     /***********************
      * useEffects only for dispose
      ***********************/
-
-    useEffect(() => {
-        // Do Nothing
-
-        return () => {
-            logger('Train Set Dispose')
-            tf.dispose([trainSet?.xs, trainSet?.ys])
-        }
-    }, [trainSet])
-
-    useEffect(() => {
-        // Do Nothing
-
-        return () => {
-            logger('Valid Set Dispose')
-            tf.dispose([validSet?.xs, validSet?.ys])
-        }
-    }, [validSet])
 
     useEffect(() => {
         // Do Nothing
@@ -113,8 +106,8 @@ const MnistWeb = (): JSX.Element => {
      * Functions
      ***********************/
 
-    const pushTrainingLog = (iteration: number, logs: any): void => {
-        logs && addTrainInfo({ iteration: iteration, logs })
+    const pushTrainingLog = (iteration: number, loss: number): void => {
+        addTrainInfo({ iteration: iteration, logs: { loss } })
         predictModel(predictSet?.xs as tf.Tensor)
     }
 
@@ -142,9 +135,6 @@ const MnistWeb = (): JSX.Element => {
         if (!_xs) {
             return
         }
-
-        // const predictions = model.predict(batch.xs)
-        // const labels = model.classesFromLabel(batch.labels)
         const preds = modelCore.predict(_xs)
         setPredictResult(preds)
     }
@@ -170,12 +160,9 @@ const MnistWeb = (): JSX.Element => {
             <h1>MNIST</h1>
             <Col span={12}>
                 <Card title='Train' style={{ margin: '8px' }} size='small'>
-                    <div style={{ color: 'red' }}>
-                        !!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`
-                    </div>
-                    <div>trainSet:
-                        {dataSet && <TfvisDatasetInfoWidget value={{ xs: dataSet.datasetImages, ys: dataSet.datasetLabels }}/>}
-                    </div>
+                    <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
+                    <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
+                    <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
 
                     <Button onClick={handleTrain} type='primary'> Train </Button>
                     <p>backend: {tfBackend}</p>

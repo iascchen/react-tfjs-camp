@@ -54,6 +54,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
      ***********************/
 
     const [sampleCount] = useState(props.sampleCount)
+    const [acc, setAcc] = useState(0)
     const [xData, setXData] = useState<ISampleInfo>()
     const [yData, setYData] = useState<ISampleInfo>()
     const [pData, setPData] = useState<ISampleInfo>()
@@ -149,6 +150,12 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         })
         setData(_data)
 
+        const correct = pData.data.reduce((p, c, i, _array): number => {
+            return c === yData.data[i] ? p + 1 : p
+        }, 0)
+        setAcc(correct / pData.data.length)
+        console.log('Acc = ', acc, pData.data.length)
+
         return () => {
             logger('Dispose sample data [p] ...')
             arrayDispose(_data)
@@ -192,7 +199,10 @@ const SampleDataVis = (props: IProps): JSX.Element => {
      ***********************/
 
     return (
-        <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize }}/>
+        <div>
+            Acc = {acc}
+            <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize }}/>
+        </div>
     )
 }
 

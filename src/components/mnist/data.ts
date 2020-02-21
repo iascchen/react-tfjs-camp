@@ -16,7 +16,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-import { fetchResource, ITrainDataSet } from '../../utils'
+import { fetchResource, ITrainDataSet, logger } from '../../utils'
 
 // MNIST data constants:
 // const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
@@ -35,11 +35,24 @@ const LABEL_HEADER_BYTES = 8
 const LABEL_RECORD_BYTE = 1
 const LABEL_FLAT_SIZE = 10
 
+const loadHeaderValues = (buffer: Buffer, headerLength: number): number[] => {
+    const headerValues = []
+    for (let i = 0; i < headerLength / 4; i++) {
+        // Header data is stored in-order (aka big-endian)
+        headerValues[i] = buffer.readUInt32BE(i * 4)
+    }
+    return headerValues
+}
+
 const loadImages = async (url: string): Promise<Float32Array[]> => {
     const buffer = await fetchResource(url, true)
 
     const headerBytes = IMAGE_HEADER_BYTES
-    const recordBytes = IMAGE_HEIGHT * IMAGE_WIDTH
+    const recordBytes = IMAGE_FLAT_SIZE
+
+    // skip header
+    const headerValues = loadHeaderValues(buffer, headerBytes)
+    logger('image header', headerValues)
 
     const images = []
     let index = headerBytes
@@ -48,10 +61,11 @@ const loadImages = async (url: string): Promise<Float32Array[]> => {
         for (let i = 0; i < recordBytes; i++) {
             // Normalize the pixel values into the 0-1 interval, from
             // the original 0-255 interval.
-            array[i] = buffer.readUInt8(index++) / 255
+            array[i] = buffer.readUInt8(index++) / 255.0
         }
         images.push(array)
     }
+    logger('Load images :', `${images.length.toString()} / ${headerValues[1].toString()}`)
     return images
 }
 
@@ -60,6 +74,10 @@ const loadLabels = async (url: string): Promise<Int32Array[]> => {
 
     const headerBytes = LABEL_HEADER_BYTES
     const recordBytes = LABEL_RECORD_BYTE
+
+    // skip header
+    const headerValues = loadHeaderValues(buffer, headerBytes)
+    logger('label header', headerValues)
 
     const labels = []
     let index = headerBytes
@@ -70,6 +88,7 @@ const loadLabels = async (url: string): Promise<Int32Array[]> => {
         }
         labels.push(array)
     }
+    logger('Load labels :', `${labels.length.toString()} / ${headerValues[1].toString()}`)
     return labels
 }
 
@@ -119,9 +138,6 @@ export class MnistDataset {
             labelsIndex = 3
         }
         const size = this.dataset[imagesIndex].length
-        tf.util.assert(
-            this.dataset[labelsIndex].length === size,
-            () => `Mismatch in the number of images (${size}) and the number of labels (${this.dataset[labelsIndex].length})`)
 
         // Only create one big array to hold batch of images.
         const imagesShape: [number, number, number, number] = [size, IMAGE_HEIGHT, IMAGE_WIDTH, 1]

@@ -76,13 +76,11 @@ const Iris = (): JSX.Element => {
         validSet?.toArray().then(
             (result: any[]) => {
                 const { xs: xTest, ys: yTest } = result[0]
-                const [xs, ys] = tf.tidy(() => {
-                    const xs = xTest
+                const [ys] = tf.tidy(() => {
                     const ys = yTest.argMax(-1)
-                    return [xs, ys]
+                    return [ys]
                 })
-                setPredictSet({ xs, ys })
-                // tf.dispose([xDataset, yDataset])
+                setPredictSet({ xs: xTest, ys })
             },
             () => {
                 // ignore
@@ -154,7 +152,6 @@ const Iris = (): JSX.Element => {
         if (!_model || !_xs) {
             return
         }
-
         const [preds] = tf.tidy(() => {
             const preds = (_model.predict(_xs) as tf.Tensor).argMax(-1)
             return [preds]

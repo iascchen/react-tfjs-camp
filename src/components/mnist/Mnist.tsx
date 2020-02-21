@@ -5,10 +5,12 @@ import { Button, Card, Col, Row, Select } from 'antd'
 import { ILayer, IModel, ITensor, ITrainDataSet, ITrainInfo, logger, STATUS } from '../../utils'
 import { MnistDataset } from './data'
 import { addCnnLayers, addDenseLayers } from './model'
+
 import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
 import TfvisModelWidget from '../common/tensor/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tensor/TfvisLayerWidget'
 import SampleDataVis from '../common/tensor/SampleDataVis'
+import TfvisDatasetInfoWidget from '../common/tensor/TfvisDatasetInfoWidget'
 
 const { Option } = Select
 
@@ -109,12 +111,11 @@ const Mnist = (): JSX.Element => {
         const xTest = validSet?.xs as tf.Tensor
         const yTest = validSet?.ys as tf.Tensor
 
-        const [xs, ys] = tf.tidy(() => {
-            const xs = xTest
+        const [ys] = tf.tidy(() => {
             const ys = yTest?.argMax(-1)
-            return [xs, ys]
+            return [ys]
         })
-        setPredictSet({ xs, ys })
+        setPredictSet({ xs: xTest, ys })
     }, [validSet])
 
     /***********************
@@ -296,11 +297,11 @@ const Mnist = (): JSX.Element => {
             </Col>
             <Col span={12}>
                 <Card title='Train' style={{ margin: '8px' }} size='small'>
-                    <p>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</p>
-                    <p>trainSet: {JSON.stringify(trainSet)}</p>
-                    <p>validSet: {JSON.stringify(validSet)}</p>
+                    <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
+                    <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
+                    <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
 
-                    <Button onClick={handleTrain}> Train </Button>
+                    <Button onClick={handleTrain} type='primary'> Train </Button>
                     <Button onClick={handleEvaluate}> Evaluate </Button>
                     <p>status: {status}</p>
                     <p>errors: {errors}</p>

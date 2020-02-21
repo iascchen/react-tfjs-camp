@@ -6,6 +6,7 @@ import './App.css'
 import SideBar from './components/common/SideBar'
 import BodyContainer from './components/common/BodyContainer'
 import GitHubLogo from './components/common/GitHubLogo'
+import ErrorBoundary from './components/common/ErrorBoundary'
 
 const { Header, Sider, Footer } = Layout
 
@@ -28,7 +29,9 @@ const App = (): JSX.Element => {
                         <span style={{ margin: '0 8px' }}>Tensorflow.js React-Hooks Playground</span>
                         <GitHubLogo />
                     </Header>
-                    <BodyContainer />
+                    <ErrorBoundary>
+                        <BodyContainer />
+                    </ErrorBoundary>
                     <Footer style={{ textAlign: 'center' }}>©2020 Created by Iasc CHEN(iascchen@gmail.com)</Footer>
                 </Layout>
             </Router>

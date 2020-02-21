@@ -26,3 +26,6 @@ yarn-error.log*
 /data
 
 *.gz
+
+public/data/mnist_images.png
+public/data/mnist_labels_uint8

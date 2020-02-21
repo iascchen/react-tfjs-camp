@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Row, Select } from 'antd'
-import { backend, getBackend, layers, sequential, train, Tensor, Scalar, randomUniform } from '@tensorflow/tfjs'
 
-import { IModel, ITensor, STATUS, range, logger } from '../../utils'
+import { STATUS, logger, range } from '../../utils'
 import ModelInfo from '../common/tensor/ModelInfo'
 import CurveVis from './CurveVis'
 
@@ -20,8 +20,8 @@ const INIT_PARAMS = [0, 1, 0]
 
 // train
 const NUM_EPOCHS = 200
-const BATCH_SIZE = 10
-const LEARNING_RATE = 0.01
+const BATCH_SIZE = 50
+const LEARNING_RATE = 0.05
 
 const Curve = (): JSX.Element => {
     /***********************
@@ -33,7 +33,7 @@ const Curve = (): JSX.Element => {
     const [status, setStatus] = useState<STATUS>(STATUS.INIT)
 
     // Model
-    const [model, setModel] = useState<IModel>()
+    const [model, setModel] = useState<tf.LayersModel>()
     const [activation, setActivation] = useState('sigmoid')
     const [layerCount, setLayerCount] = useState('2')
 
@@ -42,12 +42,12 @@ const Curve = (): JSX.Element => {
     const [totalRecord] = useState<number>(TOTAL_RECORD)
     const [testRecord] = useState<number>(TEST_RECORD)
 
-    const [trainX, setTrainX] = useState<Tensor>()
-    const [trainY, setTrainY] = useState<Tensor>()
-    const [testX, setTestX] = useState<Tensor>()
-    const [testY, setTestY] = useState<Tensor>()
-    const [testP, setTestP] = useState<Tensor>()
-    const [testV, setTestV] = useState<Tensor>()
+    const [trainX, setTrainX] = useState<tf.Tensor>()
+    const [trainY, setTrainY] = useState<tf.Tensor>()
+    const [testX, setTestX] = useState<tf.Tensor>()
+    const [testY, setTestY] = useState<tf.Tensor>()
+    const [testP, setTestP] = useState<tf.Tensor>()
+    const [testV, setTestV] = useState<tf.Scalar>()
 
     // Train
     const [trainStatusStr, setTrainStatusStr] = useState<string>('0%')
@@ -56,7 +56,7 @@ const Curve = (): JSX.Element => {
      * useCallback
      ***********************/
 
-    const calc = useCallback((x: Tensor) => {
+    const calc = useCallback((x: tf.Tensor) => {
         const [a, b, c] = curveParams
 
         // = a * x^2 + b * x + c
@@ -78,28 +78,28 @@ const Curve = (): JSX.Element => {
     useEffect(() => {
         logger('init model ...')
 
-        backend()
-        setTfBackend(getBackend())
+        tf.backend()
+        setTfBackend(tf.getBackend())
 
         // The linear regression model.
-        const _model = sequential()
+        const _model = tf.sequential()
 
         switch (layerCount) {
             case '1' :
-                _model.add(layers.dense({ inputShape: [1], units: 1 }))
+                _model.add(tf.layers.dense({ inputShape: [1], units: 1 }))
                 break
             case '2' :
-                _model.add(layers.dense({ inputShape: [1], units: 4, activation: activation as any }))
-                _model.add(layers.dense({ units: 1 }))
+                _model.add(tf.layers.dense({ inputShape: [1], units: 4, activation: activation as any }))
+                _model.add(tf.layers.dense({ units: 1 }))
                 break
             case '3' :
-                _model.add(layers.dense({ inputShape: [1], units: 4, activation: activation as any }))
-                _model.add(layers.dense({ units: 4, activation: activation as any }))
-                _model.add(layers.dense({ units: 1 }))
+                _model.add(tf.layers.dense({ inputShape: [1], units: 4, activation: activation as any }))
+                _model.add(tf.layers.dense({ units: 4, activation: activation as any }))
+                _model.add(tf.layers.dense({ units: 1 }))
                 break
         }
 
-        const optimizer = train.sgd(LEARNING_RATE)
+        const optimizer = tf.train.sgd(LEARNING_RATE)
         _model.compile({ loss: 'meanSquaredError', optimizer })
         // _model.summary()
 
@@ -115,13 +115,13 @@ const Curve = (): JSX.Element => {
         logger('init data set ...')
 
         // train set
-        const _trainTensorX = randomUniform([totalRecord], -1, 1)
+        const _trainTensorX = tf.randomUniform([totalRecord], -1, 1)
         const _trainTensorY = calc(_trainTensorX)
         setTrainX(_trainTensorX)
         setTrainY(_trainTensorY)
 
         // test set
-        const _testTensorX = randomUniform([testRecord], -1, 1)
+        const _testTensorX = tf.randomUniform([testRecord], -1, 1)
         const _testTensorY = calc(_testTensorX)
         setTestX(_testTensorX)
         setTestY(_testTensorY)
@@ -140,7 +140,7 @@ const Curve = (): JSX.Element => {
      * Functions
      ***********************/
 
-    const trainModel = (_model: IModel, _trainX: ITensor, _trainY: ITensor): void => {
+    const trainModel = (_model: tf.LayersModel, _trainX: tf.Tensor, _trainY: tf.Tensor): void => {
         if (!_model || !_trainX || !_trainY) {
             return
         }
@@ -152,8 +152,8 @@ const Curve = (): JSX.Element => {
             batchSize: BATCH_SIZE,
             validationSplit: VALIDATE_SPLIT,
             callbacks: {
-                onEpochEnd: (epoch) => {
-                    const trainStatus = `${epoch + 1}/${NUM_EPOCHS} = ${((epoch + 1) / NUM_EPOCHS * 100).toFixed(0)} %`
+                onEpochEnd: (epoch: number) => {
+                    const trainStatus = `${(epoch + 1).toString()}/${NUM_EPOCHS.toString()} = ${((epoch + 1) / NUM_EPOCHS * 100).toFixed(0)} %`
                     setTrainStatusStr(trainStatus)
 
                     if (epoch % 10 === 0) {
@@ -171,23 +171,29 @@ const Curve = (): JSX.Element => {
             })
     }
 
-    const evaluateModel = (_model: IModel, _testX: ITensor, _testY: ITensor): void => {
+    const evaluateModel = (_model: tf.LayersModel, _testX: tf.TensorContainer, _testY: tf.TensorContainer): void => {
         if (!_model || !_testX || !_testY) {
             return
         }
 
-        const pred = _model.predict(_testX) as Tensor
+        const pred = _model.predict(_testX as tf.Tensor) as tf.Tensor
         setTestP(pred)
-        const evaluate = _model.evaluate(_testX, _testY) as Scalar
+        const evaluate = _model.evaluate(_testX as tf.Tensor, _testY as tf.Tensor) as tf.Scalar
         setTestV(evaluate)
     }
 
     const handleTrain = (): void => {
+        if (!model || !trainX || !trainY) {
+            return
+        }
         // Train the model using the data.
         trainModel(model, trainX, trainY)
     }
 
     const handlePredict = (): void => {
+        if (!model || !testX || !testY) {
+            return
+        }
         evaluateModel(model, testX, testY)
     }
 
@@ -237,7 +243,7 @@ const Curve = (): JSX.Element => {
                     <CurveVis xDataset={trainX} yDataset={trainY} sampleCount={totalRecord} />
 
                     <div>
-                        Curve Params: {`${curveParams[0]}*x^2 + ${curveParams[1]}*x + ${curveParams[2]}`}
+                        Curve Params: {`${curveParams[0].toString()}*x^2 + ${curveParams[1].toString()}*x + ${curveParams[2].toString()}`}
                         <Button onClick={handleResetParams}> Reset </Button>
                     </div>
                     <div>

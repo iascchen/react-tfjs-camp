@@ -16,146 +16,142 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-import { fetchResource, ITrainDataSet, logger } from '../../utils'
 
-// MNIST data constants:
-// const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
-const BASE_URL = '/data'
-const TRAIN_IMAGES_FILE = `${BASE_URL}/train-images-idx3-ubyte.gz`
-const TRAIN_LABELS_FILE = `${BASE_URL}/train-labels-idx1-ubyte.gz`
-const TEST_IMAGES_FILE = `${BASE_URL}/t10k-images-idx3-ubyte.gz`
-const TEST_LABELS_FILE = `${BASE_URL}/t10k-labels-idx1-ubyte.gz`
+export const IMAGE_H = 28
+export const IMAGE_W = 28
+const IMAGE_SIZE = IMAGE_H * IMAGE_W
+const NUM_CLASSES = 10
+const NUM_DATASET_ELEMENTS = 65000
 
-export const IMAGE_HEIGHT = 28
-export const IMAGE_WIDTH = 28
+const NUM_TRAIN_ELEMENTS = 55000
+const NUM_TEST_ELEMENTS = NUM_DATASET_ELEMENTS - NUM_TRAIN_ELEMENTS
 
-const IMAGE_HEADER_BYTES = 16
-const IMAGE_FLAT_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH
-const LABEL_HEADER_BYTES = 8
-const LABEL_RECORD_BYTE = 1
-const LABEL_FLAT_SIZE = 10
+const MNIST_IMAGES_SPRITE_PATH = '/data/mnist_images.png'
+const MNIST_LABELS_PATH = '/data/mnist_labels_uint8'
 
-const loadHeaderValues = (buffer: Buffer, headerLength: number): number[] => {
-    const headerValues = []
-    for (let i = 0; i < headerLength / 4; i++) {
-        // Header data is stored in-order (aka big-endian)
-        headerValues[i] = buffer.readUInt32BE(i * 4)
-    }
-    return headerValues
-}
+/**
+ * A class that fetches the sprited MNIST dataset and returns shuffled batches.
+ *
+ * NOTE: This will get much easier. For now, we do data fetching and
+ * manipulation manually.
+ */
 
-const loadImages = async (url: string): Promise<Float32Array[]> => {
-    const buffer = await fetchResource(url, true)
+export class MnistWebDataset {
+    datasetImages!: Float32Array
+    trainImages!: Float32Array
+    testImages!: Float32Array
 
-    const headerBytes = IMAGE_HEADER_BYTES
-    const recordBytes = IMAGE_FLAT_SIZE
+    datasetLabels!: Uint8Array
+    trainLabels!: Uint8Array
+    testLabels!: Uint8Array
 
-    // skip header
-    const headerValues = loadHeaderValues(buffer, headerBytes)
-    logger('image header', headerValues)
+    trainIndices!: Uint32Array
+    testIndices!: Uint32Array
 
-    const images = []
-    let index = headerBytes
-    while (index < buffer.byteLength) {
-        const array = new Float32Array(recordBytes)
-        for (let i = 0; i < recordBytes; i++) {
-            // Normalize the pixel values into the 0-1 interval, from
-            // the original 0-255 interval.
-            array[i] = buffer.readUInt8(index++) / 255.0
-        }
-        images.push(array)
-    }
-    logger('Load images :', `${images.length.toString()} / ${headerValues[1].toString()}`)
-    return images
-}
+    // constructor () {
+    //     // do nothing
+    // }
 
-const loadLabels = async (url: string): Promise<Int32Array[]> => {
-    const buffer = await fetchResource(url, true)
-
-    const headerBytes = LABEL_HEADER_BYTES
-    const recordBytes = LABEL_RECORD_BYTE
-
-    // skip header
-    const headerValues = loadHeaderValues(buffer, headerBytes)
-    logger('label header', headerValues)
-
-    const labels = []
-    let index = headerBytes
-    while (index < buffer.byteLength) {
-        const array = new Int32Array(recordBytes)
-        for (let i = 0; i < recordBytes; i++) {
-            array[i] = buffer.readUInt8(index++)
-        }
-        labels.push(array)
-    }
-    logger('Load labels :', `${labels.length.toString()} / ${headerValues[1].toString()}`)
-    return labels
-}
-
-/** Helper class to handle loading training and test data. */
-export class MnistDataset {
-    dataset: [Float32Array[], Int32Array[], Float32Array[], Int32Array[]]
-    trainSize: number
-    testSize: number
-    trainBatchIndex: number
-    testBatchIndex: number
-
-    constructor () {
-        this.dataset = [[], [], [], []]
-        this.trainSize = 0
-        this.testSize = 0
-        this.trainBatchIndex = 0
-        this.testBatchIndex = 0
-    }
-
-    /** Loads training and test data. */
     loadData = async (): Promise<void> => {
-        this.dataset = await Promise.all([
-            loadImages(TRAIN_IMAGES_FILE), loadLabels(TRAIN_LABELS_FILE),
-            loadImages(TEST_IMAGES_FILE), loadLabels(TEST_LABELS_FILE)
-        ])
-        this.trainSize = this.dataset[0].length
-        this.testSize = this.dataset[2].length
+        // Make a request for the MNIST sprited image.
+        const img = new Image()
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        const imgRequest = new Promise((resolve, reject) => {
+            img.crossOrigin = ''
+            img.onload = () => {
+                img.width = img.naturalWidth
+                img.height = img.naturalHeight
+
+                const datasetBytesBuffer =
+                    new ArrayBuffer(NUM_DATASET_ELEMENTS * IMAGE_SIZE * 4)
+
+                const chunkSize = 5000
+                canvas.width = img.width
+                canvas.height = chunkSize
+
+                for (let i = 0; i < NUM_DATASET_ELEMENTS / chunkSize; i++) {
+                    const datasetBytesView = new Float32Array(
+                        datasetBytesBuffer, i * IMAGE_SIZE * chunkSize * 4,
+                        IMAGE_SIZE * chunkSize)
+                    ctx?.drawImage(
+                        img, 0, i * chunkSize, img.width, chunkSize, 0, 0, img.width,
+                        chunkSize)
+
+                    const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height)
+
+                    const length = imageData?.data.length ?? 0
+                    for (let j = 0; j < length / 4; j++) {
+                        // All channels hold an equal value since the image is grayscale, so
+                        // just read the red channel.
+                        const v = imageData?.data[j * 4] ?? 0
+                        datasetBytesView[j] = v / 255
+                    }
+                }
+                this.datasetImages = new Float32Array(datasetBytesBuffer)
+
+                resolve()
+            }
+            img.src = MNIST_IMAGES_SPRITE_PATH
+        })
+
+        const labelsRequest = fetch(MNIST_LABELS_PATH)
+        const [imgResponse, labelsResponse] =
+            await Promise.all([imgRequest, labelsRequest])
+
+        this.datasetLabels = new Uint8Array(await (labelsResponse as Response).arrayBuffer())
+
+        // Create shuffled indices into the train/test set for when we select a
+        // random dataset element for training / validation.
+        this.trainIndices = tf.util.createShuffledIndices(NUM_TRAIN_ELEMENTS)
+        this.testIndices = tf.util.createShuffledIndices(NUM_TEST_ELEMENTS)
+
+        // Slice the the images and labels into train and test sets.
+        this.trainImages = this.datasetImages.slice(0, IMAGE_SIZE * NUM_TRAIN_ELEMENTS)
+        this.testImages = this.datasetImages.slice(IMAGE_SIZE * NUM_TRAIN_ELEMENTS)
+        this.trainLabels = this.datasetLabels.slice(0, NUM_CLASSES * NUM_TRAIN_ELEMENTS)
+        this.testLabels = this.datasetLabels.slice(NUM_CLASSES * NUM_TRAIN_ELEMENTS)
     }
 
-    getTrainData = (): ITrainDataSet => {
-        return this.getData_(true)
+    /**
+     * Get all training data as a data tensor and a labels tensor.
+     *
+     * @returns
+     *   xs: The data tensor, of shape `[numTrainExamples, 28, 28, 1]`.
+     *   labels: The one-hot encoded labels tensor, of shape
+     *     `[numTrainExamples, 10]`.
+     */
+    getTrainData = (): tf.TensorContainerObject => {
+        const xs = tf.tensor4d(
+            this.trainImages,
+            [this.trainImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1])
+        const labels = tf.tensor2d(
+            this.trainLabels, [this.trainLabels.length / NUM_CLASSES, NUM_CLASSES])
+        return { xs, ys: labels }
     }
 
-    getTestData = (): ITrainDataSet => {
-        return this.getData_(false)
-    }
+    /**
+     * Get all test data as a data tensor a a labels tensor.
+     *
+     * @param {number} numExamples Optional number of examples to get. If not
+     *     provided,
+     *   all test examples will be returned.
+     * @returns
+     *   xs: The data tensor, of shape `[numTestExamples, 28, 28, 1]`.
+     *   labels: The one-hot encoded labels tensor, of shape
+     *     `[numTestExamples, 10]`.
+     */
+    getTestData = (numExamples: number = NUM_TEST_ELEMENTS): tf.TensorContainerObject => {
+        let xs = tf.tensor4d(
+            this.testImages,
+            [this.testImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1])
+        let labels = tf.tensor2d(
+            this.testLabels, [this.testLabels.length / NUM_CLASSES, NUM_CLASSES])
 
-    getData_ = (isTrainingData: boolean): ITrainDataSet => {
-        let imagesIndex: number
-        let labelsIndex: number
-
-        if (isTrainingData) {
-            imagesIndex = 0
-            labelsIndex = 1
-        } else {
-            imagesIndex = 2
-            labelsIndex = 3
+        if (numExamples != null) {
+            xs = xs.slice([0, 0, 0, 0], [numExamples, IMAGE_H, IMAGE_W, 1])
+            labels = labels.slice([0, 0], [numExamples, NUM_CLASSES])
         }
-        const size = this.dataset[imagesIndex].length
-
-        // Only create one big array to hold batch of images.
-        const imagesShape: [number, number, number, number] = [size, IMAGE_HEIGHT, IMAGE_WIDTH, 1]
-        const images = new Float32Array(tf.util.sizeFromShape(imagesShape))
-        const labels = new Int32Array(tf.util.sizeFromShape([size, 1]))
-
-        let imageOffset = 0
-        let labelOffset = 0
-        for (let i = 0; i < size; ++i) {
-            images.set(this.dataset[imagesIndex][i], imageOffset)
-            labels.set(this.dataset[labelsIndex][i], labelOffset)
-            imageOffset += IMAGE_FLAT_SIZE
-            labelOffset += 1
-        }
-
-        return {
-            xs: tf.tensor4d(images, imagesShape),
-            ys: tf.oneHot(tf.tensor1d(labels, 'int32'), LABEL_FLAT_SIZE).toFloat()
-        }
+        return { xs, ys: labels }
     }
 }

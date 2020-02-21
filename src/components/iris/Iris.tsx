@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Row } from 'antd'
 
-import { arrayDispose, IDataSet, IModel, ITensor, ITrainInfo, IValidInfo, STATUS, logger } from '../../utils'
+import { arrayDispose, IDataSet, ITrainInfo, STATUS, logger } from '../../utils'
 
 import * as data from './data'
 import ModelInfo from '../common/tensor/ModelInfo'
 import HistoryWidget from '../common/tensor/HistoryWidget'
 import SampleDataVis from '../common/tensor/SampleDataVis'
 
+const EPOCHS = 40
 const BATCH_SIZE = 32
 
 const Iris = (): JSX.Element => {
@@ -26,11 +27,11 @@ const Iris = (): JSX.Element => {
 
     const [totalEpochs] = useState<number>(40)
     const [learningRate] = useState<number>(0.01)
-    const [model, setModel] = useState<IModel>()
+    const [model, setModel] = useState<tf.LayersModel>()
     const [trainInfos, setTrainInfos] = useState<ITrainInfo[]>([])
 
-    const [predictSet, setPredictSet] = useState<IValidInfo>()
-    const [predictResult, setPredictResult] = useState<ITensor>()
+    const [predictSet, setPredictSet] = useState<tf.TensorContainerObject>()
+    const [predictResult, setPredictResult] = useState<tf.Tensor>()
 
     /***********************
      * useEffect
@@ -113,19 +114,17 @@ const Iris = (): JSX.Element => {
      * Functions
      ***********************/
 
-    const trainModel = (_model: IModel, _trainDataset: IDataSet, _validDataset: IDataSet, options?: any): void => {
+    const trainModel = (_model: tf.LayersModel, _trainDataset: IDataSet, _validDataset: IDataSet): void => {
         if (!_model || !_trainDataset || !_validDataset) {
             return
         }
-
-        const { epochs } = options
 
         setStatus(STATUS.TRAINING)
         resetTrainInfo()
         const beginMs = performance.now()
         // Call `model.fit` to train the model.
         _model.fitDataset(_trainDataset, {
-            epochs: epochs || 40,
+            epochs: EPOCHS,
             validationData: _validDataset,
             callbacks: {
                 onEpochEnd: (epoch, logs) => {
@@ -140,7 +139,7 @@ const Iris = (): JSX.Element => {
             () => {
                 setStatus(STATUS.TRAINED)
 
-                const secPerEpoch = (performance.now() - beginMs) / (1000 * epochs)
+                const secPerEpoch = (performance.now() - beginMs) / (1000 * EPOCHS)
                 logger(secPerEpoch)
             },
             () => {
@@ -148,12 +147,12 @@ const Iris = (): JSX.Element => {
             })
     }
 
-    const predictModel = (_model: IModel, _xs: ITensor): void => {
+    const predictModel = (_model: tf.LayersModel, _xs: tf.TensorContainer): void => {
         if (!_model || !_xs) {
             return
         }
         const [preds] = tf.tidy(() => {
-            const preds = (_model.predict(_xs) as tf.Tensor).argMax(-1)
+            const preds = (_model.predict(_xs as tf.Tensor) as tf.Tensor).argMax(-1)
             return [preds]
         })
         setPredictResult(preds)
@@ -177,7 +176,7 @@ const Iris = (): JSX.Element => {
             return
         }
         // Train the model using the data.
-        trainModel(model, trainSet, validSet, { epochs: totalEpochs })
+        trainModel(model, trainSet, validSet)
     }
 
     /***********************
@@ -191,7 +190,8 @@ const Iris = (): JSX.Element => {
                 <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
                     <Button onClick={handleTrain} type='primary'> Train & Validate </Button>
                     <div>status: {status}</div>
-                    <SampleDataVis xDataset={predictSet?.xs} yDataset={predictSet?.ys} pDataset={predictResult}
+                    <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
+                        pDataset={predictResult}
                         xFloatFixed={1} pageSize={18}/>
                 </Card>
             </Col>
@@ -203,7 +203,7 @@ const Iris = (): JSX.Element => {
             </Col>
             <Col span={12}>
                 <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <HistoryWidget infos={trainInfos} totalIterations={totalEpochs} debug />
+                    <HistoryWidget infos={trainInfos} totalIterations={totalEpochs} />
                 </Card>
             </Col>
         </Row>

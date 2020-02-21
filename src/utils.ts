@@ -3,9 +3,6 @@ import * as zlib from 'zlib'
 
 export const logger = console.log
 
-export type ITensor = tf.Tensor | undefined
-export type IModel = tf.LayersModel | undefined
-export type ILayer = tf.layers.Layer | undefined
 export type IDataSet = tf.data.Dataset<tf.TensorContainer>
 export type IArray = any[]
 
@@ -15,17 +12,6 @@ export enum STATUS {
     LOADED = 'Loaded',
     TRAINING = 'Training',
     TRAINED = 'Trained',
-}
-
-export interface IValidInfo {
-    xs: ITensor
-    ys: ITensor
-    preds?: ITensor
-}
-
-export interface ITrainDataSet {
-    xs: tf.Tensor
-    ys: tf.Tensor
 }
 
 export interface ITrainInfo {
@@ -69,7 +55,7 @@ export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buf
     const response = await fetch(url)
     const buf = await response.arrayBuffer()
     if (isUnzip) {
-        logger('unzip...')
+        logger('unzip...', url)
         return zlib.unzipSync(Buffer.from(buf))
     } else {
         return Buffer.from(buf)

@@ -7,24 +7,24 @@ import { ITrainInfo } from '../../../utils'
 const tfvis = require('@tensorflow/tfjs-vis')
 
 interface IProps {
-    logMsg: ITrainInfo | undefined
+    logMsg?: ITrainInfo
 
     debug?: boolean
 }
 
 const logs = {
     history: {
-        loss: [] as number[],
-        val_loss: [] as number[],
-        acc: [] as number[],
-        val_acc: [] as number[]
+        loss: [3] as number[],
+        val_loss: [3] as number[],
+        acc: [0] as number[],
+        val_acc: [0] as number[]
     }
 }
 
 const TfvisHistoryWidget = (props: IProps): JSX.Element => {
     const [logData, setLogData] = useState(logs)
 
-    const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
+    const [ignored, forceUpdate] = useReducer((x: number) => x + 1, 0)
 
     const lossCanvasRef = useRef<HTMLDivElement>(null)
     const accuracyCanvasRef = useRef<HTMLDivElement>(null)

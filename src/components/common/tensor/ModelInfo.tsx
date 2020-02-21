@@ -1,8 +1,8 @@
 import React from 'react'
-import { IModel } from '../../../utils'
+import * as tf from '@tensorflow/tfjs'
 
 interface IProps {
-    model: IModel
+    model?: tf.LayersModel
 }
 
 const ModelInfo = (props: IProps): JSX.Element => {

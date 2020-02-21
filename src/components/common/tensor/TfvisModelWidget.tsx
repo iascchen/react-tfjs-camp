@@ -1,13 +1,12 @@
 import React, { useEffect, useRef } from 'react'
-
-import { IModel } from '../../../utils'
+import * as tf from '@tensorflow/tfjs'
 
 // cannot use import
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
 
 interface IProps {
-    model: IModel
+    model?: tf.LayersModel
 
     debug?: boolean
 }

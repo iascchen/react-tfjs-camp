@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Table } from 'antd'
-import { arrayDispose, ISampleInfo, ITensor, logger } from '../../../utils'
+import { arrayDispose, ISampleInfo, logger } from '../../../utils'
 import RowImageWidget from './RowImageWidget'
 
 const MAX_SAMPLES_COUNT = 20
 
 interface IProps {
-    xDataset: ITensor
-    yDataset: ITensor
-    pDataset?: ITensor
+    xDataset: tf.Tensor
+    yDataset: tf.Tensor
+    pDataset?: tf.Tensor
     sampleCount?: number
 
     xFloatFixed?: number
@@ -30,7 +30,7 @@ export const prepareSamples = (_tensor: tf.Tensor, maxRow: number = MAX_SAMPLES_
     return { data, shape, shapeStr, shapeSize, length }
 }
 
-const formatShape = (sampleInfo: ISampleInfo | undefined, index: number, fraction = 0): JSX.Element => {
+const formatShape = (sampleInfo: ISampleInfo, index: number, fraction = 0): JSX.Element => {
     return (
         <>
             {sampleInfo?.data.slice(index * sampleInfo?.shapeSize, (index + 1) * sampleInfo?.shapeSize)
@@ -42,7 +42,7 @@ const formatShape = (sampleInfo: ISampleInfo | undefined, index: number, fractio
     )
 }
 
-const formatImage = (sampleInfo: ISampleInfo | undefined, index: number): JSX.Element => {
+const formatImage = (sampleInfo: ISampleInfo, index: number): JSX.Element => {
     const data = sampleInfo ? sampleInfo.data.slice(index * sampleInfo?.shapeSize, (index + 1) * sampleInfo?.shapeSize) : []
     const shapeArg = sampleInfo?.shape.slice(0, 2) as [number, number]
     return <RowImageWidget data={data} shape={shapeArg}/>

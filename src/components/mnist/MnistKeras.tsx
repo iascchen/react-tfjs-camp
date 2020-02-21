@@ -2,20 +2,20 @@ import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Row, Select } from 'antd'
 
-import { ILayer, IModel, ITensor, ITrainDataSet, ITrainInfo, logger, STATUS } from '../../utils'
-import { MnistDataset } from './data'
+import { ITrainInfo, logger, STATUS } from '../../utils'
+import { MnistGzDataset } from './dataGz'
 import { addCnnLayers, addDenseLayers } from './model'
 
+import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
 import TfvisModelWidget from '../common/tensor/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tensor/TfvisLayerWidget'
-import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisDatasetInfoWidget from '../common/tensor/TfvisDatasetInfoWidget'
 
 const { Option } = Select
 
 const EPOCHS = 10
-const BATCH_SIZE = 500
+const BATCH_SIZE = 128
 const VALID_SPLIT = 0.15
 
 const Models = ['dense', 'cnn']
@@ -25,7 +25,7 @@ interface ILayerSelectOption {
     index: number
 }
 
-const Mnist = (): JSX.Element => {
+const MnistKeras = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -34,19 +34,17 @@ const Mnist = (): JSX.Element => {
     const [status, setStatus] = useState<STATUS>(STATUS.INIT)
     const [errors, setErrors] = useState()
 
-    const [trainSet, setTrainSet] = useState<ITrainDataSet>()
-    const [validSet, setValidSet] = useState<ITrainDataSet>()
-
-    const [totalEpochs] = useState<number>(EPOCHS)
+    const [trainSet, setTrainSet] = useState<tf.TensorContainerObject>()
+    const [validSet, setValidSet] = useState<tf.TensorContainerObject>()
 
     const [modelName, setModelName] = useState('dense')
-    const [model, setModel] = useState<IModel>()
+    const [model, setModel] = useState<tf.LayersModel>()
     const [layersOption, setLayersOption] = useState<ILayerSelectOption[]>()
-    const [curLayer, setCurLayer] = useState<ILayer>()
+    const [curLayer, setCurLayer] = useState<tf.layers.Layer>()
     const [logMsg, setLogMsg] = useState<ITrainInfo>()
 
-    const [predictSet, setPredictSet] = useState<ITrainDataSet>()
-    const [predictResult, setPredictResult] = useState<ITensor>()
+    const [predictSet, setPredictSet] = useState<tf.TensorContainerObject>()
+    const [predictResult, setPredictResult] = useState<tf.Tensor>()
 
     /***********************
      * useEffect
@@ -68,14 +66,13 @@ const Mnist = (): JSX.Element => {
                 break
         }
 
-        const optimizer = tf.train.adam(0.5)
+        const optimizer = 'rmsprop'
         _model.compile({ optimizer, loss: 'categoricalCrossentropy', metrics: ['accuracy'] })
+        setModel(_model)
 
         const _layerOptions: ILayerSelectOption[] = _model?.layers.map((l, index) => {
             return { name: l.name, index }
         })
-
-        setModel(_model)
         setLayersOption(_layerOptions)
 
         return () => {
@@ -88,21 +85,30 @@ const Mnist = (): JSX.Element => {
         logger('init data set ...')
 
         setStatus(STATUS.LOADING)
-        const mnistDataset = new MnistDataset()
+        const mnistDataset = new MnistGzDataset()
+
+        let tSet: tf.TensorContainerObject
+        let vSet: tf.TensorContainerObject
         mnistDataset.loadData().then(
             () => {
-                const tSet = mnistDataset.getTrainData()
-                const eSet = mnistDataset.getTestData()
+                tSet = mnistDataset.getTrainData()
+                vSet = mnistDataset.getTestData()
 
                 setTrainSet(tSet)
-                setValidSet(eSet)
+                setValidSet(vSet)
 
                 setStatus(STATUS.LOADED)
             },
-            (e) => {
-                setErrors(e)
+            (error) => {
+                logger(error)
             }
         )
+
+        return () => {
+            logger('Data Set Dispose')
+            tf.dispose([tSet.xs, tSet.ys])
+            tf.dispose([vSet.xs, vSet.ys])
+        }
     }, [])
 
     useEffect(() => {
@@ -122,23 +128,23 @@ const Mnist = (): JSX.Element => {
      * useEffects only for dispose
      ***********************/
 
-    useEffect(() => {
-        // Do Nothing
-
-        return () => {
-            logger('Train Set Dispose')
-            tf.dispose([trainSet?.xs, trainSet?.ys])
-        }
-    }, [trainSet])
-
-    useEffect(() => {
-        // Do Nothing
-
-        return () => {
-            logger('Valid Set Dispose')
-            tf.dispose([validSet?.xs, validSet?.ys])
-        }
-    }, [validSet])
+    // useEffect(() => {
+    //     // Do Nothing
+    //
+    //     return () => {
+    //         logger('Train Set Dispose')
+    //         tf.dispose([trainSet?.xs, trainSet?.ys])
+    //     }
+    // }, [trainSet])
+    //
+    // useEffect(() => {
+    //     // Do Nothing
+    //
+    //     return () => {
+    //         logger('Valid Set Dispose')
+    //         tf.dispose([validSet?.xs, validSet?.ys])
+    //     }
+    // }, [validSet])
 
     useEffect(() => {
         // Do Nothing
@@ -161,44 +167,39 @@ const Mnist = (): JSX.Element => {
      * Functions
      ***********************/
 
-    const trainModel = (_model: IModel, _trainDataset: ITrainDataSet, options?: any): void => {
+    const trainModel = (_model: tf.LayersModel, _trainDataset: tf.TensorContainerObject): void => {
         if (!_model || !_trainDataset) {
             return
         }
 
-        const { epochs, batchSize, validationSplit } = options
-
         setStatus(STATUS.TRAINING)
-        // resetTrainInfo()
 
         // We'll keep a buffer of loss and accuracy values over time.
         let trainBatchCount = 0
         const beginMs = performance.now()
 
-        // logger('trainDataset', _trainDataset.xDataset.dataSync(), _trainDataset.yDataset.dataSync())
-
         // Call `model.fit` to train the model.
-        _model.fit(_trainDataset.xs, _trainDataset.ys, {
-            epochs: epochs || EPOCHS,
-            batchSize: batchSize || BATCH_SIZE,
-            validationSplit: validationSplit || VALID_SPLIT,
+        let iteration = 0
+        _model.fit(_trainDataset.xs as tf.Tensor, _trainDataset.ys as tf.Tensor, {
+            epochs: EPOCHS,
+            batchSize: BATCH_SIZE,
+            validationSplit: VALID_SPLIT,
             callbacks: {
                 onEpochEnd: async (epoch, logs) => {
                     logger('onEpochEnd', epoch)
 
                     // const secPerEpoch = (performance.now() - beginMs) / (1000 * (epoch + 1))
-                    logs && addTrainInfo({ iteration: epoch, logs })
-                    predictModel(_model, predictSet?.xs)
+                    logs && addTrainInfo({ iteration: iteration++, logs })
+                    predictModel(_model, predictSet?.xs as tf.Tensor)
 
                     await tf.nextFrame()
                 },
                 onBatchEnd: async (batch, logs) => {
-                    logger('onBatchEnd', batch)
                     trainBatchCount++
-                    logs && addTrainInfo({ iteration: batch, logs })
+                    logs && addTrainInfo({ iteration: iteration++, logs })
                     if (batch % 50 === 0) {
                         logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
-                        predictModel(_model, predictSet?.xs)
+                        predictModel(_model, predictSet?.xs as tf.Tensor)
                     }
                     await tf.nextFrame()
                 }
@@ -208,23 +209,24 @@ const Mnist = (): JSX.Element => {
                 setStatus(STATUS.TRAINED)
 
                 const secSpend = (performance.now() - beginMs) / 1000
-                logger(`Spend : ${secSpend.toString()}`)
+                logger(`Spend : ${secSpend.toString()}s`)
             },
             (error) => {
                 setErrors(error)
-            })
+            }
+        )
     }
 
-    const evaluateModel = (_model: IModel, _validDataset: ITrainDataSet): void => {
+    const evaluateModel = (_model: tf.LayersModel, _validDataset: tf.TensorContainerObject): void => {
         if (!_model || !_validDataset) {
             return
         }
-        const evalOutput = _model.evaluate(_validDataset.xs, _validDataset.ys) as tf.Tensor[]
+        const evalOutput = _model.evaluate(_validDataset.xs as tf.Tensor, _validDataset.ys as tf.Tensor) as tf.Tensor[]
         logger(`Final evaluate Loss: ${evalOutput[0].dataSync()[0].toFixed(3)} %`)
         logger(`Final evaluate Accuracy: ${evalOutput[1].dataSync()[0].toFixed(3)} %`)
     }
 
-    const predictModel = (_model: IModel, _xs: ITensor): void => {
+    const predictModel = (_model: tf.LayersModel, _xs: tf.Tensor): void => {
         if (!_model || !_xs) {
             return
         }
@@ -245,7 +247,7 @@ const Mnist = (): JSX.Element => {
             return
         }
         // Train the model using the data.
-        trainModel(model, trainSet, { epochs: totalEpochs })
+        trainModel(model, trainSet)
     }
 
     const handleEvaluate = (): void => {
@@ -314,11 +316,12 @@ const Mnist = (): JSX.Element => {
             </Col>
             <Col span={12}>
                 <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
-                    <SampleDataVis xDataset={predictSet?.xs} yDataset={predictSet?.ys} pDataset={predictResult} xIsImage />
+                    <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
+                        pDataset={predictResult} xIsImage />
                 </Card>
             </Col>
         </Row>
     )
 }
 
-export default Mnist
+export default MnistKeras

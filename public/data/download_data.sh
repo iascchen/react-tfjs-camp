@@ -15,3 +15,11 @@ wget $TRAIN_IMAGES_FILE
 wget $TRAIN_LABELS_FILE
 wget $TEST_IMAGES_FILE
 wget $TEST_LABELS_FILE
+
+BASE_URL="https://storage.googleapis.com/learnjs-data/model-builder"
+
+MNIST_IMAGES_SPRITE_PATH="${BASE_URL}/mnist_images.png"
+MNIST_LABELS_PATH="${BASE_URL}/mnist_labels_uint8"
+
+wget MNIST_IMAGES_SPRITE_PATH
+wget MNIST_LABELS_PATH

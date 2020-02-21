@@ -35,11 +35,23 @@ const SideBar = (props: IProps): JSX.Element => {
                         <span><Icon type='dot-chart' /> 鸢尾花 IRIS</span>
                     </Link>
                 </Item>
-                <Item key='3'>
-                    <Link to='/mnist'>
-                        <span><Icon type='calculator' /> 手写数字识别 MNIST</span>
-                    </Link>
-                </Item>
+                <SubMenu title={<span><Icon type='calculator' /> 手写数字识别 MNIST</span>}>
+                    <Item key='3'>
+                        <Link to='/mnist/web'>
+                            <span> Tfjs Web 数据加载 </span>
+                        </Link>
+                    </Item>
+                    <Item key='4'>
+                        <Link to='/mnist/keras'>
+                            <span> Tfjs Gz 数据加载 </span>
+                        </Link>
+                    </Item>
+                    <Item key='5'>
+                        <Link to='/mnist/core'>
+                            <span> Tfjs-core 版 </span>
+                        </Link>
+                    </Item>
+                </SubMenu>
 
                 <SubMenu title='Sand Box'>
                     <Item key='97'>

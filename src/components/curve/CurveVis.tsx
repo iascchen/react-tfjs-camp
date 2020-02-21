@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from 'react'
+import * as tf from '@tensorflow/tfjs'
 import { Card } from 'antd'
 import { Axis, Chart, Geom, Legend, Tooltip } from 'bizcharts'
 
-import { arrayDispose, ITensor, logger } from '../../utils'
+import { arrayDispose, logger } from '../../utils'
 
 const MAX_SAMPLES_COUNT = 100
 
 interface IProps {
-    xDataset: ITensor
-    yDataset: ITensor
-    pDataset?: ITensor
+    xDataset?: tf.Tensor
+    yDataset?: tf.Tensor
+    pDataset?: tf.Tensor
     sampleCount?: number
 
     debug?: boolean
 }
 
-const prepareData = (_tensor: ITensor, _sampleCount: number = MAX_SAMPLES_COUNT): number[] => {
-    const _array = _tensor?.dataSync()
+const prepareData = (_tensor: tf.Tensor, _sampleCount: number = MAX_SAMPLES_COUNT): number[] => {
+    if (!_tensor) {
+        return []
+    }
+    const _array = _tensor.dataSync()
     return Array.from(_array ?? []).splice(0, _sampleCount)
 }
 
@@ -36,6 +40,9 @@ const CurveVis = (props: IProps): JSX.Element => {
      ***********************/
 
     useEffect(() => {
+        if (!props.xDataset) {
+            return
+        }
         logger('init xDataset ...')
 
         const _d = prepareData(props.xDataset, sampleCount)
@@ -48,6 +55,9 @@ const CurveVis = (props: IProps): JSX.Element => {
     }, [props.xDataset, sampleCount])
 
     useEffect(() => {
+        if (!props.yDataset) {
+            return
+        }
         logger('init yDataset ...')
 
         const _d = prepareData(props.yDataset, sampleCount)
@@ -60,7 +70,11 @@ const CurveVis = (props: IProps): JSX.Element => {
     }, [props.yDataset, sampleCount])
 
     useEffect(() => {
+        if (!props.pDataset) {
+            return
+        }
         logger('init pDataset ...')
+
         const _d = prepareData(props.pDataset, sampleCount)
         setPData(_d)
 

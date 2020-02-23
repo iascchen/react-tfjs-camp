@@ -186,7 +186,7 @@ const MnistWeb = (): JSX.Element => {
                 </Card>
             </Col>
             <Col span={12}>
-                <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                <Card title='Evaluate Set' style={{ margin: '8px' }} size='small'>
                     <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
                         pDataset={predictResult} xIsImage />
                 </Card>

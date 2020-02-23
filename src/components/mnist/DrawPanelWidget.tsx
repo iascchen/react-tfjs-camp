@@ -71,13 +71,15 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
         }
 
         _ctx.beginPath()
-        _ctx.moveTo(from.x, from.y)
-        _ctx.lineTo(to.x, to.y)
-        _ctx?.closePath()
-
+        // _ctx.moveTo(from.x, from.y)
+        // _ctx.lineTo(to.x, to.y)
+        _ctx.lineWidth = 10
         _ctx.strokeStyle = 'white'
-        _ctx.lineWidth = 20
+        _ctx.fillStyle = 'white'
+        _ctx.arc(to.x, to.y, 8, 0, 2 * Math.PI, false)
+        _ctx.fill()
         _ctx.stroke()
+        _ctx.closePath()
     }
 
     const getMousePos = (e: MouseEvent): IPoint | null => {

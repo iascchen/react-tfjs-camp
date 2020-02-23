@@ -9,6 +9,7 @@ import * as modelCore from './modelCore'
 import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
 import TfvisDatasetInfoWidget from '../common/tensor/TfvisDatasetInfoWidget'
+import DrawPanelWidget from './DrawPanelWidget'
 
 const MnistWeb = (): JSX.Element => {
     /***********************
@@ -28,6 +29,8 @@ const MnistWeb = (): JSX.Element => {
 
     const [predictSet, setPredictSet] = useState<tf.TensorContainerObject>()
     const [predictResult, setPredictResult] = useState<tf.Tensor>()
+
+    const [drawPred, setDrawPred] = useState<tf.Tensor>()
 
     /***********************
      * useEffect
@@ -151,6 +154,13 @@ const MnistWeb = (): JSX.Element => {
         trainModel(dataSet)
     }
 
+    const handleDrawSubmit = (data: tf.Tensor): void => {
+        // logger('handleDrawSubmit', data.shape)
+        const pred = modelCore.predict(data)
+        logger('handleDrawSubmit', pred.dataSync())
+        setDrawPred(pred)
+    }
+
     /***********************
      * Render
      ***********************/
@@ -179,6 +189,11 @@ const MnistWeb = (): JSX.Element => {
                 <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
                     <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
                         pDataset={predictResult} xIsImage />
+                </Card>
+            </Col>
+            <Col span={12}>
+                <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                    <DrawPanelWidget onChange={handleDrawSubmit} prediction={drawPred} />
                 </Card>
             </Col>
         </Row>

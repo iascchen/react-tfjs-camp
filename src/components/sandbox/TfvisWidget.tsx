@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button } from 'antd'
+import {logger} from '../../utils'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
@@ -27,7 +28,7 @@ const TfvisWidget = (): JSX.Element => {
         if (!canvasRef.current) {
             return
         }
-        console.log(tfvis)
+        logger(tfvis)
 
         // const drawable = canvasRef.current as HTMLElement
         tfvis.show.history(canvasRef.current, logs, ['loss', 'val_loss'])
@@ -47,6 +48,32 @@ const TfvisWidget = (): JSX.Element => {
         ]
 
         tfvis.render.table(canvasRef2.current, { headers, values })
+
+        tfvis.visor().surface({
+            tab: 'My Tab',
+            name: 'Custom Height',
+            styles: {
+                height: 500
+            }
+        })
+        const suffer = tfvis.visor().surface({
+            tab: 'My Tab2',
+            name: 'Custom Height 2',
+            styles: {
+                height: 300
+            }
+        })
+        tfvis.render.table(suffer, { headers, values })
+
+        const data = [
+            { index: 0, value: 50 },
+            { index: 1, value: 100 },
+            { index: 2, value: 150 }
+        ]
+
+        // Render to visor
+        const surface2 = { name: 'Bar chart', tab: 'Charts' }
+        tfvis.render.barchart(surface2, data)
     }
 
     const handleClick = (): void => {

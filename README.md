@@ -53,82 +53,90 @@ Open [http://loalhost:3000](http://loalhost:3000)
     
 ### 构建程序框架
 
-简介 React-Hooks， React-Route，ESLint，tsconfig.json。
-
-使用 AntD 构造了一个左右结构的程序框架
+[x] React 概述
+[x] 简介 React-Hooks， React-Route
+[代码风格检查] ESLint，tsconfig.json。
+[x] 使用 AntD 构造了一个左右结构的程序框架
+[ ] MD 文档显示Widget
     
-## 第三章：数学公式线性回归：曲线拟合拟合
+## 第三章：数学公式线性回归：曲线拟合
 
-### 数据
+### 问题和解决模型
 
-Tensor 基础，
+公式拟合和线性回归
 
-* 数据的生成。曲线生成。。。, Tensor 运算
-* ES Array：Iterator，Array 的区别和转化
-* Buffer 的使用
+#### 神经网络模型
 
-### 模型
-构建一个简单的线性回归神经网络 Model，显示 Model 的信息
+构建一个简单的线性回归神经网络 Model，进行训练和计算
 
-* 基本网络：tf.Sequriel
-* Operator 和 loss
-* RELU 和 Sigmoid
-* 单层和多层
+[x] 神经元模型， Dense层次网络模型，tf.Sequential
+[x] 问题模型决定神经网络输入输出：Input 和 Output的数据纬度
+[x] Loss 和 Optimizer，SGD算法，反向计算
+[x] 激活函数：Relu 和 Sigmoid
+[x] 训练 model.fit 及其参数
+[x] 单层的线性回归，多层模型
 
-### 界面
+### 构建和运行模型原型
 
-React 的交互界面（简述）和 React-Hooks 使用的技巧
+数据样本的生成。
 
-useEffect 的 注意事项 
+[x] Tensor 基础: 随机数的产生，Tensor的运算，
+[x] 数据的展示和便利：Tensor 和 Javascript 数据转换，ES Array：Iterator，Array 的区别和转化, Buffer的使用
+[x] 性能优化：Tensor资源的释放(dispose)，tf.tidy GPU资源的释放，数组的释放
 
-* ANTD 的使用
-* ANTV 的 图表生成
-* React Hooks 深入：dispose 过程， useCallBack，useEffect
-* 数据联动（undefined 的处理）
+### 构建交互界面，深入理解
 
-训练和推理
+[x] React-Hooks: useState, useEffect，useEffect的资源释放，useCallBack
+[x] 思考数据数据对界面的触发，确定 useEffect 的数据依赖
+[x] 界面交互 AntD，自动生成曲线，驱动训练，曲线的绘制 BizChart，展示训练结果
+[x] 探究模型内部信息（Layer 和 Weight）
+[x] 修改优化器的超参 LEARNING_RATE，观看超参对训练的影响
 
 ## 第四章：鸢尾花实验 Iris：推断分类
-推测分类
 
-### 数据
+### 问题和解决模型
 
-使用 tf.Data 构建数据集
+分类推测问题
 
-* DataSet tf.data.zip
-* one-hot 编码方式 
-* shape 的使用
-* mul-hot
+[ ] 分类问题的模型思路： 标签整数张量，one-hot 编码方式，多分类模型
+[ ] 标签整数张量，one-hot 编码方式对 Loss 和 Optimizer 的影响
 
-### 模型
+### 构建和运行模型原型
 
-onEpochEnd 的使用
+[ ] 使用 DataSet / Tensor 作为训练数据的场景辨析
+[x] 使用 tf.Data 构建数据集. DataSet(Batch) & tf.data.zip
+[x] shape 的使用
+[x] one-hot数据的处理
+[x] model.fitDataset
+[x] 训练回调函数：onEpochEnd 的使用，了解训练的中间状态
 
-### 界面
+### 构建交互界面，深入理解
 
-显示训练状态，AntV
-对比训练结果
-    
-## 第四章：MNIST 手写数字识别：图像识别
+[x] one-hot 和 标签整数张量 的选择，展示典型数据
+[ ] 变化选择 Loss 和 Optimizer 
+[x] 显示训练样本数据，以及Prediction结果
+[x] 显示训练状态，BizChart，多条线显示的数据格式，性能优化的考量
 
-### 数据
+## 第四章：MNIST 手写数字识别：图像分类
 
-* 数据的加载和解析
-* 图片数据的处理 / 255
+### 问题和解决模型
 
-### 网络
+手写数字识别，分类问题
 
-CNN网络模型
-卷基层的可视化
+[x] CNN网络模型，池化和 Dropout
+[x] 图片数据的加载和处理：图片数据 / 255
+[x] 标签数据的处理：one-hot/标签整数张量
+[ ] 模型Layer的可视化
+[ ] 数据集的切换：mnist & mnist-fashion
 
-### 显示
+### 交互设计和实现
 
-* useRef 和 canvas
-（在React中处理 Canvas ：手写数字，显示分割图片）
-* 内存的优化 tidy 等
-* Log 模型处理的优化，tf-vis/tensor-board
-* 数字手写板
-* 摄像头识别。绑定摄像头
+[x] 样本集显示：useRef 和 canvas
+[ ] 选择 Dense 网络和 CNN 网络（遗留问题，训练不收敛）
+[x] tf-vis 集成，Log 模型处理性能的探讨
+[x] 数字手写画板实现
+[ ] 卷积层的可视化
+[ ] 性能问题，内存优化，tf.dispose(), tf.tidy 等
 
 ## 第五章：MobileNet 图片分类：使用预训练的模型，进行迁移学习
 
@@ -142,6 +150,7 @@ MobileNet，PoseNet 模型
 * 模型存储和上传加载
 
 特征的提取 => 人脸特征点
+* 摄像头识别。绑定摄像头
 
 ### 构建一个模型服务器
 

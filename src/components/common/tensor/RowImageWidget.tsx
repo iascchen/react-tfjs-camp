@@ -30,7 +30,7 @@ interface IProps {
 const RowImageWidget = (props: IProps): JSX.Element => {
     const [shape, setShape] = useState<[number, number]>([28, 28])
 
-    const canvasRef = useRef<HTMLCanvasElement>(null)
+    const rowCanvasRef = useRef<HTMLCanvasElement>(null)
 
     useEffect(() => {
         if (props.shape) {
@@ -39,13 +39,13 @@ const RowImageWidget = (props: IProps): JSX.Element => {
     }, [props.shape])
 
     useEffect(() => {
-        if (!props.data || !canvasRef) {
+        if (!props.data || !rowCanvasRef) {
             return
         }
-        draw(canvasRef.current, props.data, shape)
+        draw(rowCanvasRef.current, props.data, shape)
     }, [props.data, shape])
 
-    return <canvas width={shape[0]} height={shape[1]} ref={canvasRef} />
+    return <canvas width={shape[0]} height={shape[1]} ref={rowCanvasRef} />
 }
 
 export default RowImageWidget

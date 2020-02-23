@@ -154,7 +154,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
             return c === yData.data[i] ? p + 1 : p
         }, 0)
         setAcc(correct / pData.data.length)
-        console.log('Acc = ', acc, pData.data.length)
+        logger('Acc = ', acc, pData.data.length)
 
         return () => {
             logger('Dispose sample data [p] ...')

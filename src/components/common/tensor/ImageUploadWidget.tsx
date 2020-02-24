@@ -51,11 +51,10 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
     return (
         <Card>
             <PicturesWall onPreview={handlePreview}/>
-            <div>Current Image
-                <img src={imgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} />
-            </div>
-            <Button onClick={handleSubmit} type='primary'>Submit</Button>
+            <div>Current Image</div>
+            <img src={imgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} />
             <div>
+                <Button onClick={handleSubmit} type='primary'>Submit</Button>
                 Prediction : {label}
             </div>
         </Card>

@@ -92,19 +92,17 @@ const MobilenetClassifier = (): JSX.Element => {
         if (!imageTensor) {
             return
         }
-
-        const _sample = tf.image.resizeBilinear(imageTensor as tf.Tensor4D, [224, 224])
-        const offset = tf.scalar(127.5)
-        // Normalize the image from [0, 255] to [-1, 1].
-        const normalized = _sample.sub(offset).div(offset)
-
-        // Reshape to a single-element batch so we can pass it to predict.
-        const batched = normalized.reshape([1, IMAGE_SIZE, IMAGE_SIZE, 3])
-
-        const result = model?.predict(batched) as tf.Tensor
-        console.log(result)
-
         const [p] = tf.tidy(() => {
+            const _sample = tf.image.resizeBilinear(imageTensor as tf.Tensor4D, [224, 224])
+            const offset = tf.scalar(127.5)
+            // Normalize the image from [0, 255] to [-1, 1].
+            const normalized = _sample.sub(offset).div(offset)
+            // Reshape to a single-element batch so we can pass it to predict.
+            const batched = normalized.reshape([1, IMAGE_SIZE, IMAGE_SIZE, 3])
+
+            const result = model?.predict(batched) as tf.Tensor
+            console.log(result)
+
             const p = result?.argMax(-1)
             return [p]
         })

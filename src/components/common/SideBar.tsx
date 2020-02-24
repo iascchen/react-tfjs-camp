@@ -54,7 +54,7 @@ const SideBar = (props: IProps): JSX.Element => {
                 </SubMenu>
                 <Item key='6'>
                     <Link to='/mobilenet'>
-                        <span><Icon type='eye' /> Mobilenet 图片分类</span>
+                        <span><Icon type='eye' /> 图片分类 Mobilenet </span>
                     </Link>
                 </Item>
 

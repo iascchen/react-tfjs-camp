@@ -144,17 +144,18 @@ Open [http://loalhost:3000](http://loalhost:3000)
 MobileNet，PoseNet 模型
 
 [x] 使用预训练的模型
-* 迁移学习
+[ ] 与机器学习互动 https://github.com/googlecreativelab/teachable-machine-boilerplate.git
 * tf.LayerModel 扩展自己的个性化网络
 * 模型存储和上传加载
 
 特征的提取 => 人脸特征点
-* 摄像头识别。绑定摄像头
+
 
 ### 交互设计和实现
 
 [x] 图片上传显示组件
 [ ] 摄像头组件
+[x] 图片分类标注组件
 
 ### 构建一个模型服务器
 

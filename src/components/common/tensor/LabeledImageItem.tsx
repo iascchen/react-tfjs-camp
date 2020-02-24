@@ -7,13 +7,13 @@ import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
 const IMAGE_SIZE = 224
 const MAX_FILES = 50
 
-interface IImageItem {
-    label: string
+export interface ILabeledImagesItem {
+    label?: string
     imageList?: UploadFile[] // with base64 image data
 }
 
 interface IProps {
-    index: number
+    index?: number
     value?: string
     onChange?: (value: string) => void
 }
@@ -22,13 +22,13 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
     const [previewImage, setPreviewImage] = useState<string>()
     const [modelDisplay, setModalDispaly] = useState(false)
 
-    const [initValue, setInitValue] = useState<IImageItem>()
+    const [initValue, setInitValue] = useState<ILabeledImagesItem>()
     const [label, setLabel] = useState<string>('')
     const [imageList, setImageList] = useState<UploadFile[]>([])
 
     useEffect(() => {
         if (props.value) {
-            const obj: IImageItem = JSON.parse(props.value)
+            const obj: ILabeledImagesItem = JSON.parse(props.value)
             setInitValue(obj)
         }
     }, [props.value])

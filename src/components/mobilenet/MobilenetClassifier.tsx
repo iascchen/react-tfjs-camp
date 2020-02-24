@@ -8,6 +8,8 @@ import { logger, STATUS } from '../../utils'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
+import LabeledImageItem from '../common/tensor/LabeledImageItem'
+import LabeledImageWidget from '../common/tensor/LabeledImageWidget'
 // import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 
 const { Option } = Select
@@ -116,6 +118,33 @@ const MobilenetClassifier = (): JSX.Element => {
         setCurLayer(_layer)
     }
 
+    // const handleLabeledImageItemChange = (value: string): void => {
+    //     const obj = JSON.parse(value)
+    //     logger(obj)
+    // }
+
+    const handleLabeledImagesSubmit = (value: object): void => {
+        console.log('handleLabeledImagesSubmit', value)
+        // try {
+        //     await this.props.save(recipeBody)
+        // } catch (error) {
+        //     if (error.errorCode && error.errorCode === API_SERVER_ERROR.INPUT_ERROR) {
+        //         return Form.inputServerError(error, this.formRefs)
+        //     }
+        //     throw error
+        // }
+        // this.setState({ loading: false })
+        // const messageAndUrl = getMessageAndUrl(this.props.id, false, false, this.props.intl)
+        // AlertSuccess(messageAndUrl.message, { position: messageAndUrl.position })
+        // this.props.push(messageAndUrl.url)
+        //
+        // if (!this.props.id) {
+        //     this.props.push(recipe.fill())
+        // } else {
+        //     await this.props.getRecipe()
+        // }
+    }
+
     /***********************
      * Render
      ***********************/
@@ -123,8 +152,13 @@ const MobilenetClassifier = (): JSX.Element => {
     return (
         <Row gutter={16}>
             <h1>MNIST</h1>
+
             <Col span={12}>
-                <Card title='Model' style={{ margin: '8px' }} size='small'>
+                <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                    <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
+                    {/* <TfvisHistoryWidget logMsg={logMsg} debug /> */}
+                </Card>
+                <Card title='Basic Model' style={{ margin: '8px' }} size='small'>
                     <div>
                         <TfvisModelWidget model={model}/>
                         <p>status: {status}</p>
@@ -142,13 +176,12 @@ const MobilenetClassifier = (): JSX.Element => {
                 </Card>
             </Col>
             <Col span={12}>
-                <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
-                    {/* <TfvisHistoryWidget logMsg={logMsg} debug /> */}
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                <Card title='Machine Learning(KNN)' style={{ margin: '8px' }} size='small'>
+                    <div>Labeled Images</div>
+                    <LabeledImageWidget model={model} labeledImageList={[]}
+                        onSubmit={handleLabeledImagesSubmit} />
+
+                    {/* <LabeledImageItem index={0} onChange={handleLabeledImageItemChange}></LabeledImageItem> */}
                     {/* <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor} */}
                     {/*    pDataset={predictResult} xIsImage /> */}
                 </Card>

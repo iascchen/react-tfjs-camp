@@ -61,3 +61,20 @@ export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buf
         return Buffer.from(buf)
     }
 }
+
+export const getBase64 = async (blob: File | Blob | undefined): Promise<string> => {
+    if (!blob) {
+        throw (new Error('File Blob is undefined'))
+    }
+
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(blob)
+        reader.onload = () => {
+            const text = reader.result?.toString()
+            // logger('getBase64', text)
+            resolve(text)
+        }
+        reader.onerror = error => reject(error)
+    })
+}

@@ -7,10 +7,10 @@ import { MnistGzDataset } from './dataGz'
 import { addCnnLayers, addDenseLayers } from './model'
 
 import SampleDataVis from '../common/tensor/SampleDataVis'
-import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
-import TfvisModelWidget from '../common/tensor/TfvisModelWidget'
-import TfvisLayerWidget from '../common/tensor/TfvisLayerWidget'
-import TfvisDatasetInfoWidget from '../common/tensor/TfvisDatasetInfoWidget'
+import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
+import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
+import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
+import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 
 const { Option } = Select
 
@@ -127,24 +127,6 @@ const MnistKeras = (): JSX.Element => {
     /***********************
      * useEffects only for dispose
      ***********************/
-
-    // useEffect(() => {
-    //     // Do Nothing
-    //
-    //     return () => {
-    //         logger('Train Set Dispose')
-    //         tf.dispose([trainSet?.xs, trainSet?.ys])
-    //     }
-    // }, [trainSet])
-    //
-    // useEffect(() => {
-    //     // Do Nothing
-    //
-    //     return () => {
-    //         logger('Valid Set Dispose')
-    //         tf.dispose([validSet?.xs, validSet?.ys])
-    //     }
-    // }, [validSet])
 
     useEffect(() => {
         // Do Nothing

@@ -7,9 +7,9 @@ import { MnistCoreDataset } from './dataCore'
 import * as modelCore from './modelCore'
 
 import SampleDataVis from '../common/tensor/SampleDataVis'
-import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
-import TfvisDatasetInfoWidget from '../common/tensor/TfvisDatasetInfoWidget'
-import DrawPanelWidget from './DrawPanelWidget'
+import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
+import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
+import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 
 const MnistWeb = (): JSX.Element => {
     /***********************
@@ -193,7 +193,7 @@ const MnistWeb = (): JSX.Element => {
             </Col>
             <Col span={12}>
                 <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
-                    <DrawPanelWidget onChange={handleDrawSubmit} prediction={drawPred} />
+                    <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={drawPred} />
                 </Card>
             </Col>
         </Row>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button } from 'antd'
-import {logger} from '../../utils'
+import { logger } from '../../utils'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')

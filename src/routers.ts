@@ -11,6 +11,7 @@ import MnistCore from './components/mnist/MnistCore'
 import FetchWidget from './components/sandbox/FetchWidget'
 import TypedArrayWidget from './components/sandbox/TypedArrayWidget'
 import TfvisWidget from './components/sandbox/TfvisWidget'
+import MobilenetClassifier from './components/mobilenet/MobilenetClassifier'
 
 const routes: RouteConfig[] = [
     { path: '/', exact: true, component: Home },
@@ -20,6 +21,8 @@ const routes: RouteConfig[] = [
     { path: '/mnist/keras', component: MnistKeras },
     { path: '/mnist/core', component: MnistCore },
     { path: '/mnist/web', component: MnistWeb },
+
+    { path: '/mobilenet', component: MobilenetClassifier },
 
     { path: '/sandbox/fetch', component: FetchWidget },
     { path: '/sandbox/array', component: TypedArrayWidget },
@@ -38,6 +41,8 @@ export const breadcrumbNameMap: IBreadcrumbMap = {
     '/mnist/keras': 'MNIST',
     '/mnist/core': 'MNIST tfjs-core',
     '/mnist/web': 'MNIST tfjs web',
+
+    '/mobilenet': 'Mobilenet',
 
     '/sandbox/array': 'TypedArray',
     '/sandbox/fetch': 'Fetch',

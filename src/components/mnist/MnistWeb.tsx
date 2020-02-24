@@ -7,15 +7,18 @@ import { addCnnLayers, addDenseLayers, addSimpleConvLayers } from './model'
 import { MnistCoreDataset } from './dataCore'
 
 import SampleDataVis from '../common/tensor/SampleDataVis'
-import TfvisHistoryWidget from '../common/tensor/TfvisHistoryWidget'
-import TfvisModelWidget from '../common/tensor/TfvisModelWidget'
-import TfvisLayerWidget from '../common/tensor/TfvisLayerWidget'
-import TfvisDatasetInfoWidget from '../common/tensor/TfvisDatasetInfoWidget'
+import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
+import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
+import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
+import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const tfvis = require('@tensorflow/tfjs-vis')
 
 const { Option } = Select
 
 const EPOCHS = 10
-const BATCH_SIZE = 64
+const BATCH_SIZE = 128
 const VALID_SPLIT = 0.15
 const LEARNING_RATE = 0.1
 
@@ -87,6 +90,8 @@ const MnistWeb = (): JSX.Element => {
 
     useEffect(() => {
         logger('init data set ...')
+
+        tf.enableDebugMode()
 
         setStatus(STATUS.LOADING)
         const mnistDataset = new MnistCoreDataset()
@@ -179,35 +184,43 @@ const MnistWeb = (): JSX.Element => {
         setStatus(STATUS.TRAINING)
 
         // We'll keep a buffer of loss and accuracy values over time.
-        let trainBatchCount = 0
+        const trainBatchCount = 0
         const beginMs = performance.now()
 
         // Call `model.fit` to train the model.
-        let iteration = 0
+        // let iteration = 0
+        const surface = tfvis.visor().surface({
+            tab: 'My Tab',
+            name: 'Custom Height',
+            styles: {
+                height: 500
+            }
+        })
         _model.fit(_trainDataset.xs as tf.Tensor, _trainDataset.ys as tf.Tensor, {
             epochs: EPOCHS,
             batchSize: BATCH_SIZE,
             validationSplit: VALID_SPLIT,
-            callbacks: {
-                onEpochEnd: async (epoch, logs) => {
-                    logger('onEpochEnd', epoch)
-
-                    // const secPerEpoch = (performance.now() - beginMs) / (1000 * (epoch + 1))
-                    logs && addTrainInfo({ iteration: iteration++, logs })
-                    predictModel(_model, predictSet?.xs as tf.Tensor)
-
-                    await tf.nextFrame()
-                },
-                onBatchEnd: (batch, logs) => {
-                    trainBatchCount++
-                    logs && addTrainInfo({ iteration: iteration++, logs })
-                    if (batch % 50 === 0) {
-                        logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
-                        predictModel(_model, predictSet?.xs as tf.Tensor)
-                    }
-                    // await tf.nextFrame()
-                }
-            }
+            callbacks: tfvis.show.fitCallbacks(surface, ['loss', 'acc', 'val_loss', 'val_acc'])
+            // callbacks: {
+            //     onEpochEnd: async (epoch, logs) => {
+            //         logger('onEpochEnd', epoch)
+            //
+            //         // const secPerEpoch = (performance.now() - beginMs) / (1000 * (epoch + 1))
+            //         logs && addTrainInfo({ iteration: iteration++, logs })
+            //         predictModel(_model, predictSet?.xs as tf.Tensor)
+            //
+            //         await tf.nextFrame()
+            //     },
+            //     onBatchEnd: (batch, logs) => {
+            //         trainBatchCount++
+            //         logs && addTrainInfo({ iteration: iteration++, logs })
+            //         if (batch % 50 === 0) {
+            //             logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
+            //             predictModel(_model, predictSet?.xs as tf.Tensor)
+            //         }
+            //         // await tf.nextFrame()
+            //     }
+            // }
         }).then(
             () => {
                 setStatus(STATUS.TRAINED)

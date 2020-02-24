@@ -126,7 +126,6 @@ Open [http://loalhost:3000](http://loalhost:3000)
 [x] CNN网络模型，池化和 Dropout
 [x] 图片数据的加载和处理：图片数据 / 255
 [x] 标签数据的处理：one-hot/标签整数张量
-[ ] 模型Layer的可视化
 [ ] 数据集的切换：mnist & mnist-fashion
 
 ### 交互设计和实现
@@ -144,13 +143,18 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 MobileNet，PoseNet 模型
 
-* 使用预训练的模型
+[x] 使用预训练的模型
 * 迁移学习
 * tf.LayerModel 扩展自己的个性化网络
 * 模型存储和上传加载
 
 特征的提取 => 人脸特征点
 * 摄像头识别。绑定摄像头
+
+### 交互设计和实现
+
+[x] 图片上传显示组件
+[ ] 摄像头组件
 
 ### 构建一个模型服务器
 

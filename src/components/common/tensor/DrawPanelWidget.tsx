@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card } from 'antd'
-import { logger } from '../../utils'
-import RowImageWidget from '../common/tensor/RowImageWidget'
+import { logger } from '../../../utils'
+import RowImageWidget from './RowImageWidget'
 
 const CANVAS_WIDTH = 280
 const CANVAS_HEIGHT = 280
@@ -16,7 +16,7 @@ interface IPoint {
 interface IProps {
     model?: tf.LayersModel
     prediction?: tf.Tensor
-    onChange?: (tensor: tf.Tensor) => void
+    onSubmit?: (tensor: tf.Tensor) => void
 }
 
 const DrawPanelWidget = (props: IProps): JSX.Element => {
@@ -126,13 +126,13 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
         }
         const _ctx = _canvas.getContext('2d')
         const imageData = _ctx?.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-        if (imageData && props.onChange) {
+        if (imageData && props.onSubmit) {
             // logger('imageData', imageData)
             const _tensor = tf.browser.fromPixels(imageData, 1)
             const _sample = tf.image.resizeBilinear(_tensor, [28, 28])
             setMiniSample(Array.from(_sample.dataSync()))
 
-            props.onChange(_sample)
+            props.onSubmit(_sample)
         }
     }
 

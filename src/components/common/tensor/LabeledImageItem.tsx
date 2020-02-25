@@ -4,7 +4,6 @@ import { Card, Icon, Input, message, Modal, Upload } from 'antd'
 import { getBase64, logger } from '../../../utils'
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
 
-const IMAGE_SIZE = 224
 const MAX_FILES = 50
 
 export interface ILabeledImagesItem {
@@ -66,12 +65,12 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
         setLabel(value)
     }
 
-    const handleImageChange = ({ fileList }: UploadChangeParam): void => {
+    const handleImageChange = async ({ fileList }: UploadChangeParam): Promise<void> => {
         logger('handleImageChange', fileList.length)
 
         if (fileList.length > MAX_FILES) {
             fileList.splice(MAX_FILES)
-            message.error(`All images are stored in memory, so each label ONLY contain < ${MAX_FILES.toString()} files`)
+            await message.error(`All images are stored in memory, so each label ONLY contains < ${MAX_FILES.toString()} files`)
         }
         setImageList(fileList)
     }
@@ -87,15 +86,16 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
 
     return (
         <Card>
-            <Input onChange={handleLabelChange} defaultValue={initValue?.label} placeholder={'Label, such as: cat, dag...'}/>
+            <Input onChange={handleLabelChange} defaultValue={initValue?.label} placeholder={'Label. such as: cat, dog...'}/>
             <Upload.Dragger action={handleUpload} onChange={handleImageChange} onPreview={handlePreview}
                 defaultFileList={initValue?.imageList} fileList={imageList} multiple
                 className='upload-list-inline' listType='picture-card'>
                 <p className='ant-upload-drag-icon'>
                     <Icon type='inbox' />
                 </p>
-                <p className='ant-upload-text'>Click or drag file to this area to upload</p>
+                <p className='ant-upload-text'>Click or drag files to this area to upload</p>
                 <p className='ant-upload-hint'>Support for a single or bulk upload.</p>
+                <p className='ant-upload-hint'>Should be less than {MAX_FILES} files.</p>
             </Upload.Dragger>
 
             <Modal visible={modelDisplay} footer={null} onCancel={handleCancel}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { createRef, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Card, Col, Row, Select } from 'antd'
 
@@ -6,6 +6,7 @@ import { logger, STATUS } from '../../utils'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
+import LabeledImageWidget from '../common/tensor/LabeledImageWidget'
 
 const { Option } = Select
 
@@ -32,6 +33,8 @@ const MobilenetClassifier = (): JSX.Element => {
     const [curLayer, setCurLayer] = useState<tf.layers.Layer>()
 
     const [predictResult, setPredictResult] = useState<tf.Tensor>()
+
+    // const formRef = createRef<FormComponentProps>()
 
     /***********************
      * useEffect
@@ -77,6 +80,10 @@ const MobilenetClassifier = (): JSX.Element => {
     }, [])
 
     /***********************
+     * useEffects only for dispose
+     ***********************/
+
+    /***********************
      * Functions
      ***********************/
 
@@ -93,7 +100,7 @@ const MobilenetClassifier = (): JSX.Element => {
             const batched = normalized.reshape([1, IMAGE_SIZE, IMAGE_SIZE, 3])
 
             const result = model?.predict(batched) as tf.Tensor
-            logger(result)
+            console.log(result)
 
             const p = result?.argMax(-1)
             return [p]
@@ -108,23 +115,62 @@ const MobilenetClassifier = (): JSX.Element => {
         setCurLayer(_layer)
     }
 
+    // const handleLabeledImageItemChange = (value: string): void => {
+    //     const obj = JSON.parse(value)
+    //     logger(obj)
+    // }
+
+    const handleLabeledImagesSubmit = (value: any): void => {
+        // if (!formRef.current) {
+        //     return
+        // }
+        // const values = formRef.current.form.getFieldValue('labeledImageList')
+        // formRef.current.form.validateFields((err, values) => {
+        //     if (!err) {
+        //         // logger(values)
+        //         onSubmit(formatDataJson(values))
+        //     }
+        // })
+
+        console.log('handleLabeledImagesSubmit', value)
+        // try {
+        //     await this.props.save(recipeBody)
+        // } catch (error) {
+        //     if (error.errorCode && error.errorCode === API_SERVER_ERROR.INPUT_ERROR) {
+        //         return Form.inputServerError(error, this.formRefs)
+        //     }
+        //     throw error
+        // }
+        // this.setState({ loading: false })
+        // const messageAndUrl = getMessageAndUrl(this.props.id, false, false, this.props.intl)
+        // AlertSuccess(messageAndUrl.message, { position: messageAndUrl.position })
+        // this.props.push(messageAndUrl.url)
+        //
+        // if (!this.props.id) {
+        //     this.props.push(recipe.fill())
+        // } else {
+        //     await this.props.getRecipe()
+        // }
+    }
+
     /***********************
      * Render
      ***********************/
 
     return (
         <Row gutter={16}>
-            <h1>Mobilenet Classifier</h1>
-
+            <h1>Mobilenet + KNN</h1>
             <Col span={12}>
-                <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                    <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
-                </Card>
-                <Card title='Infomation' style={{ margin: '8px' }} size='small'>
-                    <p>此处显示说明 MD 文件</p>
+                <Card title='Machine Learning(KNN)' style={{ margin: '8px' }} size='small'>
+                    <div>Labeled Images</div>
+                    <LabeledImageWidget model={model} onSave={handleLabeledImagesSubmit} />
                 </Card>
             </Col>
             <Col span={12}>
+                <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                    <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
+                    {/* <TfvisHistoryWidget logMsg={logMsg} debug /> */}
+                </Card>
                 <Card title='Basic Model' style={{ margin: '8px' }} size='small'>
                     <div>
                         <TfvisModelWidget model={model}/>
@@ -142,6 +188,7 @@ const MobilenetClassifier = (): JSX.Element => {
                     <p>backend: {tfBackend}</p>
                 </Card>
             </Col>
+
         </Row>
     )
 }

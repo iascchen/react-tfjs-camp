@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Icon, Modal, Upload } from 'antd'
 import { UploadFile, UploadChangeParam, RcFile } from 'antd/es/upload/interface'
-import { logger, getBase64 } from '../../utils'
+import { logger, getUploadFileBase64 } from '../../utils'
 
 interface IProps {
     onPreview?: (file: string) => void
@@ -21,7 +21,7 @@ const PicturesWall = (props: IProps): JSX.Element => {
 
         let imgSrc = file.url ?? file.preview
         if (!imgSrc) {
-            const result = await getBase64(file.originFileObj)
+            const result = await getUploadFileBase64(file.originFileObj)
             file.preview = result
             imgSrc = file.preview
         }
@@ -40,7 +40,7 @@ const PicturesWall = (props: IProps): JSX.Element => {
 
     const handleUpload = async (file: RcFile): Promise<string> => {
         // logger(file)
-        return getBase64(file)
+        return getUploadFileBase64(file)
     }
 
     const uploadButton = (

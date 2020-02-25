@@ -1,4 +1,4 @@
-import React, { FormEvent, useCallback, useEffect, useRef, useState } from 'react'
+import React, { FormEvent, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Form, Icon, Col } from 'antd'
 import { FormComponentProps } from 'antd/es/form'
@@ -15,7 +15,22 @@ interface IProps extends FormComponentProps{
     labeledImageList: ILabeledImagesItem[]
 }
 
-const IMAGE_SIZE = 224
+const formItemLayout = {
+    labelCol: {
+        xs: { span: 24 },
+        sm: { span: 4 }
+    },
+    wrapperCol: {
+        xs: { span: 24 },
+        sm: { span: 20 }
+    }
+}
+const formItemLayoutWithOutLabel = {
+    wrapperCol: {
+        xs: { span: 24, offset: 0 },
+        sm: { span: 20, offset: 4 }
+    }
+}
 
 const LabeledImageWidget = (props: IProps): JSX.Element => {
     const [dyncId, setDyncId] = useState<number>(0)
@@ -60,10 +75,10 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
         // can use data-binding to get
         const { form } = props
         const _keys = form?.getFieldValue('keys')
-        console.log('_keys', _keys, dyncId)
+        logger('_keys', _keys, dyncId)
         const nextKeys = _keys.concat(dyncId)
         setDyncId(dyncId + 1)
-        console.log('nextKeys', nextKeys, dyncId)
+        logger('nextKeys', nextKeys, dyncId)
         // can use data-binding to set
         // important! notify form to detect changes
         form?.setFieldsValue({
@@ -75,7 +90,7 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
         e.preventDefault()
         props.form.validateFields((err, values) => {
             if (!err) {
-                // console.log(values)
+                // logger(values)
 
                 const { keys, labeledImageList } = values
                 const ret = keys.map((key: number) => JSON.parse(labeledImageList[key]))
@@ -84,7 +99,7 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
                     labeledImageList: ret
                 }
 
-                // console.log(JSON.stringify(formModel))
+                // logger(JSON.stringify(formModel))
                 props.onSubmit && props.onSubmit(formModel)
             }
         })
@@ -97,26 +112,9 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
     const { form } = props
     const { getFieldDecorator, getFieldValue } = form
 
-    const formItemLayout = {
-        labelCol: {
-            xs: { span: 24 },
-            sm: { span: 4 }
-        },
-        wrapperCol: {
-            xs: { span: 24 },
-            sm: { span: 20 }
-        }
-    }
-    const formItemLayoutWithOutLabel = {
-        wrapperCol: {
-            xs: { span: 24, offset: 0 },
-            sm: { span: 20, offset: 4 }
-        }
-    }
-
     getFieldDecorator('keys', { initialValue: keys || [] })
     const _keys = getFieldValue('keys')
-    console.log('_keys', _keys, dyncId)
+    logger('_keys', _keys, dyncId)
 
     const formItems = _keys.map((k: number, index: number) => (
         <Form.Item key={k}
@@ -144,15 +142,22 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
 
     return (
         <Card>
-            {JSON.stringify(_keys)}
             <Form onSubmit={handleSubmit}>
                 {formItems}
                 <Form.Item {...formItemLayoutWithOutLabel} style={{ margin: 16 }}>
-                    <Button type='dashed' size={'large'} onClick={add} style={{ width: '30%', marginRight: '10%' }}>
+                    <Button type='dashed' onClick={add} style={{ width: '20%', marginRight: '10%' }}>
                         <Icon type='plus-circle' /> Add
                     </Button>
 
-                    <Button type='primary' size={'large'} htmlType='submit' style={{ width: '30%', marginRight: '10%' }}>
+                    <Button style={{ width: '20%', marginRight: '10%' }} onClick={handleLoadData}>
+                        <Icon type='load' /> Load
+                    </Button>
+
+                    <Button style={{ width: '20%', marginRight: '10%' }} onClick={handleSaveData} >
+                        <Icon type='save' /> Save
+                    </Button>
+
+                    <Button type='primary' htmlType='submit' style={{ width: '80%', marginRight: '10%' }}>
                         Submit
                     </Button>
                 </Form.Item>

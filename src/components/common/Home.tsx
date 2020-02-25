@@ -8,7 +8,7 @@ const tfLogo = '/tf_logo.jpeg'
 
 const Home = (): JSX.Element => {
     return (
-        <div className='App'>
+        <div>
             <header className='App-header'>
                 <Row>
                     <Col span={8}><img src={reactLogo} height={200} alt='logo'/></Col>
@@ -16,7 +16,14 @@ const Home = (): JSX.Element => {
                     <Col span={8}><img src={tsLogo} height={100} alt='logo3'/></Col>
                 </Row>
             </header>
-            <p>Learn React Hooks and Tensorflow.js</p>
+            <h1>Learn React Hooks and Tensorflow.js</h1>
+            <p>Used other open source resources</p>
+            <ul>
+                <li>Ant.Design</li>
+                <li>Ant.V Bizchart</li>
+                <li>Teachable Machine</li>
+                <li>Posenet</li>
+            </ul>
         </div>
     )
 }

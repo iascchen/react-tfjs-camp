@@ -62,7 +62,7 @@ export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buf
     }
 }
 
-export const getBase64 = async (blob: File | Blob | undefined): Promise<string> => {
+export const getUploadFileBase64 = async (blob: File | Blob | undefined): Promise<string> => {
     if (!blob) {
         throw (new Error('File Blob is undefined'))
     }
@@ -72,8 +72,25 @@ export const getBase64 = async (blob: File | Blob | undefined): Promise<string> 
         reader.readAsDataURL(blob)
         reader.onload = () => {
             const text = reader.result?.toString()
-            // logger('getBase64', text)
+            // logger('getUploadFileBase64', text)
             resolve(text)
+        }
+        reader.onerror = error => reject(error)
+    })
+}
+
+export const getUploadFileArray = async (blob: File | Blob | undefined): Promise<Buffer> => {
+    if (!blob) {
+        throw (new Error('File Blob is undefined'))
+    }
+
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsArrayBuffer(blob)
+        reader.onload = () => {
+            const buffer = reader.result as ArrayBuffer
+            // logger('getUploadFileBase64', text)
+            resolve(Buffer.from(buffer))
         }
         reader.onerror = error => reject(error)
     })

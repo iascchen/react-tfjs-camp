@@ -29,3 +29,4 @@ yarn-error.log*
 
 public/data/mnist_images.png
 public/data/mnist_labels_uint8
+public/model

@@ -141,21 +141,22 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 ### 模型
 
-MobileNet，PoseNet 模型
-
-[x] 使用预训练的模型
-[ ] 与机器学习互动 https://github.com/googlecreativelab/teachable-machine-boilerplate.git
-* tf.LayerModel 扩展自己的个性化网络
-* 模型存储和上传加载
+[x] 使用预训练的MobileNet模型
+[x] 使用预训练的MobileNet模型 -> 特征 -> 机器学习算法 KNN (有点类似于 WordVec ) [teachable-machine](https://github.com/googlecreativelab/teachable-machine-boilerplate.git)
+[x] 使用预训练的MobileNet模型 -> 扩展模型 PoseNet -> 训练靠近输出的几层 -> 新的可用模型
 
 特征的提取 => 人脸特征点
 
+### 数据和模型的保存
+
+[ ] 模型存储和上传加载
+[ ] 数据存储和上传加载
 
 ### 交互设计和实现
 
 [x] 图片上传显示组件
-[ ] 摄像头组件
 [x] 图片分类标注组件
+[ ] 摄像头组件，拍照上传、对视频流的处理
 
 ### 构建一个模型服务器
 
@@ -193,6 +194,8 @@ LSTM
 seq-to-seq 的其他应用，DNA 碱基对，代码生成。。。
 
 BERT
+
+使用 RNN 处理视频、音频。。。
 
 ## 第九章 声音的处理：对信号的AI处理
 

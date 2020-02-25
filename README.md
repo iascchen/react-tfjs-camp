@@ -55,7 +55,7 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 [x] React 概述
 [x] 简介 React-Hooks， React-Route
-[代码风格检查] ESLint，tsconfig.json。
+[x] 代码风格检查 ESLint，tsconfig.json。
 [x] 使用 AntD 构造了一个左右结构的程序框架
 [ ] MD 文档显示Widget
     
@@ -70,10 +70,15 @@ Open [http://loalhost:3000](http://loalhost:3000)
 构建一个简单的线性回归神经网络 Model，进行训练和计算
 
 [x] 神经元模型， Dense层次网络模型，tf.Sequential
+
 [x] 问题模型决定神经网络输入输出：Input 和 Output的数据纬度
+
 [x] Loss 和 Optimizer，SGD算法，反向计算
+
 [x] 激活函数：Relu 和 Sigmoid
+
 [x] 训练 model.fit 及其参数
+
 [x] 单层的线性回归，多层模型
 
 ### 构建和运行模型原型

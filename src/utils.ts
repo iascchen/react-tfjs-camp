@@ -69,6 +69,7 @@ export const getUploadFileBase64 = async (blob: File | Blob | undefined): Promis
 
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
+        console.log('blob', JSON.stringify(blob))
         reader.readAsDataURL(blob)
         reader.onload = () => {
             const text = reader.result?.toString()

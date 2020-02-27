@@ -3,16 +3,12 @@ import * as tf from '@tensorflow/tfjs'
 import { Card, Col, Row, Select } from 'antd'
 
 import { logger, STATUS } from '../../utils'
+import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 
 const { Option } = Select
-
-const IMAGE_SIZE = 224
-
-// const MOBILENET_MODEL_PATH = 'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json'
-const MOBILENET_MODEL_PATH = '/model/mobilenet_v1_0.25_224/model.json'
 
 interface ILayerSelectOption {
     name: string
@@ -53,7 +49,7 @@ const MobilenetClassifier = (): JSX.Element => {
                 // Warmup the model. This isn't necessary, but makes the first prediction
                 // faster. Call `dispose` to release the WebGL memory allocated for the return
                 // value of `predict`.
-                const _temp = _model.predict(tf.zeros([1, IMAGE_SIZE, IMAGE_SIZE, 3])) as tf.Tensor
+                const _temp = _model.predict(tf.zeros([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])) as tf.Tensor
                 _temp.dispose()
 
                 setModel(_model)
@@ -90,7 +86,7 @@ const MobilenetClassifier = (): JSX.Element => {
             // Normalize the image from [0, 255] to [-1, 1].
             const normalized = _sample.sub(offset).div(offset)
             // Reshape to a single-element batch so we can pass it to predict.
-            const batched = normalized.reshape([1, IMAGE_SIZE, IMAGE_SIZE, 3])
+            const batched = normalized.reshape([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])
 
             const result = model?.predict(batched) as tf.Tensor
             logger(result)

@@ -3,16 +3,12 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Row } from 'antd'
 
 import {
-    getImageDataFromBase64,
     ILabeledImageSet,
     logger,
     STATUS
 } from '../../utils'
-import { MOBILENET_IMAGE_SIZE } from '../../constant'
+import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
 import WebCamera from '../common/tensor/WebCamera'
-
-// const MOBILENET_MODEL_PATH = 'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json'
-const MOBILENET_MODEL_PATH = '/model/mobilenet_v1_0.25_224/model.json'
 
 const MobilenetTransferWidget = (): JSX.Element => {
     /***********************

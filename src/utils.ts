@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs'
 import * as zlib from 'zlib'
-import {UploadFile} from 'antd/es/upload/interface'
+import { UploadFile } from 'antd/es/upload/interface'
 
 export const logger = console.log
 

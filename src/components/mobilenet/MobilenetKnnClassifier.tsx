@@ -12,15 +12,12 @@ import {
     logger,
     STATUS
 } from '../../utils'
-import { MOBILENET_IMAGE_SIZE } from '../../constant'
+import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import LabeledImageInputSet from '../common/tensor/LabeledImageInputSet'
 import LabeledImageSetWidget from '../common/tensor/LabeledImageSetWidget'
 
 const KNN_TOPK = 10
-
-// const MOBILENET_MODEL_PATH = 'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json'
-const MOBILENET_MODEL_PATH = '/model/mobilenet_v1_0.25_224/model.json'
 
 const MobilenetClassifier = (): JSX.Element => {
     /***********************
@@ -94,36 +91,26 @@ const MobilenetClassifier = (): JSX.Element => {
         return normalized.reshape([1, imageSize, imageSize, 3])
     }
 
-    const train = (imageSetList: ILabeledImageSet[]): void => {
+    const train = async (imageSetList: ILabeledImageSet[]): Promise<void> => {
         logger('train', imageSetList)
 
-        setStatus(STATUS.TRAINING)
-        const training = new Promise<void>(async (resolve, reject) => {
-            for (const imgSet of imageSetList) {
-                const { label, imageList } = imgSet
-                if (imageList) {
-                    for (const imgItem of imageList) {
-                        const imgBase64 = imgItem.img
-                        if (imgBase64) {
-                            const _imgData = await getImageDataFromBase64(imgBase64)
-                            const _imgTensor = tf.browser.fromPixels(_imgData, 3)
-                            const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
-                            const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
+        for (const imgSet of imageSetList) {
+            const { label, imageList } = imgSet
+            if (imageList) {
+                for (const imgItem of imageList) {
+                    const imgBase64 = imgItem.img
+                    if (imgBase64) {
+                        const _imgData = await getImageDataFromBase64(imgBase64)
+                        const _imgTensor = tf.browser.fromPixels(_imgData, 3)
+                        const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
+                        const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
 
                             // logger('sKnn.addExample', label, _imgFeature)
                             sKnn?.addExample(_imgFeature, label)
-                        }
                     }
                 }
             }
-            resolve()
-        })
-
-        training.then(
-            () => {
-                setStatus(STATUS.TRAINED)
-            }
-        )
+        }
     }
 
     const resetKnn = (): void => {
@@ -132,7 +119,14 @@ const MobilenetClassifier = (): JSX.Element => {
 
     const handleTrain = (): void => {
         if (sLabeledImgs) {
-            train(sLabeledImgs)
+            setStatus(STATUS.TRAINING)
+            train(sLabeledImgs).then(
+                () => {
+                    setStatus(STATUS.TRAINED)
+                },
+                (error) => {
+                    logger(error)
+                })
         }
     }
 

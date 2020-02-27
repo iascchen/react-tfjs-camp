@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-const draw = (canvas: HTMLCanvasElement | null, data: number[] | undefined, shape: [number, number]): void => {
+const draw = (canvas: HTMLCanvasElement | null, data: number[] | undefined, shape: number[]): void => {
     if (!canvas || !data || data.length === 0) {
         return
     }
@@ -24,11 +24,11 @@ const draw = (canvas: HTMLCanvasElement | null, data: number[] | undefined, shap
 
 interface IProps {
     data?: number[]
-    shape?: [number, number]
+    shape?: number[]
 }
 
 const RowImageWidget = (props: IProps): JSX.Element => {
-    const [shape, setShape] = useState<[number, number]>([28, 28])
+    const [shape, setShape] = useState<number[]>([28, 28])
 
     const rowCanvasRef = useRef<HTMLCanvasElement>(null)
 

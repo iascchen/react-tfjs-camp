@@ -67,7 +67,7 @@ const LabeledImageInputSet = (props: IProps): JSX.Element => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
         e.preventDefault()
         props.form.validateFields((err, values) => {
-            console.log(err, values)
+            logger(err, values)
             props.onSave && props.onSave(formatDataJson(values))
         })
     }

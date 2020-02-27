@@ -2,6 +2,7 @@ import React, { useEffect, useReducer, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Icon, Upload } from 'antd'
 import { RcFile, UploadChangeParam } from 'antd/es/upload'
+import { UploadFile } from 'antd/es/upload/interface'
 
 import {
     checkUploadDone,
@@ -12,9 +13,7 @@ import {
     ILabeledImageSet,
     logger
 } from '../../../utils'
-import { UploadFile } from 'antd/es/upload/interface'
-
-const MOBILENET_IMAGE_SIZE = 224
+import { MOBILENET_IMAGE_SIZE } from '../../../constant'
 
 interface IProps {
     model?: tf.LayersModel
@@ -22,7 +21,7 @@ interface IProps {
 
     labeledImgs?: ILabeledImageSet[]
 
-    onLoad?: (value: ILabeledImageSet[]) => void
+    onJsonLoad?: (value: ILabeledImageSet[]) => void
 }
 
 const LabeledImageSetWidget = (props: IProps): JSX.Element => {
@@ -33,7 +32,7 @@ const LabeledImageSetWidget = (props: IProps): JSX.Element => {
     const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
 
     useEffect(() => {
-        logger('LabeledImageSetWidget init ', props.labeledImgs)
+        // logger('LabeledImageSetWidget init ', props.labeledImgs)
         setLabeledImgs(props.labeledImgs)
     }, props.labeledImgs)
 
@@ -55,10 +54,10 @@ const LabeledImageSetWidget = (props: IProps): JSX.Element => {
                 setLabeledImgs(fileJson.labeledImageSetList)
 
                 // push data to LabeledImageWidget
-                const { onLoad } = props
-                if (onLoad) {
-                    logger('onLoad')
-                    onLoad(fileJson.labeledImageSetList)
+                const { onJsonLoad } = props
+                if (onJsonLoad) {
+                    logger('onJsonLoad')
+                    onJsonLoad(fileJson.labeledImageSetList)
                 }
             }
         }, 10)
@@ -86,7 +85,7 @@ const LabeledImageSetWidget = (props: IProps): JSX.Element => {
             const blobUrl = window.URL.createObjectURL(blob)
             logger(blobUrl)
 
-            // console.log(a)
+            // logger(a)
             const filename = 'labeledImages.json'
             a.href = blobUrl
             a.download = filename

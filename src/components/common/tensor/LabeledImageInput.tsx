@@ -39,7 +39,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
                     const _file = imageList[i]
                     const { uid, name, originFileObj } = _file
                     if (!_file.preview) {
-                        console.log('originFileObj', originFileObj)
+                        logger('originFileObj', originFileObj)
                         const result = await getUploadFileBase64(_file.originFileObj)
                         _file.preview = result
                     }
@@ -71,7 +71,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
         // logger('handlePreview', file)
         let imgSrc = file.url ?? file.preview
         if (!imgSrc) {
-            console.log('originFileObj', file.originFileObj)
+            logger('originFileObj', file.originFileObj)
             const result = await getUploadFileBase64(file.originFileObj)
             file.preview = result
             imgSrc = file.preview

@@ -52,7 +52,7 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><Icon type='eye' /> 预训练模型 Mobilenet </span>}>
+                <SubMenu title={<span><Icon type='eye' /> 使用预训练模型 Mobilenet </span>}>
                     <Item key='4.1'>
                         <Link to='/mobilenet/basic'>
                             <span> 图片分类器 Mobilenet </span>
@@ -64,8 +64,8 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                     <Item key='4.3'>
-                        <Link to='/mobilenet/posenet'>
-                            <span> 模型扩展 Posenet </span>
+                        <Link to='/mobilenet/transfer'>
+                            <span> 迁移学习 模型修改 </span>
                         </Link>
                     </Item>
                 </SubMenu>

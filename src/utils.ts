@@ -94,7 +94,7 @@ export const getUploadFileBase64 = async (blob: File | Blob | undefined): Promis
 
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
-        console.log('blob', JSON.stringify(blob))
+        // logger('blob', JSON.stringify(blob))
         reader.readAsDataURL(blob)
         reader.onload = () => {
             const text = reader.result?.toString()
@@ -134,7 +134,7 @@ export const getImageDataFromBase64 = async (imgBase64: string): Promise<ImageDa
 
             ctx?.drawImage(img, 0, 0, img.width, img.height)
             const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height)
-            console.log('imageData', imageData)
+            // logger('imageData', imageData)
             resolve(imageData)
         }
         img.src = imgBase64
@@ -144,11 +144,11 @@ export const getImageDataFromBase64 = async (imgBase64: string): Promise<ImageDa
 export const checkUploadDone = (fileList: UploadFile[]): number => {
     let unload: number = fileList.length
     fileList.forEach(item => {
-        // console.log(item.status)
+        // logger(item.status)
         if (item.status === 'done') {
             unload--
         }
     })
-    logger('waiting checkUnload : ', fileList.length, unload)
+    logger('waiting checkUploadDone : ', fileList.length, unload)
     return unload
 }

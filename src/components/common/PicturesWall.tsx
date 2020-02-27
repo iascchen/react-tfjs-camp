@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, useState } from 'react'
 import { Icon, Modal, Upload } from 'antd'
 import { UploadFile, UploadChangeParam, RcFile } from 'antd/es/upload/interface'
-import { logger, getUploadFileBase64, checkUploadDone, ILabeledImage, ILabeledImageSet } from '../../utils'
+import { logger, getUploadFileBase64, checkUploadDone } from '../../utils'
 
 interface IProps {
     onPreview?: (file: string) => void

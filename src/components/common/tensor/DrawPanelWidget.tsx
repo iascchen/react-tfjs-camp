@@ -6,7 +6,7 @@ import RowImageWidget from './RowImageWidget'
 
 const CANVAS_WIDTH = 280
 const CANVAS_HEIGHT = 280
-const MNIST_SHAPE = [28, 28]
+const MNIST_SHAPE: number[] = [28, 28]
 
 interface IPoint {
     x: number
@@ -155,7 +155,7 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
             <Button onClick={handleClear}>Clear</Button>
         </div>
         <div>
-            {miniSample && <RowImageWidget data={miniSample} shape={MNIST_SHAPE as [number, number]} />}
+            {miniSample && <RowImageWidget data={miniSample} shape={MNIST_SHAPE} />}
             Prediction : {props.prediction?.arraySync()}
         </div>
     </Card>

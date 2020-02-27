@@ -4,6 +4,7 @@ import * as knnClassifier from '@tensorflow-models/knn-classifier'
 import { Button, Card, Col, message, Row } from 'antd'
 
 import {
+    arrayDispose,
     getImageDataFromBase64,
     IKnnPredictResult,
     ILabeledImageFileJson,
@@ -11,11 +12,11 @@ import {
     logger,
     STATUS
 } from '../../utils'
+import { MOBILENET_IMAGE_SIZE } from '../../constant'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import LabeledImageInputSet from '../common/tensor/LabeledImageInputSet'
 import LabeledImageSetWidget from '../common/tensor/LabeledImageSetWidget'
 
-const MOBILENET_IMAGE_SIZE = 224
 const KNN_TOPK = 10
 
 // const MOBILENET_MODEL_PATH = 'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json'
@@ -84,7 +85,7 @@ const MobilenetClassifier = (): JSX.Element => {
 
     const formatImageForMobilenet = (imgTensor: tf.Tensor, imageSize: number): tf.Tensor => {
         const sample = tf.image.resizeBilinear(imgTensor as tf.Tensor3D, [imageSize, imageSize])
-        logger(JSON.stringify(sample))
+        // logger(JSON.stringify(sample))
 
         const offset = tf.scalar(127.5)
         // Normalize the image from [0, 255] to [-1, 1].
@@ -109,7 +110,7 @@ const MobilenetClassifier = (): JSX.Element => {
                             const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
                             const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
 
-                            logger('sKnn.addExample', label, _imgFeature)
+                            // logger('sKnn.addExample', label, _imgFeature)
                             sKnn?.addExample(_imgFeature, label)
                         }
                     }
@@ -160,13 +161,14 @@ const MobilenetClassifier = (): JSX.Element => {
     }
 
     const handleLabeledImagesSubmit = (value: ILabeledImageFileJson): void => {
-        console.log('handleLabeledImagesSubmit', value)
+        logger('handleLabeledImagesSubmit', value)
 
         const labeledImageSetList = value.labeledImageSetList
         setLabeledImgs(labeledImageSetList)
     }
 
     const handleLoadJson = (values: ILabeledImageSet[]): void => {
+        sLabeledImgs && arrayDispose(sLabeledImgs)
         setLabeledImgs(values)
     }
 
@@ -202,7 +204,7 @@ const MobilenetClassifier = (): JSX.Element => {
                         <div>status: {sStatus}</div>
                         {knnInfo()}
 
-                        <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onLoad={handleLoadJson}/>
+                        <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
                     </div>
                     <p>backend: {sTfBackend}</p>
                 </Card>

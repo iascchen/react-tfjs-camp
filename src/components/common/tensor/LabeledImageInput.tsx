@@ -2,26 +2,14 @@ import React, { ChangeEvent, useEffect, useReducer, useRef, useState } from 'rea
 import { Card, Icon, Input, message, Modal, Upload } from 'antd'
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
 
-import { getUploadFileBase64, logger } from '../../../utils'
+import { getUploadFileBase64, ILabeledImage, getImageDataFromBase64, logger } from '../../../utils'
+import * as tf from '@tensorflow/tfjs'
 
 const { Dragger } = Upload
 
 const MAX_FILES = 3
 
-export interface ILabeledImage {
-    uid: string
-    name: string
-    status: string
-    img: string // Base64 Array
-}
-
-export interface ILabeledImageSet {
-    label?: string
-    imageDataList?: ILabeledImage[]
-}
-
 interface IProps {
-    index?: number
     value?: string
 
     onChange?: (value: string) => void
@@ -39,9 +27,9 @@ const checkUnload = (fileList: UploadFile[]): number => {
     return unload
 }
 
-const LabeledImageItem = (props: IProps): JSX.Element => {
+const LabeledImageInput = (props: IProps): JSX.Element => {
     const [previewImage, setPreviewImage] = useState<string>()
-    const [modelDisplay, setModalDispaly] = useState(false)
+    const [modelDisplay, setModalDisplay] = useState(false)
 
     const [label, setLabel] = useState<string>('')
     const [imageList, setImageList] = useState<UploadFile[]>([])
@@ -82,9 +70,11 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
 
                 const imgDataList = []
                 for (let i = 0; i < imageList.length; i++) {
-                    const { uid, name, status, originFileObj } = imageList[i]
-                    const result = await getUploadFileBase64(originFileObj)
-                    const imgData = { uid, name, status, data: result }
+                    const { uid, name, originFileObj } = imageList[i]
+                    const _imgBase64 = await getUploadFileBase64(originFileObj)
+                    const _imgData = await getImageDataFromBase64(_imgBase64)
+
+                    const imgData: ILabeledImage = { uid, name, img: _imgData }
                     imgDataList.push(imgData)
                 }
                 const itemData = { label, imgDataList }
@@ -104,7 +94,7 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
     }, [waitingPush])
 
     const handleCancel = (): void => {
-        setModalDispaly(false)
+        setModalDisplay(false)
     }
 
     const handlePreview = async (file: UploadFile): Promise<void> => {
@@ -119,7 +109,7 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
 
         if (imgSrc) {
             setPreviewImage(imgSrc)
-            setModalDispaly(true)
+            setModalDisplay(true)
         }
     }
 
@@ -128,12 +118,14 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
         setLabel(value)
     }
 
-    const handleImageChange = async ({ fileList }: UploadChangeParam): Promise<void> => {
+    const handleImageChange = ({ fileList }: UploadChangeParam): void => {
         // logger('handleImageChange', fileList.length)
 
         if (fileList.length > MAX_FILES) {
             fileList.splice(MAX_FILES)
-            await message.error(`All images are stored in memory, so each label ONLY contains < ${MAX_FILES.toString()} files`)
+
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            message.error(`All images are stored in memory, so each label ONLY contains < ${MAX_FILES.toString()} files`)
         }
         setImageList(fileList)
 
@@ -152,7 +144,6 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
 
     return (
         <Card>
-            {props.index}
             <Input onChange={handleLabelChange} defaultValue={label} ref={labelRef}
                 placeholder={'Label. such as: cat, dog...'} />
             <Dragger action={handleUpload} onChange={handleImageChange} onPreview={handlePreview}
@@ -173,4 +164,4 @@ const LabeledImageItem = (props: IProps): JSX.Element => {
     )
 }
 
-export default LabeledImageItem
+export default LabeledImageInput

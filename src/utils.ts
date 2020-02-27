@@ -27,6 +27,30 @@ export interface ISampleInfo {
     length: number
 }
 
+export interface ILabeledImage {
+    uid: string
+    name: string
+    img: ImageData // Tensor of image data
+}
+
+export interface ILabeledImageSet {
+    label: string
+    imageList?: ILabeledImage[]
+}
+
+export interface ILabeledImageFileJson {
+    keys?: number[]
+    labeledImageSetList: ILabeledImageSet[]
+}
+
+export interface IKnnPredictResult {
+    label: string
+    classIndex: number
+    confidences: {
+        [label: string]: number
+    }
+}
+
 export const range = (from: number, to = 0): number[] => {
     return [...Array(Math.abs(to - from)).keys()].map(v => v + from)
 }
@@ -94,5 +118,24 @@ export const getUploadFileArray = async (blob: File | Blob | undefined): Promise
             resolve(Buffer.from(buffer))
         }
         reader.onerror = error => reject(error)
+    })
+}
+
+export const getImageDataFromBase64 = async (imgBase64: string): Promise<ImageData> => {
+    const img = new Image()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    return new Promise((resolve) => {
+        img.crossOrigin = ''
+        img.onload = () => {
+            img.width = img.naturalWidth
+            img.height = img.naturalHeight
+
+            ctx?.drawImage(img, 0, 0, img.width, img.height)
+            const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height)
+            console.log('imageData', imageData)
+            resolve(imageData)
+        }
+        img.src = imgBase64
     })
 }

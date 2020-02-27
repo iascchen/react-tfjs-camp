@@ -1,40 +1,31 @@
-import React, { createRef, useEffect, useState } from 'react'
+import React, {useEffect, useState} from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Card, Col, Row, Select } from 'antd'
+import * as knnClassifier from '@tensorflow-models/knn-classifier'
+import {Button, Card, Col, message, Row} from 'antd'
 
-import { logger, STATUS } from '../../utils'
-import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
-import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
+import {IKnnPredictResult, ILabeledImageFileJson, ILabeledImageSet, logger, STATUS} from '../../utils'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import LabeledImageWidget from '../common/tensor/LabeledImageWidget'
 
-const { Option } = Select
-
-const IMAGE_SIZE = 224
+const MOBILENET_IMAGE_SIZE = 224
+const KNN_TOPK = 10
 
 // const MOBILENET_MODEL_PATH = 'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json'
 const MOBILENET_MODEL_PATH = '/model/mobilenet_v1_0.25_224/model.json'
-
-interface ILayerSelectOption {
-    name: string
-    index: number
-}
 
 const MobilenetClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
 
-    const [tfBackend, setTfBackend] = useState<string>()
-    const [status, setStatus] = useState<STATUS>(STATUS.INIT)
+    const [sTfBackend, setTfBackend] = useState<string>()
+    const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
 
-    const [model, setModel] = useState<tf.LayersModel>()
-    const [layersOption, setLayersOption] = useState<ILayerSelectOption[]>()
-    const [curLayer, setCurLayer] = useState<tf.layers.Layer>()
+    const [sKnn, setKnn] = useState<knnClassifier.KNNClassifier>()
+    const [sModel, setModel] = useState<tf.LayersModel>()
 
-    const [predictResult, setPredictResult] = useState<tf.Tensor>()
-
-    // const formRef = createRef<FormComponentProps>()
+    const [sLabeledImgs, setLabeledImgs] = useState<ILabeledImageSet[]>()
+    const [sPredictResult, setPredictResult] = useState<tf.Tensor | IKnnPredictResult >()
 
     /***********************
      * useEffect
@@ -48,24 +39,23 @@ const MobilenetClassifier = (): JSX.Element => {
 
         setStatus(STATUS.LOADING)
 
+        const _knn = knnClassifier.create()
+        setKnn(_knn)
+
         let _model: tf.LayersModel
         tf.loadLayersModel(MOBILENET_MODEL_PATH).then(
             (mobilenet) => {
-                _model = mobilenet
+                // Return a model that outputs an internal activation.
+                const layer = mobilenet.getLayer('conv_preds')
+                _model = tf.model({ inputs: mobilenet.inputs, outputs: layer.output })
 
                 // Warmup the model. This isn't necessary, but makes the first prediction
                 // faster. Call `dispose` to release the WebGL memory allocated for the return
                 // value of `predict`.
-                const _temp = _model.predict(tf.zeros([1, IMAGE_SIZE, IMAGE_SIZE, 3])) as tf.Tensor
+                const _temp = _model.predict(tf.zeros([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])) as tf.Tensor
                 _temp.dispose()
 
                 setModel(_model)
-
-                const _layerOptions: ILayerSelectOption[] = _model?.layers.map((l, index) => {
-                    return { name: l.name, index }
-                })
-                setLayersOption(_layerOptions)
-
                 setStatus(STATUS.LOADED)
             },
             (error) => {
@@ -76,81 +66,86 @@ const MobilenetClassifier = (): JSX.Element => {
         return () => {
             logger('Model Dispose')
             _model?.dispose()
+            _knn.dispose()
         }
     }, [])
-
-    /***********************
-     * useEffects only for dispose
-     ***********************/
 
     /***********************
      * Functions
      ***********************/
 
-    const handlePredict = (imageTensor: tf.Tensor): void => {
-        if (!imageTensor) {
+    const formatImageForMobilenet = (imgTensor: tf.Tensor, imageSize: number): tf.Tensor => {
+        const sample = tf.image.resizeBilinear(imgTensor as tf.Tensor4D, [imageSize, imageSize])
+
+        const offset = tf.scalar(127.5)
+        // Normalize the image from [0, 255] to [-1, 1].
+        const normalized = sample.sub(offset).div(offset)
+        // Reshape to a single-element batch so we can pass it to predict.
+        return normalized.reshape([1, imageSize, imageSize, 3])
+    }
+
+    const train = (imageSetList: ILabeledImageSet[]): void => {
+        logger('train', imageSetList)
+
+        setStatus(STATUS.TRAINING)
+
+        imageSetList?.forEach(imgSet => {
+            const { label, imageList } = imgSet
+            imageList?.forEach(imgItem => {
+                const [imgFeature] = tf.tidy(() => {
+                    const _imgTensor = tf.browser.fromPixels(imgItem.img, 4)
+                    const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
+                    const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
+                    // logger(_imgFeature)
+                    return [_imgFeature]
+                })
+                logger('sKnn.addExample', label, imgFeature)
+                sKnn?.addExample(imgFeature, label)
+            })
+
+            setStatus(STATUS.TRAINED)
+        })
+    }
+
+    const resetKnn = (): void => {
+        sKnn?.clearAllClasses()
+    }
+
+    const handleTrain = (): void => {
+        if (sLabeledImgs) {
+            train(sLabeledImgs)
+        }
+    }
+
+    const handleKnnReset = (): void => {
+        resetKnn()
+    }
+
+    const handlePredict = async (imgTensor: tf.Tensor): Promise<void> => {
+        if (!imgTensor) {
             return
         }
-        const [p] = tf.tidy(() => {
-            const _sample = tf.image.resizeBilinear(imageTensor as tf.Tensor4D, [224, 224])
-            const offset = tf.scalar(127.5)
-            // Normalize the image from [0, 255] to [-1, 1].
-            const normalized = _sample.sub(offset).div(offset)
-            // Reshape to a single-element batch so we can pass it to predict.
-            const batched = normalized.reshape([1, IMAGE_SIZE, IMAGE_SIZE, 3])
-
-            const result = model?.predict(batched) as tf.Tensor
-            console.log(result)
-
-            const p = result?.argMax(-1)
-            return [p]
+        const [imgFeature] = tf.tidy(() => {
+            const batched = formatImageForMobilenet(imgTensor, MOBILENET_IMAGE_SIZE)
+            const imgFeature = sModel?.predict(batched) as tf.Tensor
+            // logger(imgFeature)
+            return [imgFeature]
         })
-
-        setPredictResult(p)
+        try {
+            const res = await sKnn?.predictClass(imgFeature, KNN_TOPK)
+            // logger('handlePredict', res)
+            setPredictResult(res)
+        } catch (e) {
+            // logger(e)
+            await message.error(e.message)
+        }
     }
 
-    const handleLayerChange = (value: number): void => {
-        logger('handleLayerChange', value)
-        const _layer = model?.getLayer(undefined, value)
-        setCurLayer(_layer)
-    }
-
-    // const handleLabeledImageItemChange = (value: string): void => {
-    //     const obj = JSON.parse(value)
-    //     logger(obj)
-    // }
-
-    const handleLabeledImagesSubmit = (value: any): void => {
-        // if (!formRef.current) {
-        //     return
-        // }
-        // const values = formRef.current.form.getFieldValue('labeledImageList')
-        // formRef.current.form.validateFields((err, values) => {
-        //     if (!err) {
-        //         // logger(values)
-        //         onSubmit(formatDataJson(values))
-        //     }
-        // })
-
+    const handleLabeledImagesSubmit = (value: ILabeledImageFileJson): void => {
         console.log('handleLabeledImagesSubmit', value)
-        // try {
-        //     await this.props.save(recipeBody)
-        // } catch (error) {
-        //     if (error.errorCode && error.errorCode === API_SERVER_ERROR.INPUT_ERROR) {
-        //         return Form.inputServerError(error, this.formRefs)
-        //     }
-        //     throw error
-        // }
-        // this.setState({ loading: false })
-        // const messageAndUrl = getMessageAndUrl(this.props.id, false, false, this.props.intl)
-        // AlertSuccess(messageAndUrl.message, { position: messageAndUrl.position })
-        // this.props.push(messageAndUrl.url)
-        //
-        // if (!this.props.id) {
-        //     this.props.push(recipe.fill())
-        // } else {
-        //     await this.props.getRecipe()
-        // }
+
+        const labeledImageSetList = value.labeledImageSetList
+        setLabeledImgs(labeledImageSetList)
     }
 
     /***********************
@@ -163,32 +158,34 @@ const MobilenetClassifier = (): JSX.Element => {
             <Col span={12}>
                 <Card title='Machine Learning(KNN)' style={{ margin: '8px' }} size='small'>
                     <div>Labeled Images</div>
-                    <LabeledImageWidget model={model} onSave={handleLabeledImagesSubmit} />
+                    <LabeledImageWidget model={sModel} onSave={handleLabeledImagesSubmit} />
                 </Card>
             </Col>
             <Col span={12}>
                 <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                    <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
-                    {/* <TfvisHistoryWidget logMsg={logMsg} debug /> */}
+                    <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
                 </Card>
-                <Card title='Basic Model' style={{ margin: '8px' }} size='small'>
+                <Card title='Mobilenet + KNN' style={{ margin: '8px' }} size='small'>
                     <div>
-                        <TfvisModelWidget model={model}/>
-                        <p>status: {status}</p>
-                    </div>
-                    <div>
-                        Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                            {layersOption?.map((v) => {
-                                return <Option key={v.index} value={v.index}>{v.name}</Option>
-                            })}
-                        </Select>
-                        <TfvisLayerWidget layer={curLayer}/>
-                    </div>
+                        {/* <TfvisModelWidget model={model}/> */}
 
-                    <p>backend: {tfBackend}</p>
+                        <Button onClick={handleTrain} type='primary'> Train </Button>
+                        <Button onClick={handleKnnReset} > Reset Model </Button>
+                        <p>status: {sStatus}</p>
+                        <p>labeled Images : </p>
+                        {
+                            sLabeledImgs?.map((imgSet, index) => {
+                                return <div key={index}>
+                                    <p>{imgSet.label}</p>
+                                    <p>{imgSet.imageList?.length}</p>
+                                </div>
+                            })
+                        }
+                        <p>KNN: {sKnn?.getNumClasses()}</p>
+                    </div>
+                    <p>backend: {sTfBackend}</p>
                 </Card>
             </Col>
-
         </Row>
     )
 }

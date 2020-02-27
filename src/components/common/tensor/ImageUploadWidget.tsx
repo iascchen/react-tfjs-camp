@@ -4,11 +4,11 @@ import { Button, Card } from 'antd'
 
 import PicturesWall from '../../common/PicturesWall'
 import { ImagenetClasses } from '../../mobilenet/imagenetClasses'
-import { logger } from '../../../utils'
+import { IKnnPredictResult, logger } from '../../../utils'
 
 interface IProps {
     model?: tf.LayersModel
-    prediction?: tf.Tensor
+    prediction?: tf.Tensor | IKnnPredictResult
     onSubmit?: (tensor: tf.Tensor) => void
 }
 
@@ -25,10 +25,18 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
             return
         }
 
-        const labelIndex = props.prediction.arraySync() as number
-        logger('labelIndex', labelIndex)
-        const _label = ImagenetClasses[labelIndex]
-        setLabel(`${labelIndex.toString()} : ${_label}`)
+        const knnRet = props.prediction as IKnnPredictResult
+        if (knnRet) {
+            const knnRet = props.prediction as IKnnPredictResult
+            setLabel(`${knnRet.label} : ${JSON.stringify(knnRet.confidences)}`)
+        } else {
+            // Imagenet Classes
+            const imagenetRet = props.prediction as tf.Tensor
+            const labelIndex = imagenetRet.arraySync() as number
+            logger('labelIndex', labelIndex)
+            const _label = ImagenetClasses[labelIndex]
+            setLabel(`${labelIndex.toString()} : ${_label}`)
+        }
     }, [props.prediction])
 
     const handlePreview = (file: string): void => {

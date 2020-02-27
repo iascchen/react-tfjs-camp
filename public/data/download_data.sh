@@ -23,3 +23,6 @@ MNIST_LABELS_PATH="${BASE_URL}/mnist_labels_uint8"
 
 wget MNIST_IMAGES_SPRITE_PATH
 wget MNIST_LABELS_PATH
+
+# wget https://storage.googleapis.com/learnjs-data/speech-commands/speech-commands-data-v0.02-browser.tar.gz
+# tar -czvf speech-commands-data-v0.02-browser.tar.gz

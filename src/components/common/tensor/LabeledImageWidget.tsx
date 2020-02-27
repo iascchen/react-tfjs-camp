@@ -3,8 +3,8 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Icon } from 'antd'
 import { FormComponentProps } from 'antd/es/form'
 
-import { logger } from '../../../utils'
-import LabeledImageItem from './LabeledImageItem'
+import { ILabeledImageFileJson, logger } from '../../../utils'
+import LabeledImageInput from './LabeledImageInput'
 
 const formItemLayout = {
     labelCol: {
@@ -24,12 +24,12 @@ const formItemLayoutWithOutLabel = {
     }
 }
 
-export const formatDataJson = (values: any): any => {
+export const formatDataJson = (values: any): ILabeledImageFileJson => {
     logger(values)
     const { keys: _keys, labeledImageList } = values
     const ret = _keys.map((key: number) => JSON.parse(labeledImageList[key]))
 
-    const formModel = { labeledImageList: ret }
+    const formModel = { labeledImageSetList: ret }
     // logger(JSON.stringify(formModel))
     return formModel
 }
@@ -159,7 +159,7 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
             <Col span={20}>
                 <Form.Item>
                     {getFieldDecorator(`labeledImageList[${k}]`, { initialValue: '{}' })(
-                        <LabeledImageItem />
+                        <LabeledImageInput />
                     )}
                 </Form.Item>
             </Col>

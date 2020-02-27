@@ -113,6 +113,17 @@ const LabeledImageSetWidget = (props: IProps): JSX.Element => {
 
     return (
         <Card title={'Labeled Images'} size='small'>
+            <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false} >
+                <Button style={{ width: '300', margin: '0 10%' }}>
+                    <Icon type='upload'/> Load Train Set
+                </Button>
+            </Upload>
+
+            <a ref={downloadRef}/>
+            <Button style={{ width: '300', margin: '0 10%' }} onClick={handleJsonSave}>
+                <Icon type='save'/> Save Train Set
+            </Button>
+
             {sLabeledImgs?.map((labeled, index) => {
                 const title = `${labeled.label}(${labeled.imageList?.length.toString()})`
                 return <Card key={index} title={title} size='small'>
@@ -124,17 +135,6 @@ const LabeledImageSetWidget = (props: IProps): JSX.Element => {
                     }
                 </Card>
             })}
-
-            <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false} >
-                <Button style={{ width: '200', margin: '10%' }} >
-                    <Icon type='upload'/> Load
-                </Button>
-            </Upload>
-
-            <a ref={downloadRef}/>
-            <Button style={{ width: '200', margin: '10%' }} onClick={handleJsonSave}>
-                <Icon type='save'/> Save
-            </Button>
         </Card>
     )
 }

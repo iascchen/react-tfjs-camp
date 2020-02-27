@@ -7,20 +7,9 @@ import { ILabeledImageFileJson, logger } from '../../../utils'
 import LabeledImageInput from './LabeledImageInput'
 
 const formItemLayout = {
-    labelCol: {
-        xs: { span: 24 },
-        sm: { span: 4 }
-    },
     wrapperCol: {
         xs: { span: 24 },
-        sm: { span: 20 }
-    }
-}
-
-const formItemLayoutWithOutLabel = {
-    wrapperCol: {
-        xs: { span: 24, offset: 0 },
-        sm: { span: 20, offset: 4 }
+        sm: { span: 24 }
     }
 }
 
@@ -30,7 +19,6 @@ export const formatDataJson = (values: any): ILabeledImageFileJson => {
     const ret = _keys.map((key: number) => JSON.parse(labeledImageList[key]))
 
     const formModel = { labeledImageSetList: ret }
-    // logger(JSON.stringify(formModel))
     return formModel
 }
 
@@ -93,21 +81,18 @@ const LabeledImageInputSet = (props: IProps): JSX.Element => {
 
     getFieldDecorator('keys', { initialValue: keys || [] })
     const _keys = getFieldValue('keys')
-    // logger('_keys', _keys, dyncId)
 
     const formItems = _keys.map((k: number, index: number) => (
-        <Form.Item key={k}
-            {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-            label={index === 0 ? 'Label : ' : ''}>
-            <Col span={20}>
+        <Form.Item key={k} {...formItemLayout } >
+            <Col span={22}>
                 <Form.Item>
                     {getFieldDecorator(`labeledImageList[${k.toString()}]`, { initialValue: '{}' })(
                         <LabeledImageInput />
                     )}
                 </Form.Item>
             </Col>
-            <Col span={2}/>
-            <Col span={2}>
+            <Col span={1}/>
+            <Col span={1}>
                 {_keys.length > 1 ? (
                     <Icon className='dynamic-delete-button' type='minus-circle-o'
                         onClick={() => remove(k)}
@@ -118,22 +103,20 @@ const LabeledImageInputSet = (props: IProps): JSX.Element => {
     ))
 
     return (
-        <Card>
-            {/* [{_keys.join(',')}], {dyncId} */}
+        <>
             <Form onSubmit={handleSubmit}>
                 {formItems}
-                <Form.Item {...formItemLayoutWithOutLabel} style={{ margin: 16 }}>
-                    <Button type='dashed' onClick={add} style={{ width: '35%', marginRight: '10%' }}>
-                        <Icon type='plus-circle'/> Add
+                <Form.Item {...formItemLayout} style={{ margin: 16 }}>
+                    <Button type='primary' htmlType='submit' style={{ width: '30%', margin: '0 10%' }}>
+                        Push to Train Set
                     </Button>
-
-                    <Button type='primary' htmlType='submit' style={{ width: '35%', marginRight: '10%' }}>
-                        Submit
+                    <Button type='dashed' onClick={add} style={{ width: '30%', margin: '0 10%' }}>
+                        <Icon type='plus-circle'/> Add
                     </Button>
                 </Form.Item>
             </Form>
             <a ref={downloadRef}/>
-        </Card>
+        </>
     )
 }
 

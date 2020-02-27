@@ -86,6 +86,9 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
     const handleLabelChange = (e: ChangeEvent<HTMLInputElement>): void => {
         const value: string = e.target.value
         setLabel(value)
+
+        // Must wait until all file status is 'done', then push then to LabeledImageWidget
+        forceWaitingPush()
     }
 
     const handleImageChange = ({ fileList }: UploadChangeParam): void => {

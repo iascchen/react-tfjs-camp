@@ -8,7 +8,7 @@ import {
     IKnnPredictResult,
     ILabeledImageFileJson,
     ILabeledImageSet,
-    logger, range,
+    logger,
     STATUS
 } from '../../utils'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
@@ -97,27 +97,32 @@ const MobilenetClassifier = (): JSX.Element => {
         logger('train', imageSetList)
 
         setStatus(STATUS.TRAINING)
+        const training = new Promise<void>(async (resolve, reject) => {
+            for (const imgSet of imageSetList) {
+                const { label, imageList } = imgSet
+                if (imageList) {
+                    for (const imgItem of imageList) {
+                        const imgBase64 = imgItem.img
+                        if (imgBase64) {
+                            const _imgData = await getImageDataFromBase64(imgBase64)
+                            const _imgTensor = tf.browser.fromPixels(_imgData, 3)
+                            const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
+                            const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
 
-        imageSetList?.forEach(imgSet => {
-            const { label, imageList } = imgSet
-            imageList?.forEach(imgItem => {
-                const imgBase64 = imgItem.img
-                if (imgBase64) {
-                    getImageDataFromBase64(imgBase64).then((_imgData) => {
-                        const _imgTensor = tf.browser.fromPixels(_imgData, 3)
-                        const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
-                        const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
-
-                        logger('sKnn.addExample', label, _imgFeature)
-                        sKnn?.addExample(_imgFeature, label)
-                    }, (error) => {
-                        logger(error)
-                    })
+                            logger('sKnn.addExample', label, _imgFeature)
+                            sKnn?.addExample(_imgFeature, label)
+                        }
+                    }
                 }
-            })
-
-            setStatus(STATUS.TRAINED)
+            }
+            resolve()
         })
+
+        training.then(
+            () => {
+                setStatus(STATUS.TRAINED)
+            }
+        )
     }
 
     const resetKnn = (): void => {
@@ -174,9 +179,7 @@ const MobilenetClassifier = (): JSX.Element => {
         const examples = sKnn?.getClassExampleCount()
         return <div>
             <p>KNN have {knnNumClasses} classes</p>
-            <p>{
-                JSON.stringify(examples)
-            }</p>
+            <p>{JSON.stringify(examples)}</p>
         </div>
     }
 
@@ -184,22 +187,21 @@ const MobilenetClassifier = (): JSX.Element => {
         <Row gutter={16}>
             <h1>Mobilenet + KNN</h1>
             <Col span={12}>
+                <Card title='Prediction' style={{ margin: '8px' }} size='small'>
+                    <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
+                </Card>
                 <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
                     <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
                 </Card>
             </Col>
             <Col span={12}>
-                <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                    <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
-                </Card>
-                <Card title='Mobilenet + KNN' style={{ margin: '8px' }} size='small'>
+                <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
                     <div>
-                        {/* <TfvisModelWidget model={model}/> */}
-
-                        <Button onClick={handleTrain} type='primary'> Train </Button>
-                        <Button onClick={handleKnnReset} > Reset Model </Button>
-                        <p>status: {sStatus}</p>
+                        <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                        <Button onClick={handleKnnReset} style={{ width: '30%', margin: '0 10%' }}> Reset Model </Button>
+                        <div>status: {sStatus}</div>
                         {knnInfo()}
+
                         <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onLoad={handleLoadJson}/>
                     </div>
                     <p>backend: {sTfBackend}</p>

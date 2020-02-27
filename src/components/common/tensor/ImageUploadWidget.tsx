@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card } from 'antd'
+import { Button } from 'antd'
 
 import PicturesWall from '../../common/PicturesWall'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
@@ -57,15 +57,17 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
      ***********************/
 
     return (
-        <Card>
+        <>
             <PicturesWall onPreview={handlePreview} />
             <div>Current Image</div>
-            <img src={imgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} />
+            <div><img src={imgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} /></div>
             <div>
-                <Button onClick={handleSubmit} type='primary'>Predict</Button>
-                Prediction : {label}
+                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>
+                    Predict
+                </Button>
             </div>
-        </Card>
+            Prediction Result : {label}
+        </>
     )
 }
 

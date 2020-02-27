@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 import { Icon, Modal, Upload } from 'antd'
 import { UploadFile, UploadChangeParam, RcFile } from 'antd/es/upload/interface'
-import { logger, getUploadFileBase64 } from '../../utils'
+import { logger, getUploadFileBase64, checkUploadDone, ILabeledImage, ILabeledImageSet } from '../../utils'
 
 interface IProps {
     onPreview?: (file: string) => void
@@ -11,6 +11,29 @@ const PicturesWall = (props: IProps): JSX.Element => {
     const [previewImage, setPreviewImage] = useState<string>()
     const [imageList, setImageList] = useState<UploadFile[]>([])
     const [modelDisplay, setModalDispaly] = useState(false)
+
+    const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
+
+    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        const timer = setInterval(async (): Promise<void> => {
+            logger('Waiting upload...')
+            if (checkUploadDone(imageList) > 0) {
+                forceWaitingPush()
+            } else {
+                clearInterval(timer)
+
+                const _file = imageList[imageList.length - 1]
+                if (_file) {
+                    await handlePreview(_file)
+                }
+            }
+        }, 10)
+
+        return () => {
+            clearInterval(timer)
+        }
+    }, [waitingPush])
 
     const handleCancel = (): void => {
         setModalDispaly(false)
@@ -36,6 +59,9 @@ const PicturesWall = (props: IProps): JSX.Element => {
     const handleChange = ({ fileList }: UploadChangeParam): void => {
         // logger('handleChange', fileList)
         setImageList(fileList)
+
+        // Must wait until all file status is 'done', then push then to LabeledImageWidget
+        forceWaitingPush()
     }
 
     const handleUpload = async (file: RcFile): Promise<string> => {

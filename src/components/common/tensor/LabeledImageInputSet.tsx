@@ -98,7 +98,7 @@ const LabeledImageInputSet = (props: IProps): JSX.Element => {
     const formItems = _keys.map((k: number, index: number) => (
         <Form.Item key={k}
             {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-            label={index === 0 ? 'Labeled Images : ' : ''}>
+            label={index === 0 ? 'Label : ' : ''}>
             <Col span={20}>
                 <Form.Item>
                     {getFieldDecorator(`labeledImageList[${k.toString()}]`, { initialValue: '{}' })(

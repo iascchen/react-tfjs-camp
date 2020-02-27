@@ -1,5 +1,6 @@
 import * as tf from '@tensorflow/tfjs'
 import * as zlib from 'zlib'
+import {UploadFile} from 'antd/es/upload/interface'
 
 export const logger = console.log
 
@@ -138,4 +139,16 @@ export const getImageDataFromBase64 = async (imgBase64: string): Promise<ImageDa
         }
         img.src = imgBase64
     })
+}
+
+export const checkUploadDone = (fileList: UploadFile[]): number => {
+    let unload: number = fileList.length
+    fileList.forEach(item => {
+        // console.log(item.status)
+        if (item.status === 'done') {
+            unload--
+        }
+    })
+    logger('waiting checkUnload : ', fileList.length, unload)
+    return unload
 }

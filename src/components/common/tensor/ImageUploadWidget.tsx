@@ -26,7 +26,7 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
         }
 
         const knnRet = props.prediction as IKnnPredictResult
-        if (knnRet) {
+        if (knnRet.label) {
             const knnRet = props.prediction as IKnnPredictResult
             setLabel(`${knnRet.label} : ${JSON.stringify(knnRet.confidences)}`)
         } else {
@@ -58,11 +58,11 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
 
     return (
         <Card>
-            <PicturesWall onPreview={handlePreview}/>
+            <PicturesWall onPreview={handlePreview} />
             <div>Current Image</div>
             <img src={imgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} />
             <div>
-                <Button onClick={handleSubmit} type='primary'>Submit</Button>
+                <Button onClick={handleSubmit} type='primary'>Predict</Button>
                 Prediction : {label}
             </div>
         </Card>

@@ -8,7 +8,7 @@ import {
     IKnnPredictResult,
     ILabeledImageFileJson,
     ILabeledImageSet,
-    logger,
+    logger, range,
     STATUS
 } from '../../utils'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
@@ -83,7 +83,8 @@ const MobilenetClassifier = (): JSX.Element => {
      ***********************/
 
     const formatImageForMobilenet = (imgTensor: tf.Tensor, imageSize: number): tf.Tensor => {
-        const sample = tf.image.resizeBilinear(imgTensor as tf.Tensor4D, [imageSize, imageSize])
+        const sample = tf.image.resizeBilinear(imgTensor as tf.Tensor3D, [imageSize, imageSize])
+        logger(JSON.stringify(sample))
 
         const offset = tf.scalar(127.5)
         // Normalize the image from [0, 255] to [-1, 1].
@@ -103,7 +104,7 @@ const MobilenetClassifier = (): JSX.Element => {
                 const imgBase64 = imgItem.img
                 if (imgBase64) {
                     getImageDataFromBase64(imgBase64).then((_imgData) => {
-                        const _imgTensor = tf.browser.fromPixels(_imgData, 4)
+                        const _imgTensor = tf.browser.fromPixels(_imgData, 3)
                         const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
                         const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
 
@@ -160,16 +161,30 @@ const MobilenetClassifier = (): JSX.Element => {
         setLabeledImgs(labeledImageSetList)
     }
 
+    const handleLoadJson = (values: ILabeledImageSet[]): void => {
+        setLabeledImgs(values)
+    }
+
     /***********************
      * Render
      ***********************/
+
+    const knnInfo = (): JSX.Element => {
+        const knnNumClasses = sKnn?.getNumClasses() ?? 0
+        const examples = sKnn?.getClassExampleCount()
+        return <div>
+            <p>KNN have {knnNumClasses} classes</p>
+            <p>{
+                JSON.stringify(examples)
+            }</p>
+        </div>
+    }
 
     return (
         <Row gutter={16}>
             <h1>Mobilenet + KNN</h1>
             <Col span={12}>
-                <Card title='Machine Learning(KNN)' style={{ margin: '8px' }} size='small'>
-                    <div>Labeled Images</div>
+                <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
                     <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
                 </Card>
             </Col>
@@ -184,10 +199,8 @@ const MobilenetClassifier = (): JSX.Element => {
                         <Button onClick={handleTrain} type='primary'> Train </Button>
                         <Button onClick={handleKnnReset} > Reset Model </Button>
                         <p>status: {sStatus}</p>
-                        <p>KNN: {sKnn?.getNumClasses()}</p>
-
-                        <p>labeled Images : </p>
-                        <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} />
+                        {knnInfo()}
+                        <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onLoad={handleLoadJson}/>
                     </div>
                     <p>backend: {sTfBackend}</p>
                 </Card>

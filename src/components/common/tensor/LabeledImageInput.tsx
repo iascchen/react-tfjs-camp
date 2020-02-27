@@ -2,28 +2,16 @@ import React, { ChangeEvent, useEffect, useReducer, useRef, useState } from 'rea
 import { Card, Icon, Input, message, Modal, Upload } from 'antd'
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
 
-import { getUploadFileBase64, ILabeledImage, ILabeledImageSet, logger } from '../../../utils'
+import { checkUploadDone, getUploadFileBase64, ILabeledImage, ILabeledImageSet, logger } from '../../../utils'
 
 const { Dragger } = Upload
 
-const MAX_FILES = 3
+const MAX_FILES = 50
 
 interface IProps {
     value?: string
 
     onChange?: (value: string) => void
-}
-
-const checkUnload = (fileList: UploadFile[]): number => {
-    let unload: number = fileList.length
-    fileList.forEach(item => {
-        // console.log(item.status)
-        if (item.status === 'done') {
-            unload--
-        }
-    })
-    logger('waiting checkUnload : ', fileList.length, unload)
-    return unload
 }
 
 const LabeledImageInput = (props: IProps): JSX.Element => {
@@ -41,7 +29,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         const timer = setInterval(async (): Promise<void> => {
             logger('Waiting upload...')
-            if (checkUnload(imageList) > 0) {
+            if (checkUploadDone(imageList) > 0) {
                 forceWaitingPush()
             } else {
                 clearInterval(timer)
@@ -109,7 +97,6 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             message.error(`All images are stored in memory, so each label ONLY contains < ${MAX_FILES.toString()} files`)
         }
-
         setImageList(fileList)
 
         // Must wait until all file status is 'done', then push then to LabeledImageWidget

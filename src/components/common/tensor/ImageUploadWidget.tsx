@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Card } from 'antd'
 
 import PicturesWall from '../../common/PicturesWall'
-import { ImagenetClasses } from '../../mobilenet/imagenetClasses'
+import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
 import { IKnnPredictResult, logger } from '../../../utils'
 
 interface IProps {

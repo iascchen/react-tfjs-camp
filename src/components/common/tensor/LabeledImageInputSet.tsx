@@ -1,4 +1,4 @@
-import React, { FormEvent, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Icon } from 'antd'
 import { FormComponentProps } from 'antd/es/form'
@@ -41,9 +41,9 @@ interface IProps extends FormComponentProps {
     onSave?: (value: any) => void
 }
 
-const LabeledImageWidget = (props: IProps): JSX.Element => {
+const LabeledImageInputSet = (props: IProps): JSX.Element => {
     const [dyncId, setDyncId] = useState<number>(0)
-    const [keys, setKeys] = useState<number[]>([])
+    const [keys] = useState<number[]>([])
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
@@ -84,63 +84,6 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
         })
     }
 
-    const handleJsonSave = (e: FormEvent): void => {
-        e.preventDefault()
-        props.form.validateFields((err, values) => {
-            if (!err) {
-                // logger(values)
-                const obj = formatDataJson(values)
-                const a = downloadRef.current
-                if (a) {
-                    const blob = new Blob(
-                        [JSON.stringify(obj, null, 2)],
-                        { type: 'application/json' })
-                    const blobUrl = window.URL.createObjectURL(blob)
-                    logger(blobUrl)
-
-                    // console.log(a)
-                    const filename = 'labeledImages.json'
-                    a.href = blobUrl
-                    a.download = filename
-                    a.click()
-                    window.URL.revokeObjectURL(blobUrl)
-                }
-            }
-        })
-    }
-
-    // const handleJsonChange = async ({ file }: UploadChangeParam): Promise<void> => {
-    //     logger('handleFileChange', file.name)
-    //
-    //     const buffer = await getUploadFileArray(file.originFileObj)
-    //     const data = JSON.parse(buffer.toString())
-    //
-    //     const _labeledImageList = data.labeledImageList
-    //     if (!_labeledImageList) {
-    //         return
-    //     }
-    //
-    //     const _keys = _labeledImageList.map((item: any, index: number) => index)
-    //     const imageListStr = _labeledImageList.map((item: any) => {
-    //         return JSON.stringify(item)
-    //     })
-    //     // setLabeledImageList(_labeledImageList)
-    //     setDyncId(_keys.length)
-    //     setKeys(_keys)
-    //
-    //     props.form.setFieldsValue(
-    //         {
-    //             keys: _keys,
-    //             labeledImageList: imageListStr
-    //         }
-    //     )
-    // }
-    //
-    // const handleUpload = async (file: RcFile): Promise<string> => {
-    //     // logger(file)
-    //     return getUploadFileBase64(file)
-    // }
-
     /***********************
      * Render
      ***********************/
@@ -158,7 +101,7 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
             label={index === 0 ? 'Labeled Images : ' : ''}>
             <Col span={20}>
                 <Form.Item>
-                    {getFieldDecorator(`labeledImageList[${k}]`, { initialValue: '{}' })(
+                    {getFieldDecorator(`labeledImageList[${k.toString()}]`, { initialValue: '{}' })(
                         <LabeledImageInput />
                     )}
                 </Form.Item>
@@ -184,18 +127,7 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
                         <Icon type='plus-circle'/> Add
                     </Button>
 
-                    {/* TODO: Disable Load button */}
-                    {/* <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false}> */}
-                    {/*    <Button style={{ width: '20%', marginRight: '10%' }}> */}
-                    {/*        <Icon type='upload'/> Load */}
-                    {/*    </Button> */}
-                    {/* </Upload> */}
-
-                    <Button style={{ width: '35%', marginRight: '10%' }} onClick={handleJsonSave}>
-                        <Icon type='save'/> Save
-                    </Button>
-
-                    <Button type='primary' htmlType='submit' style={{ width: '80%', marginRight: '10%' }}>
+                    <Button type='primary' htmlType='submit' style={{ width: '35%', marginRight: '10%' }}>
                         Submit
                     </Button>
                 </Form.Item>
@@ -205,4 +137,4 @@ const LabeledImageWidget = (props: IProps): JSX.Element => {
     )
 }
 
-export default Form.create<IProps>({ name: 'labeled-images-form' })(LabeledImageWidget)
+export default Form.create<IProps>({ name: 'labeled-images-form' })(LabeledImageInputSet)

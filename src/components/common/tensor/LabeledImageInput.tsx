@@ -2,8 +2,7 @@ import React, { ChangeEvent, useEffect, useReducer, useRef, useState } from 'rea
 import { Card, Icon, Input, message, Modal, Upload } from 'antd'
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
 
-import { getUploadFileBase64, ILabeledImage, getImageDataFromBase64, logger } from '../../../utils'
-import * as tf from '@tensorflow/tfjs'
+import { getUploadFileBase64, ILabeledImage, ILabeledImageSet, logger } from '../../../utils'
 
 const { Dragger } = Upload
 
@@ -39,28 +38,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
     const labelRef = useRef<Input>(null)
 
     useEffect(() => {
-        if (!props.value) {
-            return
-        }
-
-        logger('Can not init from stored file')
-        // TODO Cannot init AntD <Upload> by binary data
-        // const { label: _label, imageDataList: _imageDataList } = JSON.parse(props.value) as ILabeledImageSet
-        // if (_label && labelRef.current) {
-        //     labelRef.current.setValue(_label)
-        // }
-        //
-        // if (_imageDataList) {
-        //     const _imageList = _imageDataList.map(item => {
-        //         const { uid, name, status, data } = item
-        //         const file = new File ([data], name)
-        //         return { uid, name, status, file } as UploadFile
-        //     })
-        //     setImageList(_imageList)
-        // }
-    }, [props.value])
-
-    useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         const timer = setInterval(async (): Promise<void> => {
             logger('Waiting upload...')
             if (checkUnload(imageList) > 0) {
@@ -70,14 +48,18 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
 
                 const imgDataList = []
                 for (let i = 0; i < imageList.length; i++) {
-                    const { uid, name, originFileObj } = imageList[i]
-                    const _imgBase64 = await getUploadFileBase64(originFileObj)
-                    const _imgData = await getImageDataFromBase64(_imgBase64)
+                    const _file = imageList[i]
+                    const { uid, name, originFileObj } = _file
+                    if (!_file.preview) {
+                        console.log('originFileObj', originFileObj)
+                        const result = await getUploadFileBase64(_file.originFileObj)
+                        _file.preview = result
+                    }
 
-                    const imgData: ILabeledImage = { uid, name, img: _imgData }
+                    const imgData: ILabeledImage = { uid, name, img: _file.preview }
                     imgDataList.push(imgData)
                 }
-                const itemData = { label, imgDataList }
+                const itemData: ILabeledImageSet = { label, imageList: imgDataList }
 
                 // push data to LabeledImageWidget
                 const { onChange } = props
@@ -127,6 +109,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             message.error(`All images are stored in memory, so each label ONLY contains < ${MAX_FILES.toString()} files`)
         }
+
         setImageList(fileList)
 
         // Must wait until all file status is 'done', then push then to LabeledImageWidget

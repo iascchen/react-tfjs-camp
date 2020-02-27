@@ -1,11 +1,19 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import * as knnClassifier from '@tensorflow-models/knn-classifier'
-import {Button, Card, Col, message, Row} from 'antd'
+import { Button, Card, Col, message, Row } from 'antd'
 
-import {IKnnPredictResult, ILabeledImageFileJson, ILabeledImageSet, logger, STATUS} from '../../utils'
+import {
+    getImageDataFromBase64,
+    IKnnPredictResult,
+    ILabeledImageFileJson,
+    ILabeledImageSet,
+    logger,
+    STATUS
+} from '../../utils'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
-import LabeledImageWidget from '../common/tensor/LabeledImageWidget'
+import LabeledImageInputSet from '../common/tensor/LabeledImageInputSet'
+import LabeledImageSetWidget from '../common/tensor/LabeledImageSetWidget'
 
 const MOBILENET_IMAGE_SIZE = 224
 const KNN_TOPK = 10
@@ -92,15 +100,19 @@ const MobilenetClassifier = (): JSX.Element => {
         imageSetList?.forEach(imgSet => {
             const { label, imageList } = imgSet
             imageList?.forEach(imgItem => {
-                const [imgFeature] = tf.tidy(() => {
-                    const _imgTensor = tf.browser.fromPixels(imgItem.img, 4)
-                    const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
-                    const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
-                    // logger(_imgFeature)
-                    return [_imgFeature]
-                })
-                logger('sKnn.addExample', label, imgFeature)
-                sKnn?.addExample(imgFeature, label)
+                const imgBase64 = imgItem.img
+                if (imgBase64) {
+                    getImageDataFromBase64(imgBase64).then((_imgData) => {
+                        const _imgTensor = tf.browser.fromPixels(_imgData, 4)
+                        const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
+                        const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
+
+                        logger('sKnn.addExample', label, _imgFeature)
+                        sKnn?.addExample(_imgFeature, label)
+                    }, (error) => {
+                        logger(error)
+                    })
+                }
             })
 
             setStatus(STATUS.TRAINED)
@@ -158,7 +170,7 @@ const MobilenetClassifier = (): JSX.Element => {
             <Col span={12}>
                 <Card title='Machine Learning(KNN)' style={{ margin: '8px' }} size='small'>
                     <div>Labeled Images</div>
-                    <LabeledImageWidget model={sModel} onSave={handleLabeledImagesSubmit} />
+                    <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
                 </Card>
             </Col>
             <Col span={12}>
@@ -172,16 +184,10 @@ const MobilenetClassifier = (): JSX.Element => {
                         <Button onClick={handleTrain} type='primary'> Train </Button>
                         <Button onClick={handleKnnReset} > Reset Model </Button>
                         <p>status: {sStatus}</p>
-                        <p>labeled Images : </p>
-                        {
-                            sLabeledImgs?.map((imgSet, index) => {
-                                return <div key={index}>
-                                    <p>{imgSet.label}</p>
-                                    <p>{imgSet.imageList?.length}</p>
-                                </div>
-                            })
-                        }
                         <p>KNN: {sKnn?.getNumClasses()}</p>
+
+                        <p>labeled Images : </p>
+                        <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} />
                     </div>
                     <p>backend: {sTfBackend}</p>
                 </Card>

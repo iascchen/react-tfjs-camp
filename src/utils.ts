@@ -30,7 +30,7 @@ export interface ISampleInfo {
 export interface ILabeledImage {
     uid: string
     name: string
-    img: ImageData // Tensor of image data
+    img: string | undefined // base64 of image
 }
 
 export interface ILabeledImageSet {

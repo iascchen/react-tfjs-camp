@@ -1,20 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { forwardRef, Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import * as tfd from '@tensorflow/tfjs-data'
+import { WebcamIterator } from '@tensorflow/tfjs-data/dist/iterators/webcam_iterator'
 import { Button } from 'antd'
 
 import { logger } from '../../../utils'
 import { MOBILENET_IMAGE_SIZE } from '../../../constant'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
+import TensorImageThumbWidget from './TensorImageThumbWidget'
 
-interface IProps {
-    model?: tf.LayersModel
-    prediction?: tf.Tensor
-
-    onSubmit?: (tensor: tf.Tensor) => void
-}
-
-const VIDEO_SHAPE = [480, 360]
+const VIDEO_SHAPE = [480, 360] // [width, height]
 const webcamConfig = {
     // facingMode: 'user',
     centerCrop: false,
@@ -22,27 +16,37 @@ const webcamConfig = {
     resizeHeight: MOBILENET_IMAGE_SIZE
 }
 
-const webcamCapture = async (ref: HTMLVideoElement): Promise<tf.Tensor> => {
-    const cam = await tfd.webcam(ref, webcamConfig)
-    const img = await cam.capture()
-    const processedImg = tf.tidy(() => img.toFloat().div(255))
-    img.dispose()
-    return processedImg
+export interface IWebCameraHandler {
+    capture: () => Promise<tf.Tensor3D | void>
 }
 
-const WebCamera = (props: IProps): JSX.Element => {
-    const [label, setLabel] = useState()
+interface IProps {
+    model?: tf.LayersModel
+    prediction?: tf.Tensor
+    isPreview?: boolean
 
+    onSubmit?: (tensor: tf.Tensor) => void
+}
+
+const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
+    const [sLabel, setLabel] = useState<string>()
+    const [sPreview, setPreview] = useState<tf.Tensor3D>()
+
+    const [sCamera, setCamera] = useState<WebcamIterator>()
     const videoRef = useRef<HTMLVideoElement>(null)
-    const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    useImperativeHandle(ref, (): IWebCameraHandler => ({
+        capture: capture
+    }))
 
     useEffect(() => {
         if (!videoRef.current) {
             return
         }
-
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        tf.data.webcam(videoRef.current, webcamConfig).then()
+        tf.data.webcam(videoRef.current, webcamConfig).then(
+            (cam) => setCamera(cam)
+        )
     }, [videoRef])
 
     useEffect(() => {
@@ -54,17 +58,32 @@ const WebCamera = (props: IProps): JSX.Element => {
         const imagenetRet = props.prediction
         const labelIndex = imagenetRet.arraySync() as number
         logger('labelIndex', labelIndex)
-        const _label = ImagenetClasses[labelIndex]
-        setLabel(`${labelIndex.toString()} : ${_label}`)
+        const label = ImagenetClasses[labelIndex]
+        setLabel(`${labelIndex.toString()} : ${label}`)
     }, [props.prediction])
 
-    const handleSubmit = async (): Promise<void> => {
-        if (!videoRef.current) {
+    const capture = async (): Promise<tf.Tensor3D | void> => {
+        if (!sCamera) {
             return
         }
-        const imgTensor = await webcamCapture(videoRef.current)
-        props.onSubmit && props.onSubmit(imgTensor)
-        canvasRef?.current && tf.browser.toPixels(imgTensor as tf.Tensor3D, canvasRef?.current)
+        const img = await sCamera.capture()
+        const processedImg: tf.Tensor3D = tf.tidy(() => img.toFloat().div(255))
+        img.dispose()
+
+        props.isPreview && setPreview(processedImg)
+        return processedImg
+    }
+
+    const handleCapture = async (): Promise<void> => {
+        await capture()
+    }
+
+    const handleSubmit = async (): Promise<void> => {
+        const imgTensor = await capture()
+        if (imgTensor) {
+            // setPreview(imgTensor)
+            props.onSubmit && props.onSubmit(imgTensor)
+        }
     }
 
     /***********************
@@ -74,20 +93,28 @@ const WebCamera = (props: IProps): JSX.Element => {
     return (
         <>
             <div>
-                <video autoPlay muted playsInline height={VIDEO_SHAPE[1]} width={VIDEO_SHAPE[0]} ref={videoRef}
+                <video autoPlay muted playsInline width={VIDEO_SHAPE[0]} height={VIDEO_SHAPE[1]} ref={videoRef}
                     style={{ backgroundColor: 'lightgray' }}/>
             </div>
-            <div>
-                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Capture &
-                    Predict</Button>
+            <div style={{ margin: 16 }}>
+                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Predict</Button>
+                {props.isPreview && (
+                    <Button onClick={handleCapture} icon='camera'
+                        style={{ width: '30%', margin: '0 10%' }}>Capture</Button>
+                )}
             </div>
-            <div>Captured Images</div>
-            <div>
-                <canvas ref={canvasRef} height={MOBILENET_IMAGE_SIZE} width={MOBILENET_IMAGE_SIZE}/>
-            </div>
-            Prediction Result : {label}
+            {props.isPreview && (
+                <>
+                    <div>Captured Images</div>
+                    <div>
+                        {sPreview && <TensorImageThumbWidget width={VIDEO_SHAPE[0] / 2} height={VIDEO_SHAPE[1] / 2}
+                            data={sPreview}/>}
+                    </div>
+                </>
+            )}
+            Prediction Result : {sLabel}
         </>
     )
 }
 
-export default WebCamera
+export default forwardRef(WebCamera)

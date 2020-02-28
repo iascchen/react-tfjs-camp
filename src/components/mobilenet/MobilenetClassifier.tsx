@@ -2,18 +2,13 @@ import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Card, Col, Row, Select } from 'antd'
 
-import { logger, STATUS } from '../../utils'
+import { logger, STATUS, ILayerSelectOption } from '../../utils'
 import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 
 const { Option } = Select
-
-interface ILayerSelectOption {
-    name: string
-    index: number
-}
 
 const MobilenetClassifier = (): JSX.Element => {
     /***********************

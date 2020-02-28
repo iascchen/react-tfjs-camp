@@ -177,7 +177,7 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 [x] 使用预训练的MobileNet模型 -> 特征 -> 机器学习算法 KNN [teachable-machine](https://github.com/googlecreativelab/teachable-machine-boilerplate.git)
 
-[ ] 使用预训练的MobileNet模型 -> 扩展模型 PoseNet -> 训练靠近输出的几层 -> 新的可用模型
+[ ] 使用预训练的MobileNet模型 -> 扩展模型 -> 仅训练靠后扩展的几层 -> 新的可用模型
 
 特征的提取 => 人脸特征点
 

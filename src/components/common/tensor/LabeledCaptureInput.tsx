@@ -1,9 +1,9 @@
 import React, { ChangeEvent, useReducer, useState } from 'react'
-import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Icon, Input } from 'antd'
 
 import { arrayDispose, ILabeledImage, ILabeledImageSet, logger } from '../../../utils'
 import TensorImageThumbWidget from './TensorImageThumbWidget'
+import {MOBILENET_IMAGE_SIZE} from '../../../constant'
 
 interface IProps {
     value?: string
@@ -68,8 +68,8 @@ const LabeledCaptureInput = (props: IProps): JSX.Element => {
             </Button>
             {
                 sImageList?.map((imgItem: ILabeledImage) => {
-                    if (imgItem.img) {
-                        return <TensorImageThumbWidget key={imgItem.uid} data={imgItem.img as tf.Tensor3D}/>
+                    if (imgItem.tensor) {
+                        return <TensorImageThumbWidget key={imgItem.uid} data={imgItem.tensor}/>
                     } else {
                         return <></>
                     }

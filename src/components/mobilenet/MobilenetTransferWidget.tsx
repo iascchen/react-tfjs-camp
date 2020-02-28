@@ -18,7 +18,7 @@ import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import { createModel } from './modelTransfer'
 import { TransferDataset } from './dataTransfer'
 import LabeledCaptureInputSet from '../common/tensor/LabeledCaptureInputSet'
-import LabeledImageSetWidget from '../common/tensor/LabeledImageSetWidget'
+import LabeledCaptureSetWidget from '../common/tensor/LabeledCaptureSetWidget'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
@@ -209,7 +209,7 @@ const MobilenetTransferWidget = (): JSX.Element => {
                 const file: ILabeledImage = {
                     uid: sImgUid.toString(),
                     name: `${label}_${sImgUid.toString()}`,
-                    img: result
+                    tensor: result
                 }
                 return file
             }
@@ -239,7 +239,7 @@ const MobilenetTransferWidget = (): JSX.Element => {
                         <Button onClick={handleLoadWeight} type='primary' style={{ width: '30%', margin: '0 10%' }}> Load
                             Weights </Button>
                         <div>status: {sStatus}</div>
-                        <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
+                        <LabeledCaptureSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
                     </div>
                     <div>
                         <TfvisModelWidget model={sModel}/>

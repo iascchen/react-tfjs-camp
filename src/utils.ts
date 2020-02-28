@@ -13,6 +13,8 @@ export enum STATUS {
     LOADED = 'Loaded',
     TRAINING = 'Training',
     TRAINED = 'Trained',
+    PREDICTING = 'Predicting',
+    PREDICTED = 'Predicted',
 }
 
 export interface ITrainInfo {
@@ -31,7 +33,8 @@ export interface ISampleInfo {
 export interface ILabeledImage {
     uid: string
     name: string
-    img: string | undefined // base64 of image
+    tensor?: tf.Tensor3D | undefined
+    img?: string | undefined // base64 of image
 }
 
 export interface ILabeledImageSet {
@@ -50,6 +53,11 @@ export interface IKnnPredictResult {
     confidences: {
         [label: string]: number
     }
+}
+
+export interface ILayerSelectOption {
+    name: string
+    index: number
 }
 
 export const range = (from: number, to = 0): number[] => {
@@ -95,13 +103,13 @@ export const getUploadFileBase64 = async (blob: File | Blob | undefined): Promis
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
         // logger('blob', JSON.stringify(blob))
-        reader.readAsDataURL(blob)
         reader.onload = () => {
             const text = reader.result?.toString()
             // logger('getUploadFileBase64', text)
             resolve(text)
         }
         reader.onerror = error => reject(error)
+        reader.readAsDataURL(blob)
     })
 }
 
@@ -112,13 +120,13 @@ export const getUploadFileArray = async (blob: File | Blob | undefined): Promise
 
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
-        reader.readAsArrayBuffer(blob)
         reader.onload = () => {
             const buffer = reader.result as ArrayBuffer
-            // logger('getUploadFileBase64', text)
+            // logger('getUploadFileArray', text)
             resolve(Buffer.from(buffer))
         }
         reader.onerror = error => reject(error)
+        reader.readAsArrayBuffer(blob)
     })
 }
 

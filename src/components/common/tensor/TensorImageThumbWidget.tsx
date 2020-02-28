@@ -24,7 +24,7 @@ const TensorImageThumbWidget = (props: IProps): JSX.Element => {
         tf.browser.toPixels(sample, rowCanvasRef.current).then()
     }, [props.data, props.width, props.height])
 
-    return <canvas ref={rowCanvasRef} style={{ margin: 8 }}/>
+    return <canvas ref={rowCanvasRef} style={{ margin: 4 }}/>
 }
 
 export default TensorImageThumbWidget

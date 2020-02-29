@@ -177,7 +177,7 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 [x] 使用预训练的MobileNet模型 -> 特征 -> 机器学习算法 KNN [teachable-machine](https://github.com/googlecreativelab/teachable-machine-boilerplate.git)
 
-[ ] 使用预训练的MobileNet模型 -> 扩展模型 -> 仅训练靠后扩展的几层 -> 新的可用模型
+[x] 使用预训练的MobileNet模型 -> 扩展模型 -> 仅训练靠后扩展的几层 -> 新的可用模型
 
 特征的提取 => 人脸特征点
 
@@ -193,7 +193,9 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 [x] 图片分类标注组件
 
-[x] 摄像头组件，拍照上传、对视频流的处理
+[x] 摄像头组件，拍照上传
+
+[ ] 对视频流的处理
 
 ### 构建一个模型服务器
 

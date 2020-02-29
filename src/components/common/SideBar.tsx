@@ -18,15 +18,14 @@ const SideBar = (props: IProps): JSX.Element => {
         <div>
             <header className='App-header'>
                 <img src={logo} className='App-logo' alt='logo'/>
-                <p>Tensorflow.js Playground</p>
+                <span>RTP</span>
             </header>
             <Menu theme='dark' mode='inline' onClick={props.onClick}>
                 <Item key='0'>
-                    <Link to='/'>
-                        <span><HomeOutlined/> Home </span>
-                    </Link>
+                    <HomeOutlined/>
+                    <span><Link to='/'>Home</Link></span>
                 </Item>
-                <SubMenu title={<span><LineChartOutlined/> 线性回归 </span>}>
+                <SubMenu title={<span><LineChartOutlined/><span>线性回归</span></span>}>
                     <Item key='1.1'>
                         <Link to='/curve'>
                             <span> 曲线拟合 Curve </span>
@@ -38,7 +37,7 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><CalculatorOutlined/> 手写数字识别 MNIST </span>}>
+                <SubMenu title={<span><CalculatorOutlined/><span>手写数字识别 MNIST</span></span>}>
                     <Item key='3.1'>
                         <Link to='/mnist/web'>
                             <span> Tfjs Web 数据加载 </span>
@@ -55,7 +54,7 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><EyeOutlined/> 使用预训练模型 Mobilenet </span>}>
+                <SubMenu title={<span><EyeOutlined/><span>使用预训练模型 Mobilenet</span></span>}>
                     <Item key='4.1'>
                         <Link to='/mobilenet/basic'>
                             <span> 图片分类器 Mobilenet </span>
@@ -72,7 +71,7 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><FileTextOutlined/> RNN </span>}>
+                <SubMenu title={<span><FileTextOutlined/><span>RNN</span></span>}>
                     <Item key='5.1'>
                         <Link to='/rnn'>
                             <span> RNN </span>
@@ -84,7 +83,7 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title='Sand Box'>
+                <SubMenu title={<span><FileTextOutlined/><span>Sand Box</span></span>}>
                     <Item key='9.1'>
                         <Link to='/sandbox/tfvis'>
                             <span>TfVis Widget</span>

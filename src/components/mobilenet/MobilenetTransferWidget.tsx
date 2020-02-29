@@ -115,7 +115,7 @@ const MobilenetTransferWidget = (): JSX.Element => {
         if (!sLabeledImgs || !sTruncatedModel) {
             return
         }
-        logger('init data set ...')
+        logger('init data set ...', sLabeledImgs)
 
         const outputClasses = sLabeledImgs.length
         setOutputClasses(outputClasses)
@@ -245,45 +245,47 @@ const MobilenetTransferWidget = (): JSX.Element => {
     const _tensorY = sTrainSet?.ys as tf.Tensor
 
     return (
-        <Row gutter={16}>
-            <h1>Posenet</h1>
-            <Col span={12}>
-                <Card title='Prediction' size='small'>
-                    <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
-                        labelsMap={sLabelsMap} isPreview />
-                </Card>
-                <Card>
-                    <LabeledCaptureInputSet model={sModel} onSave={handleLabeledImagesSubmit}
-                        onCapture={handleLabeledCapture}/>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Model(Expand from Mobilenet)' style={{ margin: '8px' }} size='small'>
-                    <div>
-                        <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                        <Button onClick={handleLoadModel} style={{ width: '30%', margin: '0 10%' }}> Load
+        <>
+            <h1>Transfer Learning</h1>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Card title='Prediction' size='small'>
+                        <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
+                            labelsMap={sLabelsMap} isPreview />
+                    </Card>
+                    <Card>
+                        <LabeledCaptureInputSet model={sModel} onSave={handleLabeledImagesSubmit}
+                            onCapture={handleLabeledCapture}/>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Model(Expand from Mobilenet)' style={{ margin: '8px' }} size='small'>
+                        <div>
+                            <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                            <Button onClick={handleLoadModel} style={{ width: '30%', margin: '0 10%' }}> Load
                             Model </Button>
-                        <div>status: {sStatus}</div>
-                        <LabeledCaptureSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
-                        <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
-                    </div>
-                    <div>
-                        <TfvisModelWidget model={sModel}/>
-                        <p>status: {sStatus}</p>
-                    </div>
-                    <div>
+                            <div>status: {sStatus}</div>
+                            <LabeledCaptureSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
+                            <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
+                        </div>
+                        <div>
+                            <TfvisModelWidget model={sModel}/>
+                            <p>status: {sStatus}</p>
+                        </div>
+                        <div>
                         Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                            {sLayersOption?.map((v) => {
-                                return <Option key={v.index} value={v.index}>{v.name}</Option>
-                            })}
-                        </Select>
-                        <TfvisLayerWidget layer={sCurLayer}/>
-                    </div>
+                                {sLayersOption?.map((v) => {
+                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                })}
+                            </Select>
+                            <TfvisLayerWidget layer={sCurLayer}/>
+                        </div>
 
-                    <p>backend: {sTfBackend}</p>
-                </Card>
-            </Col>
-        </Row>
+                        <p>backend: {sTfBackend}</p>
+                    </Card>
+                </Col>
+            </Row>
+        </>
     )
 }
 

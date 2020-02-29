@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Icon, Menu } from 'antd'
+import { Menu } from 'antd'
+import { CalculatorOutlined, EyeOutlined, FileTextOutlined, HomeOutlined, LineChartOutlined } from '@ant-design/icons'
 import { ClickParam } from 'antd/es/menu'
 
 import logo from '../../react_logo.svg'
@@ -22,20 +23,22 @@ const SideBar = (props: IProps): JSX.Element => {
             <Menu theme='dark' mode='inline' onClick={props.onClick}>
                 <Item key='0'>
                     <Link to='/'>
-                        <span><Icon type='home'/> Home </span>
+                        <span><HomeOutlined/> Home </span>
                     </Link>
                 </Item>
-                <Item key='1'>
-                    <Link to='/curve'>
-                        <span><Icon type='line-chart' /> 曲线拟合 Curve </span>
-                    </Link>
-                </Item>
-                <Item key='2'>
-                    <Link to='/iris'>
-                        <span><Icon type='dot-chart' /> 鸢尾花 IRIS</span>
-                    </Link>
-                </Item>
-                <SubMenu title={<span><Icon type='calculator' /> 手写数字识别 MNIST </span>}>
+                <SubMenu title={<span><LineChartOutlined/> 线性回归 </span>}>
+                    <Item key='1.1'>
+                        <Link to='/curve'>
+                            <span> 曲线拟合 Curve </span>
+                        </Link>
+                    </Item>
+                    <Item key='1.2'>
+                        <Link to='/iris'>
+                            <span>鸢尾花 IRIS</span>
+                        </Link>
+                    </Item>
+                </SubMenu>
+                <SubMenu title={<span><CalculatorOutlined/> 手写数字识别 MNIST </span>}>
                     <Item key='3.1'>
                         <Link to='/mnist/web'>
                             <span> Tfjs Web 数据加载 </span>
@@ -52,7 +55,7 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><Icon type='eye' /> 使用预训练模型 Mobilenet </span>}>
+                <SubMenu title={<span><EyeOutlined/> 使用预训练模型 Mobilenet </span>}>
                     <Item key='4.1'>
                         <Link to='/mobilenet/basic'>
                             <span> 图片分类器 Mobilenet </span>
@@ -66,6 +69,18 @@ const SideBar = (props: IProps): JSX.Element => {
                     <Item key='4.3'>
                         <Link to='/mobilenet/transfer'>
                             <span> 迁移学习 模型修改 </span>
+                        </Link>
+                    </Item>
+                </SubMenu>
+                <SubMenu title={<span><FileTextOutlined/> RNN </span>}>
+                    <Item key='5.1'>
+                        <Link to='/rnn'>
+                            <span> RNN </span>
+                        </Link>
+                    </Item>
+                    <Item key='5.2'>
+                        <Link to='/lstm'>
+                            <span> LSTM </span>
                         </Link>
                     </Item>
                 </SubMenu>

@@ -201,7 +201,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
     return (
         <div>
             Acc = {acc}
-            <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize }}/>
+            <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize ?? MAX_SAMPLES_COUNT }}/>
         </div>
     )
 }

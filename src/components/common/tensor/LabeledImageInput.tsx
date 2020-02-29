@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useEffect, useReducer, useRef, useState } from 'react'
-import { Card, Icon, Input, message, Modal, Upload } from 'antd'
+import { Card, Input, message, Modal, Upload } from 'antd'
+import { InboxOutlined } from '@ant-design/icons'
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
 
 import { checkUploadDone, getUploadFileBase64, ILabeledImage, ILabeledImageSet, logger } from '../../../utils'
@@ -9,7 +10,7 @@ const { Dragger } = Upload
 const MAX_FILES = 50
 
 interface IProps {
-    value?: string
+    value?: ILabeledImageSet
 
     onChange?: (value: string) => void
 }
@@ -24,6 +25,17 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
     const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
 
     const labelRef = useRef<Input>(null)
+
+    useEffect(() => {
+        if (!props.value) {
+            return
+        }
+
+        const { label, imageList } = props.value
+        label && setLabel(label)
+
+        // imageList && setImageList(imageList)
+    }, [props.value])
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -123,7 +135,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
                 fileList={imageList} multiple
                 className='upload-list-inline' listType='picture-card'>
                 <p className='ant-upload-drag-icon'>
-                    <Icon type='inbox' />
+                    <InboxOutlined />
                 </p>
                 <p className='ant-upload-text'>Click or drag files to this area to upload</p>
                 <p className='ant-upload-hint'>Support for a single or bulk upload.</p>

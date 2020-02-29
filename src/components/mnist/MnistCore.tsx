@@ -166,37 +166,39 @@ const MnistWeb = (): JSX.Element => {
      ***********************/
 
     return (
-        <Row gutter={16}>
+        <>
             <h1>MNIST</h1>
-            <Col span={12}>
-                <Card title='Train' style={{ margin: '8px' }} size='small'>
-                    <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
-                    <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
-                    <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Card title='Train' style={{ margin: '8px' }} size='small'>
+                        <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
+                        <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
+                        <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
 
-                    <Button onClick={handleTrain} type='primary'> Train </Button>
-                    <p>backend: {tfBackend}</p>
-                    <p>status: {status}</p>
-                    <p>errors: {errors}</p>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <TfvisHistoryWidget logMsg={logMsg} debug />
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Evaluate Set' style={{ margin: '8px' }} size='small'>
-                    <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
-                        pDataset={predictResult} xIsImage />
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
-                    <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={drawPred} />
-                </Card>
-            </Col>
-        </Row>
+                        <Button onClick={handleTrain} type='primary'> Train </Button>
+                        <p>backend: {tfBackend}</p>
+                        <p>status: {status}</p>
+                        <p>errors: {errors}</p>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Visualization' style={{ margin: '8px' }} size='small'>
+                        <TfvisHistoryWidget logMsg={logMsg} debug />
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Evaluate Set' style={{ margin: '8px' }} size='small'>
+                        <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
+                            pDataset={predictResult} xIsImage />
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                        <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={drawPred} />
+                    </Card>
+                </Col>
+            </Row>
+        </>
     )
 }
 

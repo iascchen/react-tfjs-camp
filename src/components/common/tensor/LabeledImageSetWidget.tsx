@@ -1,6 +1,7 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Icon, Upload } from 'antd'
+import { Button, Card, Upload } from 'antd'
+import { SaveOutlined, UploadOutlined } from '@ant-design/icons'
 import { RcFile, UploadChangeParam } from 'antd/es/upload'
 import { UploadFile } from 'antd/es/upload/interface'
 
@@ -112,15 +113,15 @@ const LabeledImageSetWidget = (props: IProps): JSX.Element => {
 
     return (
         <Card title={'Labeled Images'} size='small'>
-            <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false} >
+            <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false}>
                 <Button style={{ width: '300', margin: '0 10%' }}>
-                    <Icon type='upload'/> Load Train Set
+                    <UploadOutlined/> Load Train Set
                 </Button>
             </Upload>
 
             <a ref={downloadRef}/>
             <Button style={{ width: '300', margin: '0 10%' }} onClick={handleJsonSave}>
-                <Icon type='save'/> Save Train Set
+                <SaveOutlined/> Save Train Set
             </Button>
 
             {sLabeledImgs?.map((labeled, index) => {
@@ -129,7 +130,7 @@ const LabeledImageSetWidget = (props: IProps): JSX.Element => {
                     {
                         labeled.imageList?.map((imgItem: ILabeledImage) => {
                             return <img key={imgItem.uid} src={imgItem.img} alt={imgItem.name}
-                                height={MOBILENET_IMAGE_SIZE / 2} style={{ margin: 4 }} />
+                                height={MOBILENET_IMAGE_SIZE / 2} style={{ margin: 4 }}/>
                         })
                     }
                 </Card>

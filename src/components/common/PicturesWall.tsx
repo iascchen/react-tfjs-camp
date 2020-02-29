@@ -1,7 +1,8 @@
 import React, { useEffect, useReducer, useState } from 'react'
-import { Icon, Modal, Upload } from 'antd'
-import { UploadFile, UploadChangeParam, RcFile } from 'antd/es/upload/interface'
-import { logger, getUploadFileBase64, checkUploadDone } from '../../utils'
+import { Modal, Upload } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
+import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
+import { checkUploadDone, getUploadFileBase64, logger } from '../../utils'
 
 interface IProps {
     onPreview?: (file: string) => void
@@ -10,7 +11,7 @@ interface IProps {
 const PicturesWall = (props: IProps): JSX.Element => {
     const [previewImage, setPreviewImage] = useState<string>()
     const [imageList, setImageList] = useState<UploadFile[]>([])
-    const [modelDisplay, setModalDispaly] = useState(false)
+    const [modelDisplay, setModalDisplay] = useState(false)
 
     const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
 
@@ -36,7 +37,7 @@ const PicturesWall = (props: IProps): JSX.Element => {
     }, [waitingPush])
 
     const handleCancel = (): void => {
-        setModalDispaly(false)
+        setModalDisplay(false)
     }
 
     const handlePreview = async (file: UploadFile): Promise<void> => {
@@ -71,7 +72,7 @@ const PicturesWall = (props: IProps): JSX.Element => {
 
     const uploadButton = (
         <div>
-            <Icon type='plus' />
+            <PlusOutlined />
             <div className='ant-upload-text'>Upload</div>
         </div>
     )

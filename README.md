@@ -10,7 +10,7 @@
 * Typescript (v3.7.2)
 * React (v16.12) : react-scripts, react-hooks, react-router
 * Tensorflow.js (v1.5.2)
-* AntD & AntV/bizcharts
+* AntD(v4.0.0) & AntV/bizcharts
 
 ### 快速开始
 

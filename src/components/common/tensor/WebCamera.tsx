@@ -64,7 +64,7 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
             return
         }
 
-        logger(props.prediction)
+        // logger(props.prediction)
         const imagenetRet = props.prediction
         const labelIndex = imagenetRet.arraySync() as number
         logger('labelIndex', labelIndex)
@@ -107,11 +107,11 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
                     style={{ backgroundColor: 'lightgray' }}/>
             </div>
             <div style={{ margin: 16 }}>
-                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Predict</Button>
                 {props.isPreview && (
                     <Button onClick={handleCapture} icon='camera'
                         style={{ width: '30%', margin: '0 10%' }}>Capture</Button>
                 )}
+                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Predict</Button>
             </div>
             {props.isPreview && (
                 <>

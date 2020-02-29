@@ -212,55 +212,57 @@ const Curve = (): JSX.Element => {
     }
 
     return (
-        <Row gutter={16}>
+        <>
             <h1>曲线拟合 Curve</h1>
-            <Col span={24}>
-                <Card title='Model' style={{ margin: '8px' }} size='small'>
-                    {model ? <ModelInfo model={model}/> : ''}
-                    <div>Backend: {tfBackend}</div>
-                    <div>
+            <Row gutter={16}>
+                <Col span={24}>
+                    <Card title='Model' style={{ margin: '8px' }} size='small'>
+                        {model ? <ModelInfo model={model}/> : ''}
+                        <div>Backend: {tfBackend}</div>
+                        <div>
                         Layer Count :
-                        <Select onChange={handleLayerCountChange} defaultValue={'2'}>
-                            {LayersCount.map((v) => {
-                                return <Option key={v} value={v}>{v}</Option>
-                            })}
-                        </Select>
-                    </div>
-                    <div>
+                            <Select onChange={handleLayerCountChange} defaultValue={'2'}>
+                                {LayersCount.map((v) => {
+                                    return <Option key={v} value={v}>{v}</Option>
+                                })}
+                            </Select>
+                        </div>
+                        <div>
                         Activation :
-                        <Select onChange={handleActivateChange} defaultValue={'sigmoid'}>
-                            {Activations.map((v) => {
-                                return <Option key={v} value={v}>{v}</Option>
-                            })}
-                        </Select>
-                    </div>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Train' style={{ margin: '8px' }} size='small'>
-                    {/* <p>trainX: {trainX?.dataSync().join(' , ')}</p> */}
-                    {/* <p>trainY: {trainY?.dataSync().join(' , ')}</p> */}
-                    <CurveVis xDataset={trainX} yDataset={trainY} sampleCount={totalRecord} />
+                            <Select onChange={handleActivateChange} defaultValue={'sigmoid'}>
+                                {Activations.map((v) => {
+                                    return <Option key={v} value={v}>{v}</Option>
+                                })}
+                            </Select>
+                        </div>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Train' style={{ margin: '8px' }} size='small'>
+                        {/* <p>trainX: {trainX?.dataSync().join(' , ')}</p> */}
+                        {/* <p>trainY: {trainY?.dataSync().join(' , ')}</p> */}
+                        <CurveVis xDataset={trainX} yDataset={trainY} sampleCount={totalRecord} />
 
-                    <div>
+                        <div>
                         Curve Params: {`${curveParams[0].toString()}*x^2 + ${curveParams[1].toString()}*x + ${curveParams[2].toString()}`}
-                        <Button onClick={handleResetParams}> Reset </Button>
-                    </div>
-                    <div>
+                            <Button onClick={handleResetParams}> Reset </Button>
+                        </div>
+                        <div>
                         Status: {status}
-                        <Button type='primary' onClick={handleTrain}> Train </Button>
-                    </div>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                    <CurveVis xDataset={testX} yDataset={testY} pDataset={testP} sampleCount={testRecord} />
-                    <Button type='primary' onClick={handlePredict}> Validate </Button>
-                    <div>trained epoches: {trainStatusStr} </div>
-                    <div>evaluate loss: {testV?.dataSync().join(' , ')}</div>
-                </Card>
-            </Col>
-        </Row>
+                            <Button type='primary' onClick={handleTrain}> Train </Button>
+                        </div>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                        <CurveVis xDataset={testX} yDataset={testY} pDataset={testP} sampleCount={testRecord} />
+                        <Button type='primary' onClick={handlePredict}> Validate </Button>
+                        <div>trained epoches: {trainStatusStr} </div>
+                        <div>evaluate loss: {testV?.dataSync().join(' , ')}</div>
+                    </Card>
+                </Col>
+            </Row>
+        </>
     )
 }
 

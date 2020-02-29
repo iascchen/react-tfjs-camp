@@ -104,36 +104,37 @@ const MobilenetClassifier = (): JSX.Element => {
      ***********************/
 
     return (
-        <Row gutter={16}>
+        <>
             <h1>Mobilenet Classifier</h1>
-
-            <Col span={12}>
-                <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                    <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
-                </Card>
-                <Card title='Infomation' style={{ margin: '8px' }} size='small'>
-                    <p>此处显示说明 MD 文件</p>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Basic Model' style={{ margin: '8px' }} size='small'>
-                    <div>
-                        <TfvisModelWidget model={model}/>
-                        <p>status: {status}</p>
-                    </div>
-                    <div>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                        <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
+                    </Card>
+                    <Card title='Infomation' style={{ margin: '8px' }} size='small'>
+                        <p>此处显示说明 MD 文件</p>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Basic Model' style={{ margin: '8px' }} size='small'>
+                        <div>
+                            <TfvisModelWidget model={model}/>
+                            <p>status: {status}</p>
+                        </div>
+                        <div>
                         Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                            {layersOption?.map((v) => {
-                                return <Option key={v.index} value={v.index}>{v.name}</Option>
-                            })}
-                        </Select>
-                        <TfvisLayerWidget layer={curLayer}/>
-                    </div>
+                                {layersOption?.map((v) => {
+                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                })}
+                            </Select>
+                            <TfvisLayerWidget layer={curLayer}/>
+                        </div>
 
-                    <p>backend: {tfBackend}</p>
-                </Card>
-            </Col>
-        </Row>
+                        <p>backend: {tfBackend}</p>
+                    </Card>
+                </Col>
+            </Row>
+        </>
     )
 }
 

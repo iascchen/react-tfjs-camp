@@ -180,30 +180,32 @@ const MobilenetClassifier = (): JSX.Element => {
     }
 
     return (
-        <Row gutter={16}>
+        <>
             <h1>Mobilenet + KNN</h1>
-            <Col span={12}>
-                <Card title='Prediction' style={{ margin: '8px' }} size='small'>
-                    <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
-                </Card>
-                <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
-                    <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
-                    <div>
-                        <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                        <Button onClick={handleKnnReset} style={{ width: '30%', margin: '0 10%' }}> Reset Model </Button>
-                        <div>status: {sStatus}</div>
-                        {knnInfo()}
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Card title='Prediction' style={{ margin: '8px' }} size='small'>
+                        <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
+                    </Card>
+                    <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
+                        <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
+                        <div>
+                            <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                            <Button onClick={handleKnnReset} style={{ width: '30%', margin: '0 10%' }}> Reset Model </Button>
+                            <div>status: {sStatus}</div>
+                            {knnInfo()}
 
-                        <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
-                    </div>
-                    <p>backend: {sTfBackend}</p>
-                </Card>
-            </Col>
-        </Row>
+                            <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
+                        </div>
+                        <p>backend: {sTfBackend}</p>
+                    </Card>
+                </Col>
+            </Row>
+        </>
     )
 }
 

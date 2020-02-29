@@ -52,10 +52,11 @@ export const addDenseLayers = (_model: tf.Sequential): void => {
 
 export const addSimpleConvLayers = (_model: tf.Sequential): void => {
     // // const _model = tf.sequential()
-    _model.add(tf.layers.conv2d({ inputShape: [IMAGE_HEIGHT, IMAGE_WIDTH, 1], kernelSize: 3, filters: 8, activation: 'relu' }))
+    _model.add(tf.layers.conv2d({ inputShape: [IMAGE_HEIGHT, IMAGE_WIDTH, 1], kernelSize: 3, filters: 16, activation: 'relu' }))
     _model.add(tf.layers.maxPooling2d({ poolSize: [2, 2] }))
-    _model.add(tf.layers.conv2d({ kernelSize: 3, filters: 16, activation: 'relu' }))
+    _model.add(tf.layers.conv2d({ kernelSize: 3, filters: 32, activation: 'relu' }))
     _model.add(tf.layers.maxPooling2d({ poolSize: [2, 2] }))
     _model.add(tf.layers.flatten({}))
+    _model.add(tf.layers.dense({ units: 64, activation: 'relu' }))
     _model.add(tf.layers.dense({ units: 10, activation: 'softmax' }))
 }

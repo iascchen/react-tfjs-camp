@@ -1,12 +1,12 @@
-import React, { ChangeEvent, useReducer, useState } from 'react'
-import { Button, Card, Icon, Input } from 'antd'
+import React, { ChangeEvent, useEffect, useReducer, useState } from 'react'
+import { Button, Card, Input } from 'antd'
+import { CameraOutlined, DeleteOutlined } from '@ant-design/icons'
 
 import { arrayDispose, ILabeledImage, ILabeledImageSet, logger } from '../../../utils'
 import TensorImageThumbWidget from './TensorImageThumbWidget'
-import {MOBILENET_IMAGE_SIZE} from '../../../constant'
 
 interface IProps {
-    value?: string
+    value?: ILabeledImageSet
 
     onCapture?: (label: string) => Promise<ILabeledImage | void>
     onChange?: (value: ILabeledImageSet) => void
@@ -14,9 +14,19 @@ interface IProps {
 
 const LabeledCaptureInput = (props: IProps): JSX.Element => {
     const [sLabel, setLabel] = useState<string>('')
-    const [sImageList] = useState<ILabeledImage[]>([])
+    const [sImageList, setImageList] = useState<ILabeledImage[]>([])
 
     const [ignore, forceUpdate] = useReducer((x: number) => x + 1, 0)
+
+    useEffect(() => {
+        if (!props.value) {
+            return
+        }
+
+        const { label, imageList } = props.value
+        label && setLabel(label)
+        imageList && setImageList(imageList)
+    }, [props.value])
 
     const pushToParentForm = (): void => {
         const { onChange } = props
@@ -61,10 +71,10 @@ const LabeledCaptureInput = (props: IProps): JSX.Element => {
         <Card>
             <Input onChange={handleLabelChange} defaultValue={sLabel} placeholder={'Label. such as: cat, dog...'} />
             <Button style={{ width: '30%', margin: '0 10%' }} size='small' onClick={handleReset}>
-                <Icon type={'reset'} /> Reset
+                <DeleteOutlined /> Drop All
             </Button>
             <Button style={{ width: '30%', margin: '0 10%' }} size='small' onClick={handleCapture}>
-                <Icon type={'camera'} /> Capture label
+                <CameraOutlined /> Capture label
             </Button>
             {
                 sImageList?.map((imgItem: ILabeledImage) => {

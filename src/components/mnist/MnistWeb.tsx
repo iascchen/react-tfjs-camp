@@ -91,7 +91,7 @@ const MnistWeb = (): JSX.Element => {
     useEffect(() => {
         logger('init data set ...')
 
-        tf.enableDebugMode()
+        // tf.enableDebugMode()
 
         setStatus(STATUS.LOADING)
         const mnistDataset = new MnistCoreDataset()
@@ -289,54 +289,56 @@ const MnistWeb = (): JSX.Element => {
      ***********************/
 
     return (
-        <Row gutter={16}>
+        <>
             <h1>MNIST</h1>
-            <Col span={12}>
-                <Card title='Model' style={{ margin: '8px' }} size='small'>
-                    <div>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Card title='Model' style={{ margin: '8px' }} size='small'>
+                        <div>
                         Select Model : <Select onChange={handleModelChange} defaultValue={'dense'}>
-                            {Models.map((v) => {
-                                return <Option key={v} value={v}>{v}</Option>
-                            })}
-                        </Select>
-                        <TfvisModelWidget model={model}/>
-                    </div>
-                    <div>
+                                {Models.map((v) => {
+                                    return <Option key={v} value={v}>{v}</Option>
+                                })}
+                            </Select>
+                            <TfvisModelWidget model={model}/>
+                        </div>
+                        <div>
                         Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                            {layersOption?.map((v) => {
-                                return <Option key={v.index} value={v.index}>{v.name}</Option>
-                            })}
-                        </Select>
-                        <TfvisLayerWidget layer={curLayer}/>
-                    </div>
+                                {layersOption?.map((v) => {
+                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                })}
+                            </Select>
+                            <TfvisLayerWidget layer={curLayer}/>
+                        </div>
 
-                    <p>backend: {tfBackend}</p>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Train' style={{ margin: '8px' }} size='small'>
-                    <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
-                    <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
-                    <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
+                        <p>backend: {tfBackend}</p>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Train' style={{ margin: '8px' }} size='small'>
+                        <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
+                        <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
+                        <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
 
-                    <Button onClick={handleTrain} type='primary'> Train </Button>
-                    <Button onClick={handleEvaluate}> Evaluate </Button>
-                    <p>status: {status}</p>
-                    <p>errors: {errors}</p>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <TfvisHistoryWidget logMsg={logMsg} debug />
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
-                    <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
-                        pDataset={predictResult} xIsImage />
-                </Card>
-            </Col>
-        </Row>
+                        <Button onClick={handleTrain} type='primary'> Train </Button>
+                        <Button onClick={handleEvaluate}> Evaluate </Button>
+                        <p>status: {status}</p>
+                        <p>errors: {errors}</p>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Visualization' style={{ margin: '8px' }} size='small'>
+                        <TfvisHistoryWidget logMsg={logMsg} debug />
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                        <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
+                            pDataset={predictResult} xIsImage />
+                    </Card>
+                </Col>
+            </Row>
+        </>
     )
 }
 

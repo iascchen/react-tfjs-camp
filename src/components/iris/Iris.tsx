@@ -184,29 +184,29 @@ const Iris = (): JSX.Element => {
      ***********************/
 
     return (
-        <Row gutter={16}>
+        <>
             <h1>鸢尾花分类 Iris</h1>
-            <Col span={12}>
-                <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
-                    <Button onClick={handleTrain} type='primary'> Train & Validate </Button>
-                    <div>status: {status}</div>
-                    <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
-                        pDataset={predictResult}
-                        xFloatFixed={1} pageSize={18}/>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Model' style={{ margin: '8px' }} size='small'>
-                    {model ? <ModelInfo model={model}/> : ''}
-                    <div>backend: {tfBackend}</div>
-                </Card>
-            </Col>
-            <Col span={12}>
-                <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                    <HistoryWidget infos={trainInfos} totalIterations={totalEpochs} />
-                </Card>
-            </Col>
-        </Row>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                        <Button onClick={handleTrain} type='primary'> Train & Validate </Button>
+                        <div>status: {status}</div>
+                        <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
+                            pDataset={predictResult}
+                            xFloatFixed={1} pageSize={18}/>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title='Model' style={{ margin: '8px' }} size='small'>
+                        {model ? <ModelInfo model={model}/> : ''}
+                        <div>backend: {tfBackend}</div>
+                    </Card>
+                    <Card title='Visualization' style={{ margin: '8px' }} size='small'>
+                        <HistoryWidget infos={trainInfos} totalIterations={totalEpochs} />
+                    </Card>
+                </Col>
+            </Row>
+        </>
     )
 }
 

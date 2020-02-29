@@ -1,7 +1,8 @@
 import * as tf from '@tensorflow/tfjs'
 import { MOBILENET_MODEL_PATH } from '../../constant'
+import { logger } from '../../utils'
 
-export const createModel = async (outputClasses: number, learningRate = 0.15, denseUnits = 10): Promise<tf.LayersModel> => {
+export const createTruncatedMobileNet = async (): Promise<tf.LayersModel> => {
     const mobilenet = await tf.loadLayersModel(MOBILENET_MODEL_PATH)
 
     // Return a model that outputs an internal activation.
@@ -9,13 +10,19 @@ export const createModel = async (outputClasses: number, learningRate = 0.15, de
     const truncatedMobileNet = tf.model({ inputs: mobilenet.inputs, outputs: layer.output })
     truncatedMobileNet.trainable = false
 
+    return truncatedMobileNet
+}
+
+export const createModel = (truncatedMobileNet: tf.LayersModel, outputClasses: number, learningRate = 0.15, denseUnits = 10): tf.LayersModel => {
+    const inputShape = truncatedMobileNet.outputs[0].shape.slice(1)
+    logger('inputShape', inputShape)
     const modelWillTrained = tf.sequential({
         layers: [
             // Flattens the input to a vector so we can use it in a dense layer. While
             // technically a layer, this only performs a reshape (and has no training
             // parameters).
-            tf.layers.flatten(
-                { inputShape: truncatedMobileNet.outputs[0].shape.slice(1) }),
+
+            tf.layers.flatten({ inputShape }),
             // Layer 1.
             tf.layers.dense({
                 units: denseUnits,
@@ -34,20 +41,13 @@ export const createModel = async (outputClasses: number, learningRate = 0.15, de
         ]
     })
 
-    const output = modelWillTrained.apply(truncatedMobileNet.apply(truncatedMobileNet.inputs)) as tf.SymbolicTensor
-    const finalModel = tf.model({ inputs: truncatedMobileNet.inputs, outputs: output })
-
-    // const finalModel = tf.sequential()
-    // finalModel.add(truncatedMobileNet)
-    // finalModel.add(modelWillTrained)
-
     // Creates the optimizers which drives training of the model.
     const optimizer = tf.train.adam(learningRate)
     // We use categoricalCrossentropy which is the loss function we use for
     // categorical classification which measures the error between our predicted
     // probability distribution over classes (probability that an input is of each
     // class), versus the label (100% probability in the true class)>
-    finalModel.compile({ optimizer: optimizer, loss: 'categoricalCrossentropy' })
+    modelWillTrained.compile({ optimizer: optimizer, loss: 'categoricalCrossentropy' })
 
-    return finalModel
+    return modelWillTrained
 }

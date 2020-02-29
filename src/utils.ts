@@ -60,6 +60,10 @@ export interface ILayerSelectOption {
     index: number
 }
 
+export interface ILabelMap {
+    [index: number]: string
+}
+
 export const range = (from: number, to = 0): number[] => {
     return [...Array(Math.abs(to - from)).keys()].map(v => v + from)
 }

@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs'
 import { WebcamIterator } from '@tensorflow/tfjs-data/dist/iterators/webcam_iterator'
 import { Button } from 'antd'
 
-import { logger } from '../../../utils'
+import { ILabelMap, logger } from '../../../utils'
 import { MOBILENET_IMAGE_SIZE } from '../../../constant'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
 import TensorImageThumbWidget from './TensorImageThumbWidget'
@@ -24,6 +24,7 @@ interface IProps {
     model?: tf.LayersModel
     prediction?: tf.Tensor
     isPreview?: boolean
+    labelsMap?: ILabelMap
 
     onSubmit?: (tensor: tf.Tensor) => void
 }
@@ -43,10 +44,19 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
         if (!videoRef.current) {
             return
         }
+
+        let _cam: WebcamIterator
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         tf.data.webcam(videoRef.current, webcamConfig).then(
-            (cam) => setCamera(cam)
+            (cam) => {
+                _cam = cam
+                setCamera(cam)
+            }
         )
+
+        return () => {
+            _cam?.stop()
+        }
     }, [videoRef])
 
     useEffect(() => {
@@ -54,12 +64,13 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
             return
         }
 
-        // Imagenet Classes
+        logger(props.prediction)
         const imagenetRet = props.prediction
         const labelIndex = imagenetRet.arraySync() as number
         logger('labelIndex', labelIndex)
-        const label = ImagenetClasses[labelIndex]
+        const label = props.labelsMap ? props.labelsMap[labelIndex] : ImagenetClasses[labelIndex]
         setLabel(`${labelIndex.toString()} : ${label}`)
+        imagenetRet.dispose()
     }, [props.prediction])
 
     const capture = async (): Promise<tf.Tensor3D | void> => {
@@ -81,7 +92,6 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
     const handleSubmit = async (): Promise<void> => {
         const imgTensor = await capture()
         if (imgTensor) {
-            // setPreview(imgTensor)
             props.onSubmit && props.onSubmit(imgTensor)
         }
     }

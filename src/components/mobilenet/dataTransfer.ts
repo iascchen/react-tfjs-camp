@@ -15,6 +15,7 @@
  * =============================================================================
  */
 import * as tf from '@tensorflow/tfjs'
+import { ILabeledImageSet } from '../../utils'
 
 /**
  * A dataset for webcam controls which allows the user to add example Tensors
@@ -24,9 +25,11 @@ export class TransferDataset {
     numClasses: number
     xs?: tf.Tensor
     ys?: tf.Tensor
+    labels: string[]
 
     constructor (numClasses: number) {
         this.numClasses = numClasses
+        this.labels = []
     }
 
     /**
@@ -35,7 +38,7 @@ export class TransferDataset {
      *     an activation, or any other type of Tensor.
      * @param {number} label The label of the example. Should be a number.
      */
-    addExample (example: tf.Tensor, label: string): void {
+    addExample (example: tf.Tensor, label: number): void {
         // One-hot encode the label.
         const y = tf.tidy(() => tf.oneHot(tf.tensor1d([label]).toInt(), this.numClasses))
 
@@ -59,7 +62,28 @@ export class TransferDataset {
         }
     }
 
+    addExamples (truncatedMobileNet: tf.LayersModel, labeledImages: ILabeledImageSet[]): void {
+        if (!labeledImages) {
+            return
+        }
+
+        this.labels = labeledImages.map((labeled) => labeled.label)
+
+        labeledImages.forEach((labeled) => {
+            const imgs = labeled.imageList
+            const label = labeled.label
+            imgs?.forEach(item => {
+                if (item.tensor) {
+                    const _tensor4D = item.tensor.expandDims(0)
+                    const predicted = truncatedMobileNet.predict(_tensor4D)
+                    this.addExample(predicted as tf.Tensor, this.labels.indexOf(label))
+                }
+            })
+        })
+    }
+
     getData (): tf.TensorContainerObject {
+        console.log(this.xs?.shape)
         return { xs: this.xs, ys: this.ys }
     }
 

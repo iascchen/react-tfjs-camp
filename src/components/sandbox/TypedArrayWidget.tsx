@@ -38,6 +38,10 @@ const TypedArrayWidget = (): JSX.Element => {
     const t3dNew = tf.tensor3d(f32Buf2, [1, 1, 3], 'float32')
     logger(t3dNew.dataSync())
 
+    const labels = [0, 1, 2, 3]
+    const tfOnehots = labels.map(item => tf.oneHot(tf.tensor1d([item]).toInt(), labels.length))
+    tfOnehots.forEach(item => item.print())
+
     return (
         <div>
             <div>{

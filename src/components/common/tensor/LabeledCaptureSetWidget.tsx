@@ -35,7 +35,7 @@ const encodeImageTensor = (labeledImgs: ILabeledImageSet[]): any[] => {
 }
 
 const decodeImageTensor = (labeledImgs: ILabeledImageSet[]): any[] => {
-    logger('decodeImageTensor', labeledImgs)
+    // logger('decodeImageTensor', labeledImgs)
     if (!labeledImgs) {
         return []
     }
@@ -51,7 +51,7 @@ const decodeImageTensor = (labeledImgs: ILabeledImageSet[]): any[] => {
                 imgItem.tensor = tf.tensor3d(f32Buf, imgItem.tensor.shape, imgItem.tensor.dtype)
                 delete imgItem.img
             }
-            logger(imgItem)
+            // logger(imgItem)
         })
     })
     return labeledImgs

@@ -12,6 +12,8 @@ import MobilenetClassifier from './components/mobilenet/MobilenetClassifier'
 import MobilenetKnnClassifier from './components/mobilenet/MobilenetKnnClassifier'
 import MobilenetTransferWidget from './components/mobilenet/MobilenetTransferWidget'
 
+import SimpleRnn from './components/rnn/SimpleRnn'
+
 import FetchWidget from './components/sandbox/FetchWidget'
 import TypedArrayWidget from './components/sandbox/TypedArrayWidget'
 import TfvisWidget from './components/sandbox/TfvisWidget'
@@ -28,6 +30,8 @@ const routes: RouteConfig[] = [
     { path: '/mobilenet/basic', component: MobilenetClassifier },
     { path: '/mobilenet/knn', component: MobilenetKnnClassifier },
     { path: '/mobilenet/transfer', component: MobilenetTransferWidget },
+
+    { path: '/rnn/simple', component: SimpleRnn },
 
     { path: '/sandbox/fetch', component: FetchWidget },
     { path: '/sandbox/array', component: TypedArrayWidget },
@@ -49,7 +53,9 @@ export const breadcrumbNameMap: IBreadcrumbMap = {
 
     '/mobilenet/basic': 'Mobilenet Classifier',
     '/mobilenet/knn': 'Teachable Machine',
-    '/mobilenet/transfer': 'Posenet',
+    '/mobilenet/transfer': 'Transfer Learning',
+
+    '/rnn/simple': 'Simple RNN',
 
     '/sandbox/array': 'TypedArray',
     '/sandbox/fetch': 'Fetch',

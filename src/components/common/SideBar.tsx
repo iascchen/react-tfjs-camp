@@ -1,7 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Menu } from 'antd'
-import { CalculatorOutlined, EyeOutlined, FileTextOutlined, HomeOutlined, LineChartOutlined } from '@ant-design/icons'
+import {
+    CalculatorOutlined,
+    ExperimentOutlined,
+    EyeOutlined,
+    HomeOutlined,
+    LineChartOutlined,
+    ReadOutlined
+} from '@ant-design/icons'
 import { ClickParam } from 'antd/es/menu'
 
 import logo from '../../react_logo.svg'
@@ -71,19 +78,19 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><FileTextOutlined/><span>RNN</span></span>}>
+                <SubMenu title={<span><ReadOutlined /><span>RNN</span></span>}>
                     <Item key='5.1'>
-                        <Link to='/rnn'>
-                            <span> RNN </span>
+                        <Link to='/rnn/simple'>
+                            <span> Simple RNN </span>
                         </Link>
                     </Item>
                     <Item key='5.2'>
-                        <Link to='/lstm'>
+                        <Link to='/rnn/lstm'>
                             <span> LSTM </span>
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><FileTextOutlined/><span>Sand Box</span></span>}>
+                <SubMenu title={<span><ExperimentOutlined /><span>Sand Box</span></span>}>
                     <Item key='9.1'>
                         <Link to='/sandbox/tfvis'>
                             <span>TfVis Widget</span>

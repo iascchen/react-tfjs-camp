@@ -74,7 +74,12 @@ const SideBar = (props: IProps): JSX.Element => {
                     </Item>
                     <Item key='4.3'>
                         <Link to='/mobilenet/transfer'>
-                            <span> 迁移学习 模型修改 </span>
+                            <span> 迁移学习：分类器 Classifier </span>
+                        </Link>
+                    </Item>
+                    <Item key='4.4'>
+                        <Link to='/mobilenet/objdetector'>
+                            <span> 迁移学习：对象识别 Object Detector </span>
                         </Link>
                     </Item>
                 </SubMenu>

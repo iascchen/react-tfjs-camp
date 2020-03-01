@@ -25,8 +25,8 @@ yarn-error.log*
 .idea
 /data
 
-*.gz
-
+public/data/*.gz
+public/data/*.csv
 public/data/mnist_images.png
 public/data/mnist_labels_uint8
 public/model

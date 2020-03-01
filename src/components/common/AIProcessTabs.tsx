@@ -1,21 +1,30 @@
 import React, { useEffect, useState } from 'react'
 import { Steps, Tabs } from 'antd'
-import { StickyContainer, Sticky } from 'react-sticky'
+import { Sticky, StickyContainer } from 'react-sticky'
 import { CoffeeOutlined, ControlOutlined, DashboardOutlined, DotChartOutlined, FileTextOutlined } from '@ant-design/icons'
 import { logger } from '../../utils'
 
 const { Step } = Steps
+
+export enum AIProcessTabPanes {
+    INFO = '1',
+    DATA = '2',
+    MODEL = '3',
+    TRAIN = '4',
+    PREDICT = '5'
+}
 
 interface IProps {
     children?: JSX.Element[]
 
     title?: string | JSX.Element
     current?: number
+    docUrl?: string
 
     onChange?: (current: number) => void
 }
 
-const AIProcess = (props: IProps): JSX.Element => {
+const AIProcessTabs = (props: IProps): JSX.Element => {
     const [sCurrent, setCurrent] = useState<number>(0)
 
     useEffect(() => {
@@ -54,4 +63,4 @@ const AIProcess = (props: IProps): JSX.Element => {
     )
 }
 
-export default AIProcess
+export default AIProcessTabs

@@ -37,7 +37,7 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
     const videoRef = useRef<HTMLVideoElement>(null)
 
     useImperativeHandle(ref, (): IWebCameraHandler => ({
-        capture: capture
+        capture
     }))
 
     useEffect(() => {

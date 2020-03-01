@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Row, Select } from 'antd'
 
-import { ITrainInfo, logger, STATUS } from '../../utils'
+import { ILayerSelectOption, ITrainInfo, logger, STATUS } from '../../utils'
 import { MnistGzDataset } from './dataGz'
 import { addCnnLayers, addDenseLayers } from './model'
 
@@ -19,11 +19,6 @@ const BATCH_SIZE = 128
 const VALID_SPLIT = 0.15
 
 const Models = ['dense', 'cnn']
-
-interface ILayerSelectOption {
-    name: string
-    index: number
-}
 
 const MnistKeras = (): JSX.Element => {
     /***********************

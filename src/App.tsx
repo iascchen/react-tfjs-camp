@@ -25,7 +25,7 @@ const App = (): JSX.Element => {
                 </Sider>
                 <Layout className='site-layout'>
                     <Header style={{ background: '#fff', padding: '0' }}>
-                        <span style={{ margin: '0 8px' }}>Tensorflow.js React-Hooks Playground</span>
+                        <span style={{ margin: '0 8px' }}>React Tensorflow.js Camp</span>
                         <GitHubLogo/>
                     </Header>
                     <ErrorBoundary>

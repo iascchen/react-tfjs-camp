@@ -1,4 +1,4 @@
-# react-tfjs-playground 全栈 AI 训练
+# react-tfjs-camp 全栈 AI 训练
 
 ## 第一章：概述
 
@@ -14,7 +14,7 @@
 
 ### 快速开始
 
-    git clone https://github.com/iascchen/react-tfjs-playground.git
+    git clone https://github.com/iascchen/react-tfjs-camp.git
     yarn
     yarn start
     
@@ -41,8 +41,8 @@ Open [http://loalhost:3000](http://loalhost:3000)
     
 ### 创建项目    
     
-    npx create-react-app react-tfjs-playground --template typescript
-    cd react-tfjs-playground
+    npx create-react-app react-tfjs-camp --template typescript
+    cd react-tfjs-camp
     yarn
     yarn start
     

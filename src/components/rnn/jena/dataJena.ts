@@ -347,4 +347,8 @@ export class JenaWeatherData {
     //         }
     //     }
     // }
+
+    dispose = () => {
+        // todo
+    }
 }

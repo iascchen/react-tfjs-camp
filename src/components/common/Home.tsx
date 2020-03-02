@@ -16,11 +16,11 @@ const Home = (): JSX.Element => {
                     <Col span={8}><img src={tsLogo} height={100} alt='logo3'/></Col>
                 </Row>
             </header>
-            <h2>RTP: React Tensorflow.js Playground</h2>
-            <h2>A Tensorflow.js study tool, coding with React Hooks and Typescript</h2>
-            <p>Used other open source resources</p>
+            <h2>RTCamp: React Tensorflow.js Camp</h2>
+            <h2>A Tensorflow.js study tool for full-stack developer, coding with React Hooks and Typescript</h2>
+            <div>Used other open source resources</div>
             <ul>
-                <li>Tensorflow.js 1.5.2</li>
+                <li>Tensorflow.js 1.5.2, tfj-example and tfjs-model</li>
                 <li>React 16.12 (React Hooks)</li>
                 <li>Typescript 3.7.2</li>
             </ul>

@@ -3,7 +3,7 @@ import React from 'react'
 const GitHubLogo = (): JSX.Element => {
     return (
         <a
-            href='https://github.com/iascchen/react-tfjs-playground'
+            href='https://github.com/iascchen/react-tfjs-camp'
             className='github-corner'
             aria-label='View source on GitHub'
         >

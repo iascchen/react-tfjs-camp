@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Card, Col, Row, Select } from 'antd'
 
-import { ILayerSelectOption, logger } from '../../utils'
-import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
-import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
+import { ILayerSelectOption, logger } from '../../../utils'
+import TfvisModelWidget from '../../common/tfvis/TfvisModelWidget'
+import TfvisLayerWidget from '../../common/tfvis/TfvisLayerWidget'
 
 import { buildGRUModel, buildLinearRegressionModel, buildMLPModel, buildSimpleRNNModel } from './modelJena'
 
@@ -63,6 +63,7 @@ const JenaModelWidget = (props: IProps): JSX.Element => {
                 _model = buildSimpleRNNModel(inputShape)
                 break
         }
+        _model.compile({ loss: 'meanAbsoluteError', optimizer: 'rmsprop' })
         // _model.summary()
         setModel(_model)
 

@@ -1,4 +1,11 @@
 /**
+ * @Author: iascchen@gmail.com
+ * @Comments:
+ * Adapted from some codes in Google tfjs-examples.
+ * Refactoring to typescript for RTL(React Tensorflow.js Lab)'s needs
+ */
+
+/**
  * @license
  * Copyright 2019 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,15 +20,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * =============================================================================
- */
-
-/**
- * Creating and training `tf.LayersModel`s for the temperature prediction
- * problem.
- *
- * This file is used to create models for both
- * - the browser: see [index.js](./index.js), and
- * - the Node.js backend environment: see [train-rnn.js](./train-rnn.js).
  */
 
 import * as tf from '@tensorflow/tfjs'
@@ -80,12 +78,6 @@ const VAL_MAX_ROW = 300000
 //         return meanAbsoluteError.dataSync()[0]
 //     }
 
-/**
- * Build a linear-regression model for the temperature-prediction problem.
- *
- * @param {tf.Shape} inputShape Input shape (without the batch dimenson).
- * @returns {tf.LayersModel} A TensorFlow.js tf.LayersModel instance.
- */
 export const buildLinearRegressionModel = (inputShape: tf.Shape): tf.LayersModel => {
     const model = tf.sequential()
     model.add(tf.layers.flatten({ inputShape }))
@@ -93,47 +85,29 @@ export const buildLinearRegressionModel = (inputShape: tf.Shape): tf.LayersModel
     return model
 }
 
-/**
- * Build a GRU model for the temperature-prediction problem.
- *
- * @param {tf.Shape} inputShape Input shape (without the batch dimenson).
- * @param {tf.regularizer.Regularizer} kernelRegularizer An optional
- *   regularizer for the kernel of the first (hdiden) dense layer of the MLP.
- *   If not specified, no weight regularization will be included in the MLP.
- * @param {number} dropoutRate Dropout rate of an optional dropout layer
- *   inserted between the two dense layers of the MLP. Optional. If not
- *   specified, no dropout layers will be included in the MLP.
- * @returns {tf.LayersModel} A TensorFlow.js tf.LayersModel instance.
- */
 export const buildMLPModel = (inputShape: tf.Shape,
-    options?: {
+    options: {
         kernelRegularizer?: any
         dropoutRate?: number
-    }): tf.LayersModel => {
+    } = {}): tf.LayersModel => {
     const model = tf.sequential()
 
     model.add(tf.layers.flatten({ inputShape }))
 
-    if (options?.kernelRegularizer) {
-        model.add(tf.layers.dense({ units: 32, kernelRegularizer: options.kernelRegularizer, activation: 'relu' }))
+    const { kernelRegularizer, dropoutRate } = options
+    if (kernelRegularizer) {
+        model.add(tf.layers.dense({ units: 32, kernelRegularizer, activation: 'relu' }))
     } else {
         model.add(tf.layers.dense({ units: 32, activation: 'relu' }))
     }
 
-    if (options?.dropoutRate && options.dropoutRate > 0) {
-        model.add(tf.layers.dropout({ rate: options.dropoutRate }))
+    if (dropoutRate && dropoutRate > 0) {
+        model.add(tf.layers.dropout({ rate: dropoutRate }))
     }
     model.add(tf.layers.dense({ units: 1 }))
     return model
 }
 
-/**
- * Build a simpleRNN-based model for the temperature-prediction problem.
- *
- * @param {tf.Shape} inputShape Input shape (without the batch dimenson).
- * @returns {tf.LayersModel} A TensorFlow.js model consisting of a simpleRNN
- *   layer.
- */
 export const buildSimpleRNNModel = (inputShape: tf.Shape): tf.LayersModel => {
     const model = tf.sequential()
     const rnnUnits = 32
@@ -142,14 +116,6 @@ export const buildSimpleRNNModel = (inputShape: tf.Shape): tf.LayersModel => {
     return model
 }
 
-/**
- * Build a GRU model for the temperature-prediction problem.
- *
- * @param {tf.Shape} inputShape Input shape (without the batch dimenson).
- * @param {number} dropout Optional input dropout rate
- * @param {number} recurrentDropout Optional recurrent dropout rate.
- * @returns {tf.LayersModel} A TensorFlow.js GRU model.
- */
 export const buildGRUModel = (inputShape: tf.Shape, dropout?: number, recurrentDropout?: number): tf.LayersModel => {
     // TODO(cais): Recurrent dropout is currently not fully working.
     //   Make it work and add a flag to train-rnn.js.
@@ -164,44 +130,6 @@ export const buildGRUModel = (inputShape: tf.Shape, dropout?: number, recurrentD
     model.add(tf.layers.dense({ units: 1 }))
     return model
 }
-
-// /**
-//  * Build a model for the temperature-prediction problem.
-//  *
-//  * @param {string} modelType Model type.
-//  * @param {number} numTimeSteps Number of time steps in each input.
-//  *   exapmle
-//  * @param {number} numFeatures Number of features (for each time step).
-//  * @returns A compiled instance of `tf.LayersModel`.
-//  */
-// export function buildModel (modelType, numTimeSteps, numFeatures) {
-//     const inputShape = [numTimeSteps, numFeatures]
-//
-//     console.log(`modelType = ${modelType}`)
-//     let model
-//     if (modelType === 'mlp') {
-//         model = buildMLPModel(inputShape)
-//     } else if (modelType === 'mlp-l2') {
-//         model = buildMLPModel(inputShape, tf.regularizers.l2())
-//     } else if (modelType === 'linear-regression') {
-//         model = buildLinearRegressionModel(inputShape)
-//     } else if (modelType === 'mlp-dropout') {
-//         const regularizer = null
-//         const dropoutRate = 0.25
-//         model = buildMLPModel(inputShape, regularizer, dropoutRate)
-//     } else if (modelType === 'simpleRNN') {
-//         model = buildSimpleRNNModel(inputShape)
-//     } else if (modelType === 'gru') {
-//         model = buildGRUModel(inputShape)
-//         // TODO(cais): Add gru-dropout with recurrentDropout.
-//     } else {
-//         throw new Error(`Unsupported model type: ${modelType}`)
-//     }
-//
-//     model.compile({ loss: 'meanAbsoluteError', optimizer: 'rmsprop' })
-//     model.summary()
-//     return model
-// }
 
 /**
  * Train a model on the Jena weather data.

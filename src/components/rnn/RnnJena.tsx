@@ -18,7 +18,8 @@ import LabeledImageSetWidget from '../common/tensor/LabeledImageSetWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
-import JenaModelWidget from './JenaModelWidget'
+import JenaModelWidget from './jena/JenaModelWidget'
+import JenaDataWidget from './jena/JenaDataWidget'
 
 const { TabPane } = Tabs
 
@@ -26,7 +27,7 @@ const RnnJena = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
-    const [sTabCurrent, setTabCurrent] = useState<number>(3)
+    const [sTabCurrent, setTabCurrent] = useState<number>(2)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -113,28 +114,10 @@ const RnnJena = (): JSX.Element => {
                 <MarkdownWidget url={'/docs/rnnJena.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <Row>
-                    <Col span={12}>
-                        <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
-                            {sModel && <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />}
-                        </Card>
-                    </Col>
-                    <Col span={12}>
-                        <Card title='Data Set' style={{ margin: '8px' }} size='small'>
-                            {sModel && <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs}
-                                onJsonLoad={handleLoadJson}/>}
-                        </Card>
-                    </Col>
-                </Row>
+                <JenaDataWidget numFeatures={sNumFeatures} onChange={handleModelChange} />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
-                <Col>
-                    <JenaModelWidget numFeatures={sNumFeatures} onChange={handleModelChange} />
-                </Col>
-                <Col>
-                    {/*{sModel && <TfvisModelWidget model={sModel} />}*/}
-                </Col>
-
+                <JenaModelWidget numFeatures={sNumFeatures} onChange={handleModelChange} />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>

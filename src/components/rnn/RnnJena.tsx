@@ -20,6 +20,8 @@ import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
 import JenaModelWidget from './jena/JenaModelWidget'
 import JenaDataWidget from './jena/JenaDataWidget'
+import JenaTrainWidget from './jena/JenaTrainWidget'
+import { JenaWeatherData } from './jena/dataJena'
 
 const { TabPane } = Tabs
 
@@ -34,6 +36,7 @@ const RnnJena = (): JSX.Element => {
 
     const [sNumFeatures, setNumFeatures] = useState(10)
     const [sModel, setModel] = useState<tf.LayersModel>()
+    const [sDataHandler, setDataHandler] = useState<JenaWeatherData>()
 
     const [sLabeledImgs, setLabeledImgs] = useState<ILabeledImageSet[]>()
     const [sPredictResult, setPredictResult] = useState<tf.Tensor | IKnnPredictResult >()
@@ -46,37 +49,7 @@ const RnnJena = (): JSX.Element => {
      * Functions
      ***********************/
 
-    const train = async (imageSetList: ILabeledImageSet[]): Promise<void> => {
-        logger('train', imageSetList)
 
-        for (const imgSet of imageSetList) {
-            const { label, imageList } = imgSet
-            if (imageList) {
-                for (const imgItem of imageList) {
-                    const imgBase64 = imgItem.img
-                    if (imgBase64) {
-                        const _imgData = await getImageDataFromBase64(imgBase64)
-                        const _imgTensor = tf.browser.fromPixels(_imgData, 3)
-                        // const _imgBatched = formatImageForMobilenet(_imgTensor, MOBILENET_IMAGE_SIZE)
-                        // const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
-                    }
-                }
-            }
-        }
-    }
-
-    const handleTrain = (): void => {
-        if (sLabeledImgs) {
-            setStatus(STATUS.TRAINING)
-            train(sLabeledImgs).then(
-                () => {
-                    setStatus(STATUS.TRAINED)
-                },
-                (error) => {
-                    logger(error)
-                })
-        }
-    }
 
     const handlePredict = async (imgTensor: tf.Tensor): Promise<void> => {
         if (!imgTensor) {
@@ -84,16 +57,23 @@ const RnnJena = (): JSX.Element => {
         }
     }
 
-    const handleLabeledImagesSubmit = (value: ILabeledImageFileJson): void => {
-        logger('handleLabeledImagesSubmit', value)
+    // const handleLabeledImagesSubmit = (value: ILabeledImageFileJson): void => {
+    //     logger('handleLabeledImagesSubmit', value)
+    //
+    //     const labeledImageSetList = value.labeledImageSetList
+    //     setLabeledImgs(labeledImageSetList)
+    // }
+    //
+    // const handleLoadJson = (values: ILabeledImageSet[]): void => {
+    //     sLabeledImgs && arrayDispose(sLabeledImgs)
+    //     setLabeledImgs(values)
+    // }
 
-        const labeledImageSetList = value.labeledImageSetList
-        setLabeledImgs(labeledImageSetList)
-    }
+    const handleDataChange = (dataHandler: JenaWeatherData): void => {
+        setDataHandler(dataHandler)
 
-    const handleLoadJson = (values: ILabeledImageSet[]): void => {
-        sLabeledImgs && arrayDispose(sLabeledImgs)
-        setLabeledImgs(values)
+        const numFeatures = dataHandler.getDataColumnNames().length
+        setNumFeatures(numFeatures)
     }
 
     const handleModelChange = (model: tf.LayersModel): void => {
@@ -114,19 +94,13 @@ const RnnJena = (): JSX.Element => {
                 <MarkdownWidget url={'/docs/rnnJena.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <JenaDataWidget numFeatures={sNumFeatures} onChange={handleModelChange} />
+                <JenaDataWidget numFeatures={sNumFeatures} onChange={handleDataChange} />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <JenaModelWidget numFeatures={sNumFeatures} onChange={handleModelChange} />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
-                <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
-                    <div>
-                        <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                        <div>status: {sStatus}</div>
-                    </div>
-                    <p>backend: {sTfBackend}</p>
-                </Card>
+                <JenaTrainWidget model={sModel} data={sDataHandler} />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
                 <Card title='Prediction' style={{ margin: '8px' }} size='small'>

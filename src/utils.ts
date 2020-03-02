@@ -65,7 +65,8 @@ export interface ILabelMap {
 }
 
 export const range = (from: number, to = 0): number[] => {
-    return [...Array(Math.abs(to - from)).keys()].map(v => v + from)
+    // return [...Array(Math.abs(to - from)).keys()].map(v => v + from)
+    return Array.from(tf.range(from, to).dataSync())
 }
 
 export const splitDataSet = (shuffled: IArray, testSplit: number, shuffle = false): IArray[] => {

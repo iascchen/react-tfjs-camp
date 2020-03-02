@@ -2,16 +2,14 @@ import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Card, Col, message, Row, Select } from 'antd'
 
-import { ILayerSelectOption, logger } from '../../../utils'
-
+import {logger, STATUS} from '../../../utils'
+import SampleDataVis from '../../common/tensor/SampleDataVis'
 import { JenaWeatherData } from './dataJena'
-
-const { Option } = Select
 
 interface IProps{
     numFeatures: number
 
-    onChange?: (model: tf.data.Dataset<any>) => void
+    onChange?: (model: JenaWeatherData) => void
 }
 
 const JenaDataWidget = (props: IProps): JSX.Element => {
@@ -19,10 +17,10 @@ const JenaDataWidget = (props: IProps): JSX.Element => {
      * useState
      ***********************/
 
-    const [sNumFeatures, setNumFeatures] = useState(10)
+    const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
+
     const [sDataHandler, setDataHandler] = useState<JenaWeatherData>()
-    const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
-    const [curLayer, setCurLayer] = useState<tf.layers.Layer>()
+    const [sSampleData, setSampleData] = useState<tf.TensorContainerObject>()
 
     /***********************
      * useEffect
@@ -31,9 +29,15 @@ const JenaDataWidget = (props: IProps): JSX.Element => {
     useEffect(() => {
         logger('init data ...')
 
+        setStatus(STATUS.LOADING)
         const dataHandler = new JenaWeatherData()
         dataHandler.load().then(() => {
             setDataHandler(dataHandler)
+
+            const _sample = dataHandler.getSampleData()
+            setSampleData(_sample)
+
+            setStatus(STATUS.LOADED)
         }, (e) => {
             logger(e)
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -57,49 +61,20 @@ const JenaDataWidget = (props: IProps): JSX.Element => {
      * Render
      ***********************/
 
-    const handleModelChange = (value: string): void => {
-        setModelName(value)
-    }
-
-    const handleLayerChange = (value: number): void => {
-        logger('handleLayerChange', value)
-        const _layer = sModel?.getLayer(undefined, value)
-        setCurLayer(_layer)
-    }
-
-    const modelTitle = (
-        <>
-            Model
-            <Select onChange={handleModelChange} defaultValue={'simpleRnn'} style={{ marginLeft: 16 }}>
-                {ModelOptions.map((v) => {
-                    return <Option key={v} value={v}>{v}</Option>
-                })}
-            </Select>
-        </>
-    )
-
-    const layerTitle = (
-        <>
-            {sModelName} Layers
-            <Select onChange={handleLayerChange} defaultValue={0} style={{ marginLeft: 16 }}>
-                {sLayersOption?.map((v) => {
-                    return <Option key={v.index} value={v.index}>{v.name}</Option>
-                })}
-            </Select>
-        </>
-    )
-
     return (
         <Row>
-            <Col span={12} >
-                <Card title={modelTitle} style={{ margin: 8 }}>
+            <Col span={12}>
+                <Card title={'Data'} style={{ margin: 8 }}>
+                    {/*{JSON.stringify(sSampleData)}*/}
+                    {/*{sSampleData && (<SampleDataVis xFloatFixed={4} xDataset={sSampleData.data as tf.Tensor}*/}
+                    {/*    yDataset={sSampleData.normalizedTimeOfDay as tf.Tensor} ></SampleDataVis>)}*/}
 
+                    {sStatus} {sDataHandler?.getDataLength()}
                 </Card>
             </Col>
-            <Col span={12}>
-                <Card title={layerTitle} style={{ margin: 8 }}>
-
-                </Card>
+            <Col span={24} >
+                <h3>Please goto ./public/data folder and download data file with follow command</h3>
+                <code>wget https://storage.googleapis.com/learnjs-data/jena_climate/jena_climate_2009_2016.csv</code>
             </Col>
         </Row>
     )

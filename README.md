@@ -1,4 +1,4 @@
-# react-tfjs-playground 全栈 AI 训练
+# react-tfjs-camp 全栈 AI 训练
 
 ## 第一章：概述
 

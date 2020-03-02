@@ -1,7 +1,7 @@
 /**
  * @Author: iascchen@gmail.com
  * @Comments:
- * Adapted from some codes in Google tfjs-examples.
+ * Adapted from some codes in Google tfjs-examples or tfjs-models.
  * Refactoring to typescript for RTL(React Tensorflow.js Lab)'s needs
  */
 
@@ -23,6 +23,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
+import { JenaWeatherData } from './dataJena'
 
 // Row ranges of the training and validation data subsets.
 const TRAIN_MIN_ROW = 0
@@ -151,24 +152,25 @@ export const buildGRUModel = (inputShape: tf.Shape, dropout?: number, recurrentD
  *   to invoke at the end of every epoch. Can optionally have `onBatchEnd` and
  *   `onEpochEnd` fields.
  */
-// export const trainModel =
-//     async (model, jenaWeatherData, normalize, includeDateTime, lookBack, step, delay,
-//         batchSize, epochs, customCallback): Promise<void> => {
-//         const trainShuffle = true
-//         const trainDataset = tf.data.generator(
-//             () => jenaWeatherData.getNextBatchFunction(
-//                 trainShuffle, lookBack, delay, batchSize, step, TRAIN_MIN_ROW,
-//                 TRAIN_MAX_ROW, normalize, includeDateTime)).prefetch(8)
-//         const evalShuffle = false
-//         const valDataset = tf.data.generator(
-//             () => jenaWeatherData.getNextBatchFunction(
-//                 evalShuffle, lookBack, delay, batchSize, step, VAL_MIN_ROW,
-//                 VAL_MAX_ROW, normalize, includeDateTime))
-//
-//         await model.fitDataset(trainDataset, {
-//             batchesPerEpoch: 500,
-//             epochs,
-//             callbacks: customCallback,
-//             validationData: valDataset
-//         })
-//     }
+export const trainModel =
+    async (model: tf.LayersModel, jenaWeatherData: JenaWeatherData, normalize: boolean, includeDateTime: boolean,
+        lookBack: number, step: number, delay: number, batchSize: number, epochs: number,
+        customCallback: tf.Callback | tf.CustomCallbackArgs): Promise<void> => {
+        const trainShuffle = true
+        const trainDataset = tf.data.generator(
+            () => jenaWeatherData.getNextBatchFunction(
+                trainShuffle, lookBack, delay, batchSize, step, TRAIN_MIN_ROW,
+                TRAIN_MAX_ROW, normalize, includeDateTime)).prefetch(8)
+        const evalShuffle = false
+        const valDataset = tf.data.generator(
+            () => jenaWeatherData.getNextBatchFunction(
+                evalShuffle, lookBack, delay, batchSize, step, VAL_MIN_ROW,
+                VAL_MAX_ROW, normalize, includeDateTime))
+
+        await model.fitDataset(trainDataset, {
+            batchesPerEpoch: 500,
+            epochs,
+            callbacks: customCallback,
+            validationData: valDataset
+        })
+    }

@@ -173,7 +173,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
                 title: 'Y',
                 dataIndex: 'y',
                 key: 'y',
-                render: (text: string, record: any) => {
+                render: (text: string, record: any): JSX.Element => {
                     const color = (record.y === record.p) ? 'green' : 'red'
                     return (
                         <span style={{ color: color }}>{text}</span>
@@ -184,7 +184,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
                 title: 'P',
                 dataIndex: 'p',
                 key: 'p',
-                render: (text: string, record: any) => {
+                render: (text: string, record: any): JSX.Element => {
                     const color = (record.y === record.p) ? 'green' : 'red'
                     return (
                         <span style={{ color: color }}>{text}</span>

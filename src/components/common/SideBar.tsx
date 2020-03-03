@@ -25,7 +25,7 @@ const SideBar = (props: IProps): JSX.Element => {
         <div>
             <header className='App-header'>
                 <img src={logo} className='App-logo' alt='logo'/>
-                <span>RTP</span>
+                <span>RTCamp</span>
             </header>
             <Menu theme='dark' mode='inline' onClick={props.onClick}>
                 <Item key='0'>

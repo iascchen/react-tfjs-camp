@@ -1,16 +1,55 @@
-## RNN 文本生成：自然语言处理
+# 处理连续数据的模型：循环神经网络
 
-### Jena
+## Jena 天气预报
 
-RNN
+### 数据
 
-RNN 比 GRU 和 LSTM 都更容易理解。
+**注意** 
+
+* 如果您要在本地环境运行这个例子，最好预先下载数据文件。并将数据文件放在此项目的 `./public/data` 目录下。
+
+    [https://storage.googleapis.com/learnjs-data/jena_climate/jena_climate_2009_2016.csv](https://storage.googleapis.com/learnjs-data/jena_climate/jena_climate_2009_2016.csv)
+
+* 所需的数据大约有 41.2MB。
+* 刷新页面，会丢失已经加载的数据。
+
+### 模型
+
+提供以下神经网络模型，供比较。
+
+* linear-regression 单层线性回归模型
+* mlp 多层感知机
+* mlp-l2 多层感知机，使用 L2 正则化
+* mlp-dropout 多层感知机，使用 Dropout 处理过拟合
+* simpleRnn 简单的 RNN 模型
+* gru GRU 模型
+
+https://zhuanlan.zhihu.com/p/32481747
+
+模型的输入 Shappe 和所加载的特征数据的列数有关。(=14）
+    
+#### RNN
+
+循环神经网络（Recurrent Neural Network，RNN）是一种用于处理序列数据的神经网络。
+相比一般的神经网络来说，它能够处理序列变化的数据。比如某个单词的意思会因为上文提到的内容不同而有不同的含义，RNN就能够很好地解决这类问题。
+
+https://zhuanlan.zhihu.com/p/32085405
 
 RNN 的伪代码
 
         y=0
         for x in input_sequence:
             y = f(dot(W, x) + dot(U, y))
+
+#### GRU
+
+GRU（Gate Recurrent Unit）是循环神经网络（Recurrent Neural Network, RNN）的一种。和LSTM（Long-Short Term Memory）一样，也是为了解决长期记忆和反向传播中的梯度等问题而提出来的。
+
+GRU和LSTM在很多情况下实际表现上相差无几，那么为什么我们要使用新人GRU（2014年提出）而不是相对经受了更多考验的LSTM（1997提出）呢。
+"我们在我们的实验中选择GRU是因为它的实验效果与LSTM相似，但是更易于计算。"
+简单来说就是贫穷限制了我们的计算能力...
+
+相比LSTM，使用GRU能够达到相当的效果，并且相比之下更容易进行训练，能够很大程度上提高训练效率，因此很多时候会更倾向于使用GRU。
 
 GRU 的伪代码
 
@@ -21,8 +60,9 @@ GRU 的伪代码
             h_prime = tanh(dot(W, x) + dot(r, dot(U, h))) 
             h = dot(1 - z, h) + dot(z, h_prime)
 
-LSTM
+#### LSTM
 
+https://zhuanlan.zhihu.com/p/74034891
 
 ### 使用 RNN 进行语义分析
 

@@ -10,11 +10,10 @@ import { buildGRUModel, buildLinearRegressionModel, buildMLPModel, buildSimpleRN
 
 const { Option } = Select
 
-const ModelOptions = ['linear-regression', 'mlp', 'mlp-l2', 'mlp-dropout', 'simpleRnn', 'gru']
+const MODEL_OPTIONS = ['linear-regression', 'mlp', 'mlp-l2', 'mlp-dropout', 'simpleRnn', 'gru']
+const NUM_FEATURES = 14
 
 interface IProps{
-    numFeatures: number
-
     onChange?: (model: tf.LayersModel) => void
 }
 
@@ -38,7 +37,7 @@ const JenaModelWidget = (props: IProps): JSX.Element => {
         const lookBack = 10 * 24 * 6 // Look back 10 days.
         const step = 6 // 1-hour steps.
         const numTimeSteps = Math.floor(lookBack / step)
-        const numFeatures = props.numFeatures ?? 10
+        const numFeatures = NUM_FEATURES
         const inputShape: tf.Shape = [numTimeSteps, numFeatures]
 
         let _model: tf.LayersModel
@@ -76,7 +75,7 @@ const JenaModelWidget = (props: IProps): JSX.Element => {
             logger('Model Dispose')
             _model?.dispose()
         }
-    }, [sModelName, props.numFeatures])
+    }, [sModelName])
 
     useEffect(() => {
         if (!sModel || !props.onChange) {
@@ -103,7 +102,7 @@ const JenaModelWidget = (props: IProps): JSX.Element => {
         <>
             Model
             <Select onChange={handleModelChange} defaultValue={'simpleRnn'} style={{ marginLeft: 16 }}>
-                {ModelOptions.map((v) => {
+                {MODEL_OPTIONS.map((v) => {
                     return <Option key={v} value={v}>{v}</Option>
                 })}
             </Select>

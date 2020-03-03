@@ -29,7 +29,7 @@ const RnnJena = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
-    const [sTabCurrent, setTabCurrent] = useState<number>(2)
+    const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -94,10 +94,10 @@ const RnnJena = (): JSX.Element => {
                 <MarkdownWidget url={'/docs/rnnJena.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <JenaDataWidget numFeatures={sNumFeatures} onChange={handleDataChange} />
+                <JenaDataWidget onChange={handleDataChange} />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
-                <JenaModelWidget numFeatures={sNumFeatures} onChange={handleModelChange} />
+                <JenaModelWidget onChange={handleModelChange} />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <JenaTrainWidget model={sModel} data={sDataHandler} />

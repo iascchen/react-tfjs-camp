@@ -14,7 +14,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -23,7 +23,8 @@
     "sourceMap": true
   },
   "include": [
-    "src", "node"
+    "src",
+    "node"
   ],
   "exclude": [
     "node_modules"

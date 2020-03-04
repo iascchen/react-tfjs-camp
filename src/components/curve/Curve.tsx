@@ -288,7 +288,7 @@ const Curve = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'曲线拟合 Curve'} current={sTabCurrent} onChange={handleTabChange} docUrl={'/docs/rnnJena.md'}>
+        <AIProcessTabs title={'曲线拟合 Curve'} current={sTabCurrent} onChange={handleTabChange}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/curve.md'}/>
             </TabPane>

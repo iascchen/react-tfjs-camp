@@ -89,7 +89,7 @@ const RnnJena = (): JSX.Element => {
      ***********************/
 
     return (
-        <AIProcessTabs title={'RNN'} current={sTabCurrent} onChange={handleTabChange} docUrl={'/docs/rnnJena.md'}>
+        <AIProcessTabs title={'RNN'} current={sTabCurrent} onChange={handleTabChange} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/rnnJena.md'}/>
             </TabPane>

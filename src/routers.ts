@@ -7,7 +7,6 @@ import Curve from './components/curve/Curve'
 import Iris from './components/iris/Iris'
 
 import MnistKeras from './components/mnist/MnistKeras'
-import MnistWeb from './components/mnist/MnistWeb'
 import MnistCore from './components/mnist/MnistCore'
 
 import MobilenetClassifier from './components/mobilenet/MobilenetClassifier'
@@ -29,7 +28,6 @@ const routes: RouteConfig[] = [
 
     { path: '/mnist/keras', component: MnistKeras },
     { path: '/mnist/core', component: MnistCore },
-    { path: '/mnist/web', component: MnistWeb },
 
     { path: '/mobilenet/basic', component: MobilenetClassifier },
     { path: '/mobilenet/knn', component: MobilenetKnnClassifier },
@@ -54,9 +52,8 @@ export const breadcrumbNameMap: IBreadcrumbMap = {
     '/curve': 'Curve',
     '/iris': 'Iris',
 
-    '/mnist/keras': 'MNIST',
-    '/mnist/core': 'MNIST tfjs-core',
-    '/mnist/web': 'MNIST tfjs web',
+    '/mnist/keras': 'MNIST LayerModel',
+    '/mnist/core': 'MNIST Core',
 
     '/mobilenet/basic': 'Mobilenet Classifier',
     '/mobilenet/knn': 'Teachable Machine',

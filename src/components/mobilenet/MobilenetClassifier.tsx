@@ -1,28 +1,35 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Card, Col, Row, Select } from 'antd'
+import { Card, Col, Row, Select, Tabs } from 'antd'
 
 import { logger, STATUS, ILayerSelectOption } from '../../utils'
 import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
+import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
+import MarkdownWidget from '../common/MarkdownWidget'
+import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 
 const { Option } = Select
+const { TabPane } = Tabs
 
 const MobilenetClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
+    const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
     const [tfBackend, setTfBackend] = useState<string>()
     const [status, setStatus] = useState<STATUS>(STATUS.INIT)
 
-    const [model, setModel] = useState<tf.LayersModel>()
+    const [sModel, setModel] = useState<tf.LayersModel>()
     const [layersOption, setLayersOption] = useState<ILayerSelectOption[]>()
     const [curLayer, setCurLayer] = useState<tf.layers.Layer>()
 
-    const [predictResult, setPredictResult] = useState<tf.Tensor>()
+    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
+
+    const webcamRef = useRef<IWebCameraHandler>(null)
 
     /***********************
      * useEffect
@@ -83,7 +90,7 @@ const MobilenetClassifier = (): JSX.Element => {
             // Reshape to a single-element batch so we can pass it to predict.
             const batched = normalized.reshape([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])
 
-            const result = model?.predict(batched) as tf.Tensor
+            const result = sModel?.predict(batched) as tf.Tensor
             logger(result)
 
             const p = result?.argMax(-1)
@@ -95,8 +102,12 @@ const MobilenetClassifier = (): JSX.Element => {
 
     const handleLayerChange = (value: number): void => {
         logger('handleLayerChange', value)
-        const _layer = model?.getLayer(undefined, value)
+        const _layer = sModel?.getLayer(undefined, value)
         setCurLayer(_layer)
+    }
+
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
     }
 
     /***********************
@@ -104,37 +115,48 @@ const MobilenetClassifier = (): JSX.Element => {
      ***********************/
 
     return (
-        <>
-            <h1>Mobilenet Classifier</h1>
-            <Row gutter={16}>
-                <Col span={12}>
-                    <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                        <ImageUploadWidget model={model} onSubmit={handlePredict} prediction={predictResult}/>
-                    </Card>
-                    <Card title='Infomation' style={{ margin: '8px' }} size='small'>
-                        <p>此处显示说明 MD 文件</p>
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card title='Basic Model' style={{ margin: '8px' }} size='small'>
-                        <div>
-                            <TfvisModelWidget model={model}/>
+        <AIProcessTabs title={'Mobilenet Classifier'} current={sTabCurrent} onChange={handleTabChange}
+            invisiblePanes={[AIProcessTabPanes.DATA, AIProcessTabPanes.TRAIN]}>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
+                <MarkdownWidget url={'/docs/mobilenet.md'}/>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Mobilenet Model' style={{ margin: '8px' }} size='small'>
+                            <TfvisModelWidget model={sModel}/>
                             <p>status: {status}</p>
-                        </div>
-                        <div>
-                        Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Layers' style={{ margin: '8px' }} size='small'>
+                            Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
                                 {layersOption?.map((v) => {
                                     return <Option key={v.index} value={v.index}>{v.name}</Option>
                                 })}
                             </Select>
                             <TfvisLayerWidget layer={curLayer}/>
-                        </div>
-
-                        <p>backend: {tfBackend}</p>
-                    </Card>
-                </Col>
-            </Row>
-        </>
+                            <p>backend: {tfBackend}</p>
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                            <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Prediction' size='small'>
+                            <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
+                                isPreview />
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+        </AIProcessTabs>
     )
 }
 

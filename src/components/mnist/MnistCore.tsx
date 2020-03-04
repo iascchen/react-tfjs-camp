@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs-core'
-import { Button, Card, Col, Row } from 'antd'
+import { Button, Card, Col, Row, Tabs } from 'antd'
 
 import { ITrainInfo, logger, STATUS } from '../../utils'
 import { MnistCoreDataset } from './dataCore'
@@ -10,11 +10,17 @@ import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
+import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
+import MarkdownWidget from '../common/MarkdownWidget'
+
+const { TabPane } = Tabs
 
 const MnistWeb = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
+
+    const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
     const [tfBackend, setTfBackend] = useState<string>()
     const [status, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -161,44 +167,55 @@ const MnistWeb = (): JSX.Element => {
         setDrawPred(pred)
     }
 
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
+    }
+
     /***********************
      * Render
      ***********************/
 
     return (
-        <>
-            <h1>MNIST</h1>
-            <Row gutter={16}>
+        <AIProcessTabs title={'MNIST Core Model'} current={sTabCurrent} onChange={handleTabChange} >
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
+                <MarkdownWidget url={'/docs/mnist.md'}/>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Col span={12}>
-                    <Card title='Train' style={{ margin: '8px' }} size='small'>
+                    <Card title='Data Set' style={{ margin: '8px' }} size='small'>
                         <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
                         <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
                         <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
-
-                        <Button onClick={handleTrain} type='primary'> Train </Button>
-                        <p>backend: {tfBackend}</p>
-                        <p>status: {status}</p>
-                        <p>errors: {errors}</p>
                     </Card>
                 </Col>
-                <Col span={12}>
-                    <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                        <TfvisHistoryWidget logMsg={logMsg} debug />
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card title='Evaluate Set' style={{ margin: '8px' }} size='small'>
-                        <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
-                            pDataset={predictResult} xIsImage />
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
-                        <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={drawPred} />
-                    </Card>
-                </Col>
-            </Row>
-        </>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Train' style={{ margin: '8px' }} size='small'>
+                            <Button onClick={handleTrain} type='primary'> Train </Button>
+                            <p>backend: {tfBackend}</p>
+                            <p>status: {status}</p>
+                            <p>errors: {errors}</p>
+                        </Card>
+                        <Card title='Visualization' style={{ margin: '8px' }} size='small'>
+                            <TfvisHistoryWidget logMsg={logMsg} debug />
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Evaluate Set' style={{ margin: '8px' }} size='small'>
+                            <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
+                                pDataset={predictResult} xIsImage />
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
+                <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={drawPred} />
+            </TabPane>
+        </AIProcessTabs>
     )
 }
 

@@ -12,6 +12,9 @@
 * Tensorflow.js (v1.5.2)
 * AntD(v4.0.0) & AntV/bizcharts
 
+基于 TensorFlow.js 的无服务架构机器学习
+https://juejin.im/post/5bc13de2e51d450e827b88fc
+
 ### 快速开始
 
     git clone https://github.com/iascchen/react-tfjs-camp.git

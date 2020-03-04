@@ -23,9 +23,10 @@ CMD ["npm", "run", "start"]
 # when we change our application's nodejs dependencies:
 
 COPY package.json /opt/app/package.json
+COPY yarn.lock /opt/app/yarn.lock
 #COPY package-lock.json /opt/app/package-lock.json
 
-RUN npm set progress=false && npm config set depth 0
-RUN npm install --production --no-optional --registry=${NPM_REGISTRY} --force
+RUN npm config set registry ${NPM_REGISTRY}
+RUN yarn
 
 COPY . /opt/app

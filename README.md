@@ -20,6 +20,16 @@
     
 Open [http://loalhost:3000](http://loalhost:3000)
 
+### 目录结构
+
+node    ttjs-node 代码，用于模型训练，比在浏览器中快不少
+src     React Tensorflow.js Camp 的 Web App 代码 
+
+public/model    用于存放你自己的模型，可以直接在 Web App 中使用 fetch('/model/...') 获取
+public/data     用于存放你自己的数据，可以直接在 Web App 中使用 fetch('/data/...') 获取
+public/preload  预先下载好的数据和模型，因为体积太大，并不放在 git 里。打包在 docker 中。
+                Web App中使用 fetch('/preload/...') 获取到
+                node.js 中使用文件访问相对路径获取，如：'../../public/preload/model'
 ## 第二章：从零开始 Start from scratch
 
 ### 环境安装

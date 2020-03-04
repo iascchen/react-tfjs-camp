@@ -18,12 +18,13 @@
 import * as tf from '@tensorflow/tfjs-node'
 import { MnistGzDataset } from './dataGz'
 import { addSimpleConvLayers } from './model'
+import { logger } from '../utils'
 
 const EPOCHS = 10
 const BATCH_SIZE = 128
 const VALID_SPLIT = 0.15
 
-const run = async (epochs: number, batchSize: number, modelSavePath: string) => {
+const run = async (epochs: number, batchSize: number, modelSavePath: string): Promise<void> => {
     const model = tf.sequential()
     addSimpleConvLayers(model)
     const optimizer = 'rmsprop'
@@ -33,12 +34,10 @@ const run = async (epochs: number, batchSize: number, modelSavePath: string) => 
     const mnistDataset = new MnistGzDataset()
     await mnistDataset.loadData()
 
-    let tSet: tf.TensorContainerObject
-    let vSet: tf.TensorContainerObject
-    tSet = mnistDataset.getTrainData()
-    vSet = mnistDataset.getTestData()
+    const tSet: tf.TensorContainerObject = mnistDataset.getTrainData()
+    const vSet: tf.TensorContainerObject = mnistDataset.getTestData()
 
-    console.log("before fit")
+    console.log('before fit')
     await model.fit(tSet.xs as tf.Tensor, tSet.ys as tf.Tensor, {
         epochs: epochs,
         batchSize: batchSize,
@@ -57,8 +56,15 @@ const run = async (epochs: number, batchSize: number, modelSavePath: string) => 
         `  Loss = ${evalOutput}; `)
 
     if (modelSavePath != null) {
-        await model.save(`file://${modelSavePath}`); console.log(`Saved model to path: ${modelSavePath}`);
+        await model.save(`file://${modelSavePath}`); console.log(`Saved model to path: ${modelSavePath}`)
     }
 }
 
-run(EPOCHS, BATCH_SIZE, './mmm')
+run(EPOCHS, BATCH_SIZE, './public/model/mnist').then(
+    () => {
+        logger('Finished')
+    },
+    (e) => {
+        logger(e.msg)
+    }
+)

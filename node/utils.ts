@@ -53,7 +53,7 @@ export const arrayDispose = (_array: any[]): void => {
     _array?.splice(0, _array.length)
 }
 
-const readFile = util.promisify(fs.readFile);
+const readFile = util.promisify(fs.readFile)
 
 // Downloads a test file only once and returns the buffer for the file.
 export const fetchLocal = async (filename: string, isUnzip?: boolean): Promise<Buffer | undefined> => {
@@ -69,7 +69,7 @@ export const fetchLocal = async (filename: string, isUnzip?: boolean): Promise<B
 }
 
 export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buffer | undefined> => {
-    try{
+    try {
         const response = await fetch(url)
         // const buf = await response.arrayBuffer()
         const buf = await Buffer.from(response.text())
@@ -79,7 +79,7 @@ export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buf
         } else {
             return Buffer.from(buf)
         }
-    } catch(e){
+    } catch (e) {
         logger(e)
     }
 }

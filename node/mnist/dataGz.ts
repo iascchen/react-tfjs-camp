@@ -20,7 +20,7 @@ import { fetchLocal, logger } from '../utils'
 
 // MNIST data constants:
 // const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
-const BASE_URL = '../../public/preload/data/mnist'
+const BASE_URL = './public/preload/data/mnist'
 const TRAIN_IMAGES_FILE = `${BASE_URL}/train-images-idx3-ubyte.gz`
 const TRAIN_LABELS_FILE = `${BASE_URL}/train-labels-idx1-ubyte.gz`
 const TEST_IMAGES_FILE = `${BASE_URL}/t10k-images-idx3-ubyte.gz`
@@ -47,7 +47,7 @@ const loadHeaderValues = (buffer: Buffer, headerLength: number): number[] => {
 const loadImages = async (url: string): Promise<Float32Array[]> => {
     // const buffer = await fetchResource(url, true)
     const buffer = await fetchLocal(url, true)
-    if(!buffer){
+    if (!buffer) {
         return []
     }
 
@@ -76,7 +76,7 @@ const loadImages = async (url: string): Promise<Float32Array[]> => {
 const loadLabels = async (url: string): Promise<Int32Array[]> => {
     // const buffer = await fetchResource(url, true)
     const buffer = await fetchLocal(url, true)
-    if(!buffer){
+    if (!buffer) {
         return []
     }
 

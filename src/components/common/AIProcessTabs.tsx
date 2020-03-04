@@ -14,23 +14,30 @@ export enum AIProcessTabPanes {
     PREDICT = '5'
 }
 
+const INVISIBLE_PANES: AIProcessTabPanes[] = []
+
 interface IProps {
     children?: JSX.Element[]
 
     title?: string | JSX.Element
     current?: number
-    docUrl?: string
+    invisiblePanes?: AIProcessTabPanes[]
 
     onChange?: (current: number) => void
 }
 
 const AIProcessTabs = (props: IProps): JSX.Element => {
     const [sCurrent, setCurrent] = useState<number>(0)
+    const [sInvisiblePanes, setInvisiblePanes] = useState<AIProcessTabPanes[]>(INVISIBLE_PANES)
 
     useEffect(() => {
         logger('init current', props.current)
         props.current && setCurrent(props.current - 1)
     }, [props.current])
+
+    useEffect(() => {
+        props.invisiblePanes && setInvisiblePanes(props.invisiblePanes)
+    }, [props.invisiblePanes])
 
     const handleChange = (current: number): void => {
         setCurrent(current)
@@ -45,11 +52,26 @@ const AIProcessTabs = (props: IProps): JSX.Element => {
                     return (<div style={_style}>
                         <h1>{props.title}</h1>
                         <Steps current={sCurrent} onChange={handleChange}>
-                            <Step icon={<FileTextOutlined/>} title='问题' description='要解决的问题背景'/>
-                            <Step icon={<DotChartOutlined/>} title='数据' description='加载和准备所需数据'/>
-                            <Step icon={<ControlOutlined/>} title='模型' description='修改模型结构和调参'/>
-                            <Step icon={<DashboardOutlined/>} title='训练' description='训练过程可视化'/>
-                            <Step icon={<CoffeeOutlined/>} title='推理' description='验证训练效果'/>
+                            {
+                                !sInvisiblePanes?.includes(AIProcessTabPanes.INFO) &&
+                                <Step icon={<FileTextOutlined/>} title='问题' description='要解决的问题背景'/>
+                            }
+                            {
+                                !sInvisiblePanes?.includes(AIProcessTabPanes.DATA) &&
+                                <Step icon={<DotChartOutlined/>} title='数据' description='加载和准备所需数据'/>
+                            }
+                            {
+                                !sInvisiblePanes?.includes(AIProcessTabPanes.MODEL) &&
+                                <Step icon={<ControlOutlined/>} title='模型' description='修改模型结构和调参'/>
+                            }
+                            {
+                                !sInvisiblePanes?.includes(AIProcessTabPanes.TRAIN) &&
+                                <Step icon={<DashboardOutlined/>} title='训练' description='训练过程可视化'/>
+                            }
+                            {
+                                !sInvisiblePanes?.includes(AIProcessTabPanes.PREDICT) &&
+                                <Step icon={<CoffeeOutlined/>} title='推理' description='验证训练效果'/>
+                            }
                         </Steps>
                     </div>)
                 }

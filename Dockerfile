@@ -16,17 +16,17 @@ ARG NPM_REGISTRY="https://registry.npm.taobao.org"
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
-EXPOSE 80
-CMD ["npm", "run", "start"]
+EXPOSE 3000
+CMD ["yarn", "start"]
 
 # use changes to package.json to force Docker not to use the cache
 # when we change our application's nodejs dependencies:
 
 COPY package.json /opt/app/package.json
 COPY yarn.lock /opt/app/yarn.lock
-#COPY package-lock.json /opt/app/package-lock.json
 
-RUN npm config set registry ${NPM_REGISTRY}
+RUN yarn config set registry ${NPM_REGISTRY}
+RUN yarn config get registry
 RUN yarn
 
 COPY . /opt/app

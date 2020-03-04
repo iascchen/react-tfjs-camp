@@ -67,7 +67,7 @@ const Curve = (): JSX.Element => {
         // = a * x^2 + b * x + c
         return (x.mul(a).mul(x)).add(x.mul(b)).add(c)
 
-        // // = a * x^2 + b * x + c
+        // // = b * x + c
         // return x.mul(b).add(c)
     }, [curveParams])
 

@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Row, Select } from 'antd'
+import { Button, Card, Col, Row, Select, Tabs } from 'antd'
 
 import { STATUS, logger, range } from '../../utils'
 import ModelInfo from '../common/tensor/ModelInfo'
 import CurveVis from './CurveVis'
+import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
+import MarkdownWidget from '../common/MarkdownWidget'
 
 const { Option } = Select
+const { TabPane } = Tabs
 
 // model
 const LayersCount = ['1', '2', '3']
@@ -27,6 +30,8 @@ const Curve = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
+
+    const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
     // General
     const [tfBackend, setTfBackend] = useState<string>()
@@ -211,58 +216,145 @@ const Curve = (): JSX.Element => {
         setLayerCount(value)
     }
 
-    return (
-        <>
-            <h1>曲线拟合 Curve</h1>
-            <Row gutter={16}>
-                <Col span={24}>
-                    <Card title='Model' style={{ margin: '8px' }} size='small'>
-                        {model ? <ModelInfo model={model}/> : ''}
-                        <div>Backend: {tfBackend}</div>
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
+    }
+
+    /***********************
+     * Render
+     ***********************/
+
+    const dataAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Adjust Data' style={{ margin: '8px' }} size='small'>
+                <Row>
+                    <Col span={12}>
+                        <Button onClick={handleResetParams} style={{ width: '60%', margin: '0 20%' }}> Random a,b,c </Button>
+                    </Col>
+                    <Col span={12}>
+                    Curve Params: {`${curveParams[0].toString()}*x^2 + ${curveParams[1].toString()}*x + ${curveParams[2].toString()}`}
+                    </Col>
+                </Row>
+            </Card>
+        )
+    }
+
+    const trainDataCard = (): JSX.Element => {
+        return (
+            <Card title='Train Data Set' style={{ margin: '8px' }} size='small'>
+                <CurveVis xDataset={trainX} yDataset={trainY} sampleCount={totalRecord} />
+            </Card>
+        )
+    }
+
+    const testDataCard = (): JSX.Element => {
+        return (
+            <Card title='Test Data Set' style={{ margin: '8px' }} size='small'>
+                <CurveVis xDataset={testX} yDataset={testY} pDataset={testP} sampleCount={testRecord} />
+                <Button type='primary' onClick={handlePredict}> Validate </Button>
+                <div>trained epoches: {trainStatusStr} </div>
+                <div>evaluate loss: {testV?.dataSync().join(' , ')}</div>
+            </Card>
+        )
+    }
+
+    const modelAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
+                <Row>
+                    <Col span={12}>
                         <div>
-                        Layer Count :
+                            Layer Count :
                             <Select onChange={handleLayerCountChange} defaultValue={'2'}>
                                 {LayersCount.map((v) => {
                                     return <Option key={v} value={v}>{v}</Option>
                                 })}
                             </Select>
                         </div>
+                    </Col>
+                    <Col span={12}>
                         <div>
-                        Activation :
+                            Activation :
                             <Select onChange={handleActivateChange} defaultValue={'sigmoid'}>
                                 {Activations.map((v) => {
                                     return <Option key={v} value={v}>{v}</Option>
                                 })}
                             </Select>
                         </div>
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card title='Train' style={{ margin: '8px' }} size='small'>
-                        {/* <p>trainX: {trainX?.dataSync().join(' , ')}</p> */}
-                        {/* <p>trainY: {trainY?.dataSync().join(' , ')}</p> */}
-                        <CurveVis xDataset={trainX} yDataset={trainY} sampleCount={totalRecord} />
+                    </Col>
+                </Row>
+            </Card>
+        )
+    }
 
-                        <div>
-                        Curve Params: {`${curveParams[0].toString()}*x^2 + ${curveParams[1].toString()}*x + ${curveParams[2].toString()}`}
-                            <Button onClick={handleResetParams}> Reset </Button>
-                        </div>
-                        <div>
-                        Status: {status}
-                            <Button type='primary' onClick={handleTrain}> Train </Button>
-                        </div>
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                        <CurveVis xDataset={testX} yDataset={testY} pDataset={testP} sampleCount={testRecord} />
-                        <Button type='primary' onClick={handlePredict}> Validate </Button>
-                        <div>trained epoches: {trainStatusStr} </div>
-                        <div>evaluate loss: {testV?.dataSync().join(' , ')}</div>
-                    </Card>
-                </Col>
-            </Row>
-        </>
+    return (
+        <AIProcessTabs title={'曲线拟合 Curve'} current={sTabCurrent} onChange={handleTabChange} docUrl={'/docs/rnnJena.md'}>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
+                <MarkdownWidget url={'/docs/curve.md'}/>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
+                <Row>
+                    <Col span={12}>
+                        {dataAdjustCard()}
+                    </Col>
+                    <Col span={12}>
+                        {trainDataCard()}
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
+                <Row>
+                    <Col span={12}>
+                        {modelAdjustCard()}
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Model' style={{ margin: '8px' }} size='small'>
+                            {model ? <ModelInfo model={model}/> : ''}
+                            <div>Backend: {tfBackend}</div>
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
+                <Row>
+                    <Col span={12}>
+                        {dataAdjustCard()}
+                    </Col>
+                    <Col span={12}>
+                        {modelAdjustCard()}
+                    </Col>
+                    <Col span={24}>
+                        <Card title='Train' style={{ margin: '8px' }} size='small'>
+                            <Row>
+                                <Col span={6}>
+                                    <Button type='primary' style={{ width: '60%', margin: '0 20%' }} onClick={handleTrain}> Train </Button>
+                                </Col>
+                                <Col span={6}>
+                                    Status: {status}
+                                </Col>
+                            </Row>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        {trainDataCard()}
+                    </Col>
+                    <Col span={12}>
+                        {testDataCard()}
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                            <Button type='primary' onClick={handlePredict}> Validate </Button>
+                            <div>evaluate loss: {testV?.dataSync().join(' , ')}</div>
+                        </Card>
+                    </Col>
+                    {testDataCard()}
+                </Row>
+            </TabPane>
+        </AIProcessTabs>
     )
 }
 

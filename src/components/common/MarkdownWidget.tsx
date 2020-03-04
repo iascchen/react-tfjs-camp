@@ -1,19 +1,33 @@
 import React, { useEffect, useState } from 'react'
 import { message } from 'antd'
 import ReactMarkdown from 'react-markdown'
+import MathJax from '@matejmazur/react-mathjax'
+import RemarkMathPlugin from 'remark-math'
 
 import { fetchResource, logger } from '../../utils'
 
 const DEFAULT_INFO = 'Please set props url or source'
 
-interface IProps {
-    url?: string
-    source?: string
-}
-
 const loadMD = async (url: string): Promise<string> => {
     const buffer = await fetchResource(url, false)
     return buffer.toString()
+}
+
+const math = (p: {value: string}): JSX.Element => {
+    return <MathJax.Node>{p.value}</MathJax.Node>
+}
+
+const inlineMath = (p: {value: string}): JSX.Element => {
+    return <MathJax.Node inline>{p.value}</MathJax.Node>
+}
+
+const renderers = {
+    math, inlineMath
+}
+
+interface IProps {
+    source?: string
+    url?: string
 }
 
 const MarkdownWidget = (props: IProps): JSX.Element => {
@@ -28,7 +42,6 @@ const MarkdownWidget = (props: IProps): JSX.Element => {
         // Fetch and load MD content
         loadMD(props.url).then(
             (src) => {
-                // logger('src', src)
                 setSource(src)
             }, (e) => {
                 // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -41,7 +54,10 @@ const MarkdownWidget = (props: IProps): JSX.Element => {
     }, [props.source])
 
     return (
-        <ReactMarkdown source={sSource} escapeHtml={true} />
+        <MathJax.Context>
+            <ReactMarkdown source={sSource} escapeHtml={true}
+                plugins={[RemarkMathPlugin]} renderers={renderers}/>
+        </MathJax.Context>
     )
 }
 

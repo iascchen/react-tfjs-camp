@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Row, Select } from 'antd'
+import { Button, Card, Col, Row, Select, Tabs } from 'antd'
 
 import { ITrainInfo, logger, STATUS } from '../../utils'
 import { addCnnLayers, addDenseLayers, addSimpleConvLayers } from './model'
@@ -11,11 +11,15 @@ import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
+import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
+import MarkdownWidget from '../common/MarkdownWidget'
+import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
 
 const { Option } = Select
+const { TabPane } = Tabs
 
 const EPOCHS = 10
 const BATCH_SIZE = 128
@@ -33,6 +37,7 @@ const MnistWeb = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
+    const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
     const [tfBackend, setTfBackend] = useState<string>()
     const [status, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -49,6 +54,8 @@ const MnistWeb = (): JSX.Element => {
 
     const [predictSet, setPredictSet] = useState<tf.TensorContainerObject>()
     const [predictResult, setPredictResult] = useState<tf.Tensor>()
+
+    const [drawPred, setDrawPred] = useState<tf.Tensor>()
 
     /***********************
      * useEffect
@@ -284,61 +291,84 @@ const MnistWeb = (): JSX.Element => {
         setCurLayer(_layer)
     }
 
+    const handleDrawSubmit = (data: tf.Tensor): void => {
+        // logger('handleDrawSubmit', data.shape)
+        const pred = model?.predict(data) as tf.Tensor
+        logger('handleDrawSubmit', pred.dataSync())
+        setDrawPred(pred)
+    }
+
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
+    }
+
     /***********************
      * Render
      ***********************/
 
     return (
-        <>
-            <h1>MNIST</h1>
-            <Row gutter={16}>
-                <Col span={12}>
-                    <Card title='Model' style={{ margin: '8px' }} size='small'>
-                        <div>
+        <AIProcessTabs title={'MNIST LayerModel'} current={sTabCurrent} onChange={handleTabChange} docUrl={'/docs/rnnJena.md'}>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
+                <MarkdownWidget url={'/docs/mnist.md'}/>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
+                <Card title='Train' style={{ margin: '8px' }} size='small'>
+                    <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
+                    <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
+                    <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
+                </Card>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
+                <Card title='Model' style={{ margin: '8px' }} size='small'>
+                    <div>
                         Select Model : <Select onChange={handleModelChange} defaultValue={'dense'}>
-                                {Models.map((v) => {
-                                    return <Option key={v} value={v}>{v}</Option>
-                                })}
-                            </Select>
-                            <TfvisModelWidget model={model}/>
-                        </div>
-                        <div>
+                            {Models.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                        <TfvisModelWidget model={model}/>
+                    </div>
+                    <div>
                         Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                                {layersOption?.map((v) => {
-                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
-                                })}
-                            </Select>
-                            <TfvisLayerWidget layer={curLayer}/>
-                        </div>
+                            {layersOption?.map((v) => {
+                                return <Option key={v.index} value={v.index}>{v.name}</Option>
+                            })}
+                        </Select>
+                        <TfvisLayerWidget layer={curLayer}/>
+                    </div>
 
-                        <p>backend: {tfBackend}</p>
-                    </Card>
-                </Col>
+                    <p>backend: {tfBackend}</p>
+                </Card>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
+                <Row>
+                    <Col span={24}>
+                        <Card title='Train' style={{ margin: '8px' }} size='small'>
+                            <Button onClick={handleTrain} type='primary'> Train </Button>
+                            <Button onClick={handleEvaluate}> Evaluate </Button>
+                            <p>status: {status}</p>
+                            <p>errors: {errors}</p>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                            <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
+                                pDataset={predictResult} xIsImage />
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Training History' style={{ margin: '8px' }} size='small'>
+                            <TfvisHistoryWidget logMsg={logMsg} debug />
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
                 <Col span={12}>
-                    <Card title='Train' style={{ margin: '8px' }} size='small'>
-                        <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
-                        <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
-                        <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
-
-                        <Button onClick={handleTrain} type='primary'> Train </Button>
-                        <Button onClick={handleEvaluate}> Evaluate </Button>
-                        <p>status: {status}</p>
-                        <p>errors: {errors}</p>
-                    </Card>
+                    <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={drawPred} />
                 </Col>
-                <Col span={12}>
-                    <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                        <TfvisHistoryWidget logMsg={logMsg} debug />
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
-                        <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
-                            pDataset={predictResult} xIsImage />
-                    </Card>
-                </Col>
-            </Row>
-        </>
+            </TabPane>
+        </AIProcessTabs>
     )
 }
 

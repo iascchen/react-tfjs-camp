@@ -26,8 +26,9 @@ const NUM_DATASET_ELEMENTS = 65000
 const NUM_TRAIN_ELEMENTS = 55000
 const NUM_TEST_ELEMENTS = NUM_DATASET_ELEMENTS - NUM_TRAIN_ELEMENTS
 
-const MNIST_IMAGES_SPRITE_PATH = '/data/mnist_images.png'
-const MNIST_LABELS_PATH = '/data/mnist_labels_uint8'
+const BASE_URL = '/preload/data/mnist'
+const MNIST_IMAGES_SPRITE_PATH = `${BASE_URL}/mnist_images.png`
+const MNIST_LABELS_PATH = `${BASE_URL}/mnist_labels_uint8`
 
 /**
  * A class that fetches the sprited MNIST dataset and returns shuffled batches.

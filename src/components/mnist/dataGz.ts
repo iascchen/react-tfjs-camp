@@ -20,7 +20,7 @@ import { fetchResource, logger } from '../../utils'
 
 // MNIST data constants:
 // const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
-const BASE_URL = '/data'
+const BASE_URL = '/preload/data/mnist'
 const TRAIN_IMAGES_FILE = `${BASE_URL}/train-images-idx3-ubyte.gz`
 const TRAIN_LABELS_FILE = `${BASE_URL}/train-labels-idx1-ubyte.gz`
 const TEST_IMAGES_FILE = `${BASE_URL}/t10k-images-idx3-ubyte.gz`

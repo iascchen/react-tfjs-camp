@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, message } from 'antd'
+import { Button, Card, Col, message, Row } from 'antd'
 
 import { logger, STATUS } from '../../../utils'
 
@@ -90,16 +90,22 @@ const JenaTrainWidget = (props: IProps): JSX.Element => {
 
     // const disable = (sStatus === STATUS.TRAINING)
     return (
-        <div>
-            <Card title='Jena Weather' style={{ margin: '8px' }} size='small'>
-                <div>
-                    <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                    <div>status: {sStatus}</div>
-                </div>
-                <p>backend: {sTfBackend}</p>
-            </Card>
-            <div ref={elementRef} style={{ height: 400 }}/>
-        </div>
+        <Row>
+            <Col span={12}>
+                <Card title='Jena Weather' style={{ margin: '8px' }} size='small'>
+                    <div>
+                        <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                        <div>status: {sStatus}</div>
+                    </div>
+                    <p>backend: {sTfBackend}</p>
+                </Card>
+            </Col>
+            <Col span={12}>
+                <Card title='Training History' style={{ margin: '8px' }} size='small'>
+                    <div ref={elementRef} />
+                </Card>
+            </Col>
+        </Row>
     )
 }
 

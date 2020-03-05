@@ -12,16 +12,16 @@ import {
     STATUS
 } from '../../utils'
 import { MOBILENET_IMAGE_SIZE } from '../../constant'
-import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
-import { buildObjectDetectionModel } from './modelObjDetector'
-import ObjectDetectionImageSynthesizer from './dataObjDetector'
-import LabeledCaptureInputSet from '../common/tensor/LabeledCaptureInputSet'
-import LabeledCaptureSetWidget from '../common/tensor/LabeledCaptureSetWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
+import LabeledImageSetWidget from '../common/tensor/LabeledImageSetWidget'
+import LabeledImageInputSet from '../common/tensor/LabeledImageInputSet'
+
+import { buildObjectDetectionModel } from './modelObjDetector'
+import ObjectDetectionImageSynthesizer from './dataObjDetector'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
@@ -58,7 +58,6 @@ const MobilenetTransferWidget = (): JSX.Element => {
     const [sLabelsMap, setLabelsMap] = useState<ILabelMap>()
     const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
 
-    const webcamRef = useRef<IWebCameraHandler>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
     /***********************
@@ -78,6 +77,12 @@ const MobilenetTransferWidget = (): JSX.Element => {
             ({ model, fineTuningLayers }) => {
                 _model = model
                 setModel(model)
+
+                const _layerOptions: ILayerSelectOption[] = _model?.layers.map((l, index) => {
+                    return { name: l.name, index }
+                })
+                setLayersOption(_layerOptions)
+
                 setStatus(STATUS.LOADED)
             },
             (e) => {
@@ -185,12 +190,6 @@ const MobilenetTransferWidget = (): JSX.Element => {
         sTrainSet && train(sTrainSet)
     }
 
-    const handleLoadModel = (): void => {
-        // TODO : Load saved model
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        message.info('TODO: Not Implemented')
-    }
-
     const handlePredict = (imgTensor: tf.Tensor): void => {
         if (!imgTensor) {
             return
@@ -227,21 +226,18 @@ const MobilenetTransferWidget = (): JSX.Element => {
         setLabeledImgs(values)
     }
 
-    const handleLabeledCapture = async (label: string): Promise<ILabeledImage | void> => {
-        logger('handleLabeldCapture')
-        if (webcamRef.current) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            const result = await webcamRef.current.capture()
-            if (result) {
-                genImgUid()
-                const file: ILabeledImage = {
-                    uid: sImgUid.toString(),
-                    name: `${label}_${sImgUid.toString()}`,
-                    tensor: result
-                }
-                return file
-            }
-        }
+    const handleLoadModelWeight = (): void => {
+        // TODO : Load saved model
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        message.info('TODO: Not Implemented')
+    }
+
+    const handleSaveModelWeight = (): void => {
+        // TODO
+    }
+
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
     }
 
     /***********************
@@ -252,52 +248,76 @@ const MobilenetTransferWidget = (): JSX.Element => {
     const _tensorY = sTrainSet?.ys as tf.Tensor
 
     return (
-        <AIProcessTabs title={'Simple Object Detector based Mobilenet'} current={sTabCurrent} >
+        <AIProcessTabs title={'Simple Object Detector based Mobilenet'} current={sTabCurrent} onChange={handleTabChange} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/simpleObjDetector.md'}/>
+                <MarkdownWidget url={'/docs/mobilenet.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <Card>
-                    <LabeledCaptureInputSet model={sModel} onSave={handleLabeledImagesSubmit}
-                        onCapture={handleLabeledCapture}/>
-                </Card>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
+                            <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Train Set' style={{ margin: '8px' }} size='small'>
+                            <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
+                            <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
+                        </Card>
+                    </Col>
+                </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
-                <Card title='Model(Expand from Mobilenet)' style={{ margin: '8px' }} size='small'>
-                    <div>
-                        <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                        <Button onClick={handleLoadModel} style={{ width: '30%', margin: '0 10%' }}> Load
-                            Model </Button>
-                        <div>status: {sStatus}</div>
-                        <LabeledCaptureSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
-                        <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
-                    </div>
-                    <div>
-                        <TfvisModelWidget model={sModel}/>
-                        <p>status: {sStatus}</p>
-                    </div>
-                    <div>
-                        Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                            {sLayersOption?.map((v) => {
-                                return <Option key={v.index} value={v.index}>{v.name}</Option>
-                            })}
-                        </Select>
-                        <TfvisLayerWidget layer={sCurLayer}/>
-                    </div>
-
-                    <p>backend: {sTfBackend}</p>
-                </Card>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Model(Expand from Mobilenet)' style={{ margin: '8px' }} size='small'>
+                            <TfvisModelWidget model={sModel}/>
+                            <p>backend: {sTfBackend}</p>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Model(Expand from Mobilenet)' style={{ margin: '8px' }} size='small'>
+                                Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
+                                {sLayersOption?.map((v) => {
+                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                })}
+                            </Select>
+                            <TfvisLayerWidget layer={sCurLayer}/>
+                        </Card>
+                    </Col>
+                </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
-                <Card title='Prediction' style={{ margin: '8px' }} size='small'>
-                    <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
-                </Card>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Mobilenet + Simple Object Detect' style={{ margin: '8px' }} size='small'>
+                            <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Mobilenet Simple Object Detect Train Set' style={{ margin: '8px' }} size='small'>
+                            <div>
+                                <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                                <div>status: {sStatus}</div>
+                            </div>
+                            <div>
+                                <Button onClick={handleSaveModelWeight} style={{ width: '30%', margin: '0 10%' }}> Save
+                                    Model </Button>
+                                <Button onClick={handleLoadModelWeight} style={{ width: '30%', margin: '0 10%' }}> Load
+                                    Model </Button>
+                                <div>status: {sStatus}</div>
+                            </div>
+                            <p>backend: {sTfBackend}</p>
+                        </Card>
+                    </Col>
+                </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
-                <Card title='Prediction' size='small'>
-                    <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
-                        labelsMap={sLabelsMap} isPreview />
-                </Card>
+                <Col span={12}>
+                    <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                        <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
+                    </Card>
+                </Col>
             </TabPane>
             <canvas ref={canvasRef} />
         </AIProcessTabs>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import * as knnClassifier from '@tensorflow-models/knn-classifier'
-import { Button, Card, Col, message, Row, Tabs } from 'antd'
+import {Button, Card, Col, Divider, message, Row, Select, Tabs} from 'antd'
 
 import {
     arrayDispose,
@@ -195,8 +195,7 @@ const MobilenetClassifier = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'Mobilenet + KNN'} current={sTabCurrent} onChange={handleTabChange}
-            invisiblePanes={[AIProcessTabPanes.MODEL]}>
+        <AIProcessTabs title={'Mobilenet + KNN'} current={sTabCurrent} onChange={handleTabChange}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/mobilenet.md'}/>
             </TabPane>
@@ -210,6 +209,21 @@ const MobilenetClassifier = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
                             <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
+                <Row>
+                    <Col span={24}>
+                        <Card title='Mobilenet' style={{ margin: '8px' }} size='small'>
+                            预训练模型
+                        </Card>
+                    </Col>
+                    <Divider orientation={'center'}>Mobilenet 的输出作为 KNN 的样本输入</Divider>
+                    <Col span={12}>
+                        <Card title='KNN 样本库' style={{ margin: '8px' }} size='small'>
+                            KNN 样本库
                         </Card>
                     </Col>
                 </Row>

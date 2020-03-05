@@ -24,7 +24,7 @@ const logs = {
 const TfvisHistoryWidget = (props: IProps): JSX.Element => {
     const [logData, setLogData] = useState(logs)
 
-    const [ignored, forceUpdate] = useReducer((x: number) => x + 1, 0)
+    const [ignore, forceUpdate] = useReducer((x: number) => x + 1, 0)
 
     const lossCanvasRef = useRef<HTMLDivElement>(null)
     const accuracyCanvasRef = useRef<HTMLDivElement>(null)
@@ -49,7 +49,7 @@ const TfvisHistoryWidget = (props: IProps): JSX.Element => {
         }
         tfvis.show.history(lossCanvasRef.current, logData, ['loss', 'val_loss'])
         tfvis.show.history(accuracyCanvasRef.current, logData, ['acc', 'val_acc'])
-    }, [ignored])
+    }, [ignore])
 
     return (
         <Row>

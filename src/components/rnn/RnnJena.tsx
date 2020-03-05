@@ -7,16 +7,10 @@ import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
-import {
-    buildGRUModel,
-    buildLinearRegressionModel,
-    buildMLPModel,
-    buildSimpleRNNModel,
-    trainModel
-} from './jena/modelJena'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 
-import { JenaWeatherData } from './jena/dataJena'
+import { buildGRUModel, buildLinearRegressionModel, buildMLPModel, buildSimpleRNNModel, trainModel } from './modelJena'
+import { JenaWeatherData } from './dataJena'
 
 // cannot use import
 // eslint-disable-next-line @typescript-eslint/no-var-requires

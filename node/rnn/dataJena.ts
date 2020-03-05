@@ -27,10 +27,11 @@
  * - the Node.js backend environment: see [train-rnn.js](./train-rnn.js).
  */
 
-import * as tf from '@tensorflow/tfjs'
-import { logger } from '../../utils'
+import * as tf from '@tensorflow/tfjs-node'
+import { logger } from '../utils'
 
-const LOCAL_JENA_WEATHER_CSV_PATH = '/preload/data/jena_climate_2009_2016.csv'
+const BASE_URL = './public/preload/data'
+const LOCAL_JENA_WEATHER_CSV_PATH = `${BASE_URL}/jena_climate_2009_2016.csv`
 // const REMOTE_JENA_WEATHER_CSV_PATH =
 //     'https://storage.googleapis.com/learnjs-data/jena_climate/jena_climate_2009_2016.csv'
 

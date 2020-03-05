@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs'
 import { WebcamIterator } from '@tensorflow/tfjs-data/dist/iterators/webcam_iterator'
 import { Button } from 'antd'
 
-import { ILabelMap, logger } from '../../../utils'
+import { IKnnPredictResult, ILabelMap, logger } from '../../../utils'
 import { MOBILENET_IMAGE_SIZE } from '../../../constant'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
 import TensorImageThumbWidget from './TensorImageThumbWidget'
@@ -22,7 +22,7 @@ export interface IWebCameraHandler {
 
 interface IProps {
     model?: tf.LayersModel
-    prediction?: tf.Tensor
+    prediction?: tf.Tensor | IKnnPredictResult
     isPreview?: boolean
     labelsMap?: ILabelMap
 
@@ -64,13 +64,18 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
             return
         }
 
-        // logger(props.prediction)
-        const imagenetRet = props.prediction
-        const labelIndex = imagenetRet.arraySync() as number
-        logger('labelIndex', labelIndex)
-        const label = props.labelsMap ? props.labelsMap[labelIndex] : ImagenetClasses[labelIndex]
-        setLabel(`${labelIndex.toString()} : ${label}`)
-        imagenetRet.dispose()
+        const knnRet = props.prediction as IKnnPredictResult
+        if (knnRet.label) {
+            const knnRet = props.prediction as IKnnPredictResult
+            setLabel(`${knnRet.label} : ${JSON.stringify(knnRet.confidences)}`)
+        } else {
+            // Imagenet Classes
+            const imagenetRet = props.prediction as tf.Tensor
+            const labelIndex = imagenetRet.arraySync() as number
+            logger('labelIndex', labelIndex)
+            const _label = props.labelsMap ? props.labelsMap[labelIndex] : ImagenetClasses[labelIndex]
+            setLabel(`${labelIndex.toString()} : ${_label}`)
+        }
     }, [props.prediction])
 
     const capture = async (): Promise<tf.Tensor3D | void> => {

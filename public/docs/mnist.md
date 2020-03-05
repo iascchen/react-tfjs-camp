@@ -21,3 +21,7 @@ MNIST 数据:
 ## 推理
 
 在画板上，手写输入数字，观察在其推理输出结果。
+
+## 使用 tfjs-node 加速训练
+
+    ts-node --project tsconfig.node.json ./node/mnist/main.ts

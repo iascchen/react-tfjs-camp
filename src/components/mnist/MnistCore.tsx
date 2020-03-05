@@ -176,7 +176,8 @@ const MnistWeb = (): JSX.Element => {
      ***********************/
 
     return (
-        <AIProcessTabs title={'MNIST Core Model'} current={sTabCurrent} onChange={handleTabChange} >
+        <AIProcessTabs title={'MNIST Core Model'} current={sTabCurrent} onChange={handleTabChange}
+            invisiblePanes={[AIProcessTabPanes.MODEL]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/mnist.md'}/>
             </TabPane>

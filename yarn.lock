@@ -14,10 +14,10 @@
   resolved "https://registry.npm.taobao.org/@ant-design/icons-svg/download/@ant-design/icons-svg-4.0.0.tgz#6683db0df97c0c6900bb28a280faf391522ec734"
   integrity sha1-ZoPbDfl8DGkAuyiigPrzkVIuxzQ=
 
-"@ant-design/icons@^4.0.0-rc.0":
-  version "4.0.0"
-  resolved "https://registry.npm.taobao.org/@ant-design/icons/download/@ant-design/icons-4.0.0.tgz?cache=0&sync_timestamp=1582869912383&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40ant-design%2Ficons%2Fdownload%2F%40ant-design%2Ficons-4.0.0.tgz#cdb870777f185422cfc0e235392592d3e4795ef6"
-  integrity sha1-zbhwd38YVCLPwOI1OSWS0+R5XvY=
+"@ant-design/icons@^4.0.0":
+  version "4.0.2"
+  resolved "https://registry.npm.taobao.org/@ant-design/icons/download/@ant-design/icons-4.0.2.tgz?cache=0&sync_timestamp=1582987591455&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40ant-design%2Ficons%2Fdownload%2F%40ant-design%2Ficons-4.0.2.tgz#6fce64b3e207d99d1e258ff527674e22b9b2afc0"
+  integrity sha1-b85ks+IH2Z0eJY/1J2dOIrmyr8A=
   dependencies:
     "@ant-design/colors" "^3.1.0"
     "@ant-design/icons-svg" "^4.0.0"
@@ -2068,12 +2068,12 @@ ansi-styles@^4.0.0:
     "@types/color-name" "^1.1.1"
     color-convert "^2.0.1"
 
-antd@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.npm.taobao.org/antd/download/antd-4.0.0.tgz#1566ee4a4c9ff5deb446cc3ce7604d4495fd2d38"
-  integrity sha1-FWbuSkyf9d60Rsw852BNRJX9LTg=
+antd@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.npm.taobao.org/antd/download/antd-4.0.1.tgz#506365bb6f697237dddf675c78c0a41375bd314e"
+  integrity sha1-UGNlu29pcjfd32dceMCkE3W9MU4=
   dependencies:
-    "@ant-design/icons" "^4.0.0-rc.0"
+    "@ant-design/icons" "^4.0.0"
     "@ant-design/react-slick" "~0.25.5"
     array-tree-filter "^2.1.0"
     classnames "~2.2.6"
@@ -2105,7 +2105,7 @@ antd@^4.0.0:
     rc-slider "~9.2.1"
     rc-steps "~3.5.0"
     rc-switch "~1.9.0"
-    rc-table "~7.0.0"
+    rc-table "~7.1.0"
     rc-tabs "~10.0.0"
     rc-tooltip "~4.0.0"
     rc-tree "~3.0.0"
@@ -2116,7 +2116,6 @@ antd@^4.0.0:
     rc-virtual-list "~1.0.0"
     resize-observer-polyfill "^1.5.1"
     scroll-into-view-if-needed "^2.2.20"
-    shallowequal "^1.1.0"
     warning "~4.0.3"
 
 anymatch@^2.0.0:
@@ -9833,10 +9832,10 @@ rc-switch@~1.9.0:
     prop-types "^15.5.6"
     react-lifecycles-compat "^3.0.4"
 
-rc-table@~7.0.0:
-  version "7.0.0"
-  resolved "https://registry.npm.taobao.org/rc-table/download/rc-table-7.0.0.tgz#53f4652f661e77cfcda98ed6ece895ea76d12308"
-  integrity sha1-U/RlL2Yed8/NqY7W7OiV6nbRIwg=
+rc-table@~7.1.0:
+  version "7.1.2"
+  resolved "https://registry.npm.taobao.org/rc-table/download/rc-table-7.1.2.tgz?cache=0&sync_timestamp=1583297406261&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Frc-table%2Fdownload%2Frc-table-7.1.2.tgz#ffd24afbdf0875de5a0381cf8e3d61c6ed450390"
+  integrity sha1-/9JK+98Idd5aA4HPjj1hxu1FA5A=
   dependencies:
     classnames "^2.2.5"
     component-classes "^1.2.6"

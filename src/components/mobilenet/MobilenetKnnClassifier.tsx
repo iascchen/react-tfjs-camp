@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import * as knnClassifier from '@tensorflow-models/knn-classifier'
-import { Button, Card, Col, message, Row } from 'antd'
+import { Button, Card, Col, message, Row, Tabs } from 'antd'
 
 import {
     arrayDispose,
@@ -16,6 +16,13 @@ import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import LabeledImageInputSet from '../common/tensor/LabeledImageInputSet'
 import LabeledImageSetWidget from '../common/tensor/LabeledImageSetWidget'
+import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
+import MarkdownWidget from '../common/MarkdownWidget'
+import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
+import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
+import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
+
+const { TabPane } = Tabs
 
 const KNN_TOPK = 10
 
@@ -23,6 +30,8 @@ const MobilenetClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
+
+    const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -32,6 +41,8 @@ const MobilenetClassifier = (): JSX.Element => {
 
     const [sLabeledImgs, setLabeledImgs] = useState<ILabeledImageSet[]>()
     const [sPredictResult, setPredictResult] = useState<tf.Tensor | IKnnPredictResult >()
+
+    const webcamRef = useRef<IWebCameraHandler>(null)
 
     /***********************
      * useEffect
@@ -166,6 +177,10 @@ const MobilenetClassifier = (): JSX.Element => {
         setLabeledImgs(values)
     }
 
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
+    }
+
     /***********************
      * Render
      ***********************/
@@ -180,32 +195,61 @@ const MobilenetClassifier = (): JSX.Element => {
     }
 
     return (
-        <>
-            <h1>Mobilenet + KNN</h1>
-            <Row gutter={16}>
-                <Col span={12}>
-                    <Card title='Prediction' style={{ margin: '8px' }} size='small'>
-                        <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
-                    </Card>
-                    <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
-                        <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
-                    </Card>
-                </Col>
-                <Col span={12}>
-                    <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
-                        <div>
-                            <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                            <Button onClick={handleKnnReset} style={{ width: '30%', margin: '0 10%' }}> Reset Model </Button>
-                            <div>status: {sStatus}</div>
-                            {knnInfo()}
-
+        <AIProcessTabs title={'Mobilenet + KNN'} current={sTabCurrent} onChange={handleTabChange}
+            invisiblePanes={[AIProcessTabPanes.MODEL]}>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
+                <MarkdownWidget url={'/docs/mobilenet.md'}/>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Images Label Panel' style={{ margin: '8px' }} size='small'>
+                            <LabeledImageInputSet model={sModel} onSave={handleLabeledImagesSubmit} />
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
                             <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
-                        </div>
-                        <p>backend: {sTfBackend}</p>
-                    </Card>
-                </Col>
-            </Row>
-        </>
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
+                            <LabeledImageSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
+                            <div>
+                                <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                                <Button onClick={handleKnnReset} style={{ width: '30%', margin: '0 10%' }}> Reset Model </Button>
+                                <div>status: {sStatus}</div>
+                                {knnInfo()}
+                            </div>
+                            <p>backend: {sTfBackend}</p>
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Prediction' style={{ margin: '8px' }} size='small'>
+                            <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Prediction' size='small'>
+                            <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
+                                isPreview />
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+        </AIProcessTabs>
     )
 }
 

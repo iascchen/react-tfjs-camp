@@ -20,9 +20,11 @@
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "noEmit": true
+        "noEmit": true,
+        "sourceMap": true
     },
     "include": [
-        "src"
+        "src",
+        "node"
     ]
 }

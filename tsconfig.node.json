@@ -2,8 +2,8 @@
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
         "allowJs": true,
-        "module": "commonjs",
-        "sourceMap": true
+        "isolatedModules": true,
+        "module": "commonjs"
     },
     "include": [
         "node"

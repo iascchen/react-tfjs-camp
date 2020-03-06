@@ -78,10 +78,10 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><ReadOutlined /><span>RNN</span></span>}>
+                <SubMenu title={<span><ReadOutlined /><span>循环神经网络 RNN</span></span>}>
                     <Item key='5.1'>
-                        <Link to='/rnn/simple'>
-                            <span> Simple RNN </span>
+                        <Link to='/rnn/jena'>
+                            <span> 时序数据预测 Jena Weather</span>
                         </Link>
                     </Item>
                     <Item key='5.2'>

@@ -31,10 +31,11 @@ import { ArgumentParser } from 'argparse'
 import { JenaWeatherData } from './dataJena'
 import { buildModel, getBaselineMeanAbsoluteError, trainModel } from './modelJena'
 import { logger } from '../utils'
+import { Callback } from '@tensorflow/tfjs-node'
 
-global.fetch = require('node-fetch')
+// global.fetch = require('node-fetch')
 
-function parseArguments () {
+const parseArguments = (): any => {
     const parser =
       new ArgumentParser({ description: 'Train RNNs for Jena weather problem' })
     parser.addArgument('--modelType', {
@@ -112,6 +113,8 @@ const main = async (): Promise<void> => {
 
     const jenaWeatherData = new JenaWeatherData()
     console.log('Loading Jena weather data...')
+    await jenaWeatherData.loadCsv()
+    jenaWeatherData.loadDataColumnNames()
     await jenaWeatherData.load()
 
     if (args.modelType === 'baseline') {
@@ -127,27 +130,22 @@ const main = async (): Promise<void> => {
         const model = buildModel(
             args.modelType, Math.floor(args.lookBack / args.step), numFeatures)
 
-        const callback = []
+        const callback: Callback[] = []
         if (args.logDir != null) {
-            console.log(
-                'Logging to tensorboard. ' +
-          'Use the command below to bring up tensorboard server:\n' +
-          `  tensorboard --logdir ${args.logDir}`)
+            console.log('Logging to tensorboard. ' + 'Use the command below to bring up tensorboard server:\n' +
+                `  tensorboard --logdir ${args.logDir}`)
             callback.push(tfn.node.tensorBoard(args.logDir, {
                 updateFreq: args.logUpdateFreq
             }))
         }
         if (args.earlyStoppingPatience != null) {
-            console.log(
-                'Using earlyStoppingCallback with patience ' +
-          `${args.earlyStoppingPatience}.`)
+            console.log('Using earlyStoppingCallback with patience ' + `${args.earlyStoppingPatience}.`)
             callback.push(tfn.callbacks.earlyStopping({
                 patience: args.earlyStoppingPatience
             }))
         }
 
-        await trainModel(
-            model, jenaWeatherData, args.normalize, args.includeDateTime,
+        await trainModel(model, jenaWeatherData, args.normalize, args.includeDateTime,
             args.lookBack, args.step, args.delay, args.batchSize, args.epochs,
             callback)
     }
@@ -157,6 +155,11 @@ if (require.main === module) {
     main().then(
         () => {
             logger('Finished')
+        },
+        (e) => {
+            logger(e.msg)
         }
     )
 }
+
+// ts-node --project tsconfig.node.json ./node/rnn/train-rnn.ts --logDir ./node/rnn/logs

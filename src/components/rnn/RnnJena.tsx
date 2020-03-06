@@ -3,7 +3,6 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, message, Row, Select, Tabs } from 'antd'
 
 import { ILayerSelectOption, logger, STATUS } from '../../utils'
-import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
@@ -31,10 +30,6 @@ const mdInfo = '**注意** \n' +
     '* 所需的数据大约有 41.2MB。\n' +
     '* 刷新页面，会丢失已经加载的数据。'
 
-interface IKeyMap {
-    [index: string]: number
-}
-
 export const TIME_SPAN_RANGE_MAP: IKeyMap = {
     hour: 6,
     day: 6 * 24,
@@ -54,6 +49,10 @@ export const TIME_SPAN_STRIDE_MAP: IKeyMap = {
     full: 6 * 24
 }
 
+interface IKeyMap {
+    [index: string]: number
+}
+
 const RnnJena = (): JSX.Element => {
     /***********************
      * useState
@@ -65,7 +64,6 @@ const RnnJena = (): JSX.Element => {
 
     // const [sNumFeatures, setNumFeatures] = useState(10)
     const [sDataHandler, setDataHandler] = useState<JenaWeatherData>()
-    const [sSampleData, setSampleData] = useState<tf.TensorContainerObject>()
     const [sLoadSpendSec, setLoadSpendSec] = useState<number>(0)
 
     const [sModelName, setModelName] = useState('simpleRnn')
@@ -77,7 +75,6 @@ const RnnJena = (): JSX.Element => {
     const [ignore, forceUpdate] = useReducer((x: number) => x + 1, 0)
 
     const [sEpochs, setEpochs] = useState<number>(5)
-    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
 
     const elementRef = useRef<HTMLDivElement>(null)
     const dataChartRef = useRef<HTMLDivElement>(null)
@@ -224,7 +221,8 @@ const RnnJena = (): JSX.Element => {
         train().then()
     }
 
-    const makeTimeSeriesChart = async (series1: string, series2: string, timeSpan: string, normalize: boolean, chartConatiner: HTMLDivElement): Promise<void> => {
+    const makeTimeSeriesChart = async (series1: string, series2: string, timeSpan: string, normalize: boolean,
+        chartConatiner: HTMLDivElement): Promise<void> => {
         if (!sDataHandler || !chartConatiner) {
             return
         }
@@ -285,32 +283,11 @@ const RnnJena = (): JSX.Element => {
         })
     }
 
-    const handlePredict = async (imgTensor: tf.Tensor): Promise<void> => {
-        if (!imgTensor) {
-
-        }
-    }
-
-    // const handleLabeledImagesSubmit = (value: ILabeledImageFileJson): void => {
-    //     logger('handleLabeledImagesSubmit', value)
-    //
-    //     const labeledImageSetList = value.labeledImageSetList
-    //     setLabeledImgs(labeledImageSetList)
-    // }
-    //
-    // const handleLoadJson = (values: ILabeledImageSet[]): void => {
-    //     sLabeledImgs && arrayDispose(sLabeledImgs)
-    //     setLabeledImgs(values)
-    // }
-
     const handleDataLoad = (): void => {
         setStatus(STATUS.LOADING)
 
         const beginMs = performance.now()
         sDataHandler?.load().then(() => {
-            const _sample = sDataHandler.getSampleData()
-            setSampleData(_sample)
-
             setLoadSpendSec((performance.now() - beginMs) / 1000)
             setStatus(STATUS.LOADED)
 
@@ -373,7 +350,8 @@ const RnnJena = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'RNN'} current={sTabCurrent} onChange={handleTabChange} >
+        <AIProcessTabs title={'RNN'} current={sTabCurrent} onChange={handleTabChange}
+            invisiblePanes={[AIProcessTabPanes.PREDICT]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/rnnJena.md'}/>
             </TabPane>
@@ -431,11 +409,6 @@ const RnnJena = (): JSX.Element => {
                         </Card>
                     </Col>
                 </Row>
-            </TabPane>
-            <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
-                <Card title='Prediction' style={{ margin: '8px' }} size='small'>
-                    {sModel && <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>}
-                </Card>
             </TabPane>
         </AIProcessTabs>
     )

@@ -47,37 +47,36 @@ const VAL_MAX_ROW = 300000
  * @returns {number} The mean absolute error of the commonsense baseline
  *   prediction.
  */
-// export const getBaselineMeanAbsoluteError =
-//     async (jenaWeatherData, normalize, includeDateTime, lookBack, step, delay): Promise<number[]> => {
-//         const batchSize = 128
-//         const dataset = tf.data.generator(
-//             () => jenaWeatherData.getNextBatchFunction(
-//                 false, lookBack, delay, batchSize, step, VAL_MIN_ROW,
-//                 VAL_MAX_ROW, normalize, includeDateTime))
-//
-//         const batchMeanAbsoluteErrors = []
-//         const batchSizes = []
-//         await dataset.forEach(dataItem => {
-//             const features = dataItem.xs
-//             const targets = dataItem.ys
-//             const timeSteps = features.shape[1]
-//             batchSizes.push(features.shape[0])
-//             batchMeanAbsoluteErrors.push(tf.tidy(
-//                 () => tf.losses.absoluteDifference(
-//                     targets,
-//                     features.gather([timeSteps - 1], 1).gather([1], 2).squeeze([2]))))
-//         })
-//
-//         const meanAbsoluteError = tf.tidy(() => {
-//             const batchSizesTensor = tf.tensor1d(batchSizes)
-//             const batchMeanAbsoluteErrorsTensor = tf.stack(batchMeanAbsoluteErrors)
-//             return batchMeanAbsoluteErrorsTensor.mul(batchSizesTensor)
-//                 .sum()
-//                 .div(batchSizesTensor.sum())
-//         })
-//         tf.dispose(batchMeanAbsoluteErrors)
-//         return meanAbsoluteError.dataSync()[0]
-//     }
+export const getBaselineMeanAbsoluteError = async (jenaWeatherData: JenaWeatherData, normalize: boolean,
+    includeDateTime: boolean, lookBack: number, step: number, delay: number): Promise<number> => {
+    const batchSize = 128
+    const dataset: tf.data.Dataset<tf.TensorContainerObject> = tf.data.generator(
+        () => jenaWeatherData.getNextBatchFunction(false, lookBack, delay, batchSize, step,
+            VAL_MIN_ROW, VAL_MAX_ROW, normalize, includeDateTime))
+
+    const batchMeanAbsoluteErrors: tf.Tensor[] = []
+    const batchSizes: number[] = []
+    await dataset.forEachAsync((dataItem: tf.TensorContainerObject) => {
+        const features = dataItem.xs as tf.Tensor
+        const targets = dataItem.ys as tf.Tensor
+        const timeSteps = features.shape[1] as number
+        batchSizes.push(features.shape[0])
+        batchMeanAbsoluteErrors.push(tf.tidy(
+            () => tf.losses.absoluteDifference(
+                targets,
+                features.gather([timeSteps - 1], 1).gather([1], 2).squeeze([2]))))
+    })
+
+    const meanAbsoluteError = tf.tidy(() => {
+        const batchSizesTensor = tf.tensor1d(batchSizes)
+        const batchMeanAbsoluteErrorsTensor = tf.stack(batchMeanAbsoluteErrors)
+        return batchMeanAbsoluteErrorsTensor.mul(batchSizesTensor)
+            .sum()
+            .div(batchSizesTensor.sum())
+    })
+    tf.dispose(batchMeanAbsoluteErrors)
+    return meanAbsoluteError.dataSync()[0]
+}
 
 export const buildLinearRegressionModel = (inputShape: tf.Shape): tf.LayersModel => {
     const model = tf.sequential()
@@ -132,6 +131,34 @@ export const buildGRUModel = (inputShape: tf.Shape, dropout?: number, recurrentD
     return model
 }
 
+export const buildModel = (modelType: string, numTimeSteps: number, numFeatures: number): tf.LayersModel => {
+    const inputShape = [numTimeSteps, numFeatures]
+
+    console.log(`modelType = ${modelType}`)
+    let model
+    if (modelType === 'mlp') {
+        model = buildMLPModel(inputShape)
+    } else if (modelType === 'mlp-l2') {
+        model = buildMLPModel(inputShape, { kernelRegularizer: tf.regularizers.l2() })
+    } else if (modelType === 'linear-regression') {
+        model = buildLinearRegressionModel(inputShape)
+    } else if (modelType === 'mlp-dropout') {
+        const dropoutRate = 0.25
+        model = buildMLPModel(inputShape, { dropoutRate: dropoutRate })
+    } else if (modelType === 'simpleRNN') {
+        model = buildSimpleRNNModel(inputShape)
+    } else if (modelType === 'gru') {
+        model = buildGRUModel(inputShape)
+        // TODO(cais): Add gru-dropout with recurrentDropout.
+    } else {
+        throw new Error(`Unsupported model type: ${modelType}`)
+    }
+
+    model.compile({ loss: 'meanAbsoluteError', optimizer: 'rmsprop' })
+    model.summary()
+    return model
+}
+
 /**
  * Train a model on the Jena weather data.
  *
@@ -155,7 +182,7 @@ export const buildGRUModel = (inputShape: tf.Shape, dropout?: number, recurrentD
 export const trainModel =
     async (model: tf.LayersModel, jenaWeatherData: JenaWeatherData, normalize: boolean, includeDateTime: boolean,
         lookBack: number, step: number, delay: number, batchSize: number, epochs: number,
-        customCallback: tf.Callback | tf.CustomCallbackArgs): Promise<void> => {
+        customCallback: tf.Callback | tf.CustomCallbackArgs[]): Promise<void> => {
         const trainShuffle = true
         const trainDataset = tf.data.generator(
             () => jenaWeatherData.getNextBatchFunction(

@@ -28,7 +28,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs-node'
-import { logger } from '../utils'
+import { fetchLocal, logger } from '../utils'
 
 const BASE_URL = './public/preload/data'
 const LOCAL_JENA_WEATHER_CSV_PATH = `${BASE_URL}/jena_climate_2009_2016.csv`
@@ -74,16 +74,19 @@ export class JenaWeatherData {
     sampleData?: tf.TensorContainerObject
 
     csvLines: string[] = []
-    csvDataset: tf.data.CSVDataset
 
     constructor () {
-        this.csvDataset = tf.data.csv(LOCAL_JENA_WEATHER_CSV_PATH)
+        // this.csvDataset = tf.data.csv(LOCAL_JENA_WEATHER_CSV_PATH)
     }
 
-    loadCsv = async (): Promise<string[]> => {
-        const response = await fetch(LOCAL_JENA_WEATHER_CSV_PATH)
-        const csvData = await response.text()
-        return csvData.split('\n')
+    loadCsv = async (): Promise<void> => {
+        const buffer = await fetchLocal(LOCAL_JENA_WEATHER_CSV_PATH)
+        if (!buffer) {
+            return
+        }
+
+        const csvData = buffer.toString()
+        this.csvLines = csvData.split('\n')
     }
 
     loadDataColumnNames = (): void => {
@@ -104,7 +107,7 @@ export class JenaWeatherData {
 
     load = async (): Promise<void> => {
         // Parse CSV file. will spend 10+ sec
-        const beginMs = performance.now()
+        // const beginMs = performance.now()
 
         this.dateTime = []
         this.data = [] // Unnormalized data.
@@ -141,7 +144,7 @@ export class JenaWeatherData {
 
         await this.calculateMeansAndStddevs_()
 
-        logger('spend time: ', (performance.now() - beginMs) / 1000)
+        // logger('spend time: ', (performance.now() - beginMs) / 1000)
         // logger(this.normalizedData)
     }
 

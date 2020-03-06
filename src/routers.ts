@@ -34,7 +34,7 @@ const routes: RouteConfig[] = [
     { path: '/mobilenet/transfer', component: MobilenetTransferWidget },
     { path: '/mobilenet/objdetector', component: MobilenetObjDetector },
 
-    { path: '/rnn/simple', component: RnnJena },
+    { path: '/rnn/jena', component: RnnJena },
 
     { path: '/sandbox/fetch', component: FetchWidget },
     { path: '/sandbox/array', component: TypedArrayWidget },
@@ -60,7 +60,7 @@ export const breadcrumbNameMap: IBreadcrumbMap = {
     '/mobilenet/transfer': 'Transfer Learning: Classifier',
     '/mobilenet/objdetector': 'Transfer Learning: Object Detector',
 
-    '/rnn/simple': 'Simple RNN',
+    '/rnn/jena': 'Jena Weather',
 
     '/sandbox/array': 'TypedArray',
     '/sandbox/fetch': 'Fetch',

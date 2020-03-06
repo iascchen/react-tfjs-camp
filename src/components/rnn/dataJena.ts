@@ -34,9 +34,6 @@ const LOCAL_JENA_WEATHER_CSV_PATH = '/preload/data/jena_climate_2009_2016.csv'
 // const REMOTE_JENA_WEATHER_CSV_PATH =
 //     'https://storage.googleapis.com/learnjs-data/jena_climate/jena_climate_2009_2016.csv'
 
-const SAMPLE_OFFSET = 50
-const SAMPLE_LEN = 3
-
 interface IParsedDate {
     date: Date
     normalizedDayOfYear: number // normalizedDayOfYear: Day of the year, normalized between 0 and 1.
@@ -59,24 +56,20 @@ export class JenaWeatherData {
     numColumnsExcludingTarget = 0
 
     dateTime: Date[] = []
-    // Day of the year data, normalized between 0 and 1.
-    normalizedDayOfYear: number[] = []
-    // Time of the day, normalized between 0 and 1.
-    normalizedTimeOfDay: number[] = []
+    normalizedDayOfYear: number[] = [] // Day of the year data, normalized between 0 and 1.
+    normalizedTimeOfDay: number[] = [] // Time of the day, normalized between 0 and 1.
 
     data: number[][] = [] // Unnormalized data.
+    normalizedData: number[][] = []
     means: number[] = []
     stddevs: number[] = []
-    normalizedData: number[][] = []
 
     dataset?: tf.TensorContainer[]
     sampleData?: tf.TensorContainerObject
 
     csvLines: string[] = []
-    csvDataset: tf.data.CSVDataset
 
     constructor () {
-        this.csvDataset = tf.data.csv(LOCAL_JENA_WEATHER_CSV_PATH)
     }
 
     loadCsv = async (): Promise<string[]> => {
@@ -94,7 +87,7 @@ export class JenaWeatherData {
         }
 
         this.dateTimeCol = columnNames.indexOf('Date Time')
-        // tf.util.assert(this.dateTimeCol === 0, 'Unexpected date-time column index')
+        // tf.util.assert(this.dateTimeCol === 0, () => 'Unexpected date-time column index')
 
         this.dataColumnNames = columnNames.slice(1)
         this.tempCol = this.dataColumnNames.indexOf('T (degC)')
@@ -143,59 +136,6 @@ export class JenaWeatherData {
         logger('spend time: ', (performance.now() - beginMs) / 1000)
         // logger(this.normalizedData)
     }
-
-    // loadDataColumnNames = async (): Promise<void> => {
-    //     // Parse header.
-    //     const columnNames = await this.csvDataset.columnNames()
-    //     this.dataColumnNames = columnNames.slice(1)
-    //     this.tempCol = 0
-    //     // logger(columnNames)
-    // }
-
-    // load = async (): Promise<void> => {
-    //     // // will spend 130+ sec
-    //     // // Headers
-    //     // const cName = ['Date Time', 'p (mbar)', 'T (degC)', 'Tpot (K)', 'Tdew (degC)', 'rh (%)',
-    //     //     'VPmax (mbar)', 'VPact (mbar)', 'VPdef (mbar)', 'sh (g/kg)', 'H2OC (mmol/mol)',
-    //     //     'rho (g/m**3)', 'wv (m/s)', 'max. wv (m/s)', 'wd (deg)']
-    //
-    //     const beginMs = performance.now()
-    //
-    //     // const sampleObjs = csvDataset.skip(SAMPLE_OFFSET).take(SAMPLE_LEN)
-    //
-    //     this.dateTime = []
-    //     this.data = [] // Unnormalized data.
-    //     this.normalizedDayOfYear = [] // Day of the year data, normalized between 0 and 1.
-    //     this.normalizedTimeOfDay = [] // Time of the day, normalized between 0 and 1.
-    //
-    //     // await allData.forEachAsync((row: any) => {
-    //     await this.csvDataset.forEachAsync((row: any) => {
-    //         const rowValues = Object.values(row)
-    //         // logger(rowValues)
-    //
-    //         const parsed: any = this.parseDateTime_(rowValues[0] as string)
-    //         const newDateTime = parsed.date
-    //
-    //         this.dateTime.push(newDateTime)
-    //         this.data.push(rowValues.slice(1).map(x => Number(x)))
-    //         this.normalizedDayOfYear.push(parsed.normalizedDayOfYear)
-    //         this.normalizedTimeOfDay.push(parsed.normalizedTimeOfDay)
-    //     })
-    //
-    //     this.numRows = this.data.length
-    //     this.numColumns = this.data[0].length
-    //     this.numColumnsExcludingTarget = this.data[0].length - 1
-    //
-    //     await this.calculateMeansAndStddevs_()
-    //
-    //     // this.sampleData = {
-    //     //     data: tf.tensor2d(this.data, [this.numRows, this.numColumns]),
-    //     //     normalizedTimeOfDay: tf.tensor2d(this.normalizedTimeOfDay, [this.numRows, 1])
-    //     // }
-    //
-    //     logger('spend time: ', (performance.now() - beginMs) / 1000)
-    //     logger(this.normalizedData)
-    // }
 
     parseDateTime_ = (str: string): IParsedDate => {
         // The date time string with a format that looks like: "17.01.2009 22:10:00"

@@ -165,3 +165,9 @@ export const checkUploadDone = (fileList: UploadFile[]): number => {
     logger('waiting checkUploadDone : ', fileList.length, unload)
     return unload
 }
+
+export const loggerError = (e: any): void => {
+    logger(e)
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    // message.error(e)
+}

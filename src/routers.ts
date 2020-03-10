@@ -15,6 +15,8 @@ import MobilenetTransferWidget from './components/mobilenet/MobilenetTransferWid
 import MobilenetObjDetector from './components/mobilenet/MobilenetObjDetector'
 
 import RnnJena from './components/rnn/RnnJena'
+import SentimentWidget from './components/rnn/SentimentWidget'
+import TextGenLstm from './components/rnn/TextGenLstm'
 
 import FetchWidget from './components/sandbox/FetchWidget'
 import TypedArrayWidget from './components/sandbox/TypedArrayWidget'
@@ -35,6 +37,8 @@ const routes: RouteConfig[] = [
     { path: '/mobilenet/objdetector', component: MobilenetObjDetector },
 
     { path: '/rnn/jena', component: RnnJena },
+    { path: '/rnn/sentiment', component: SentimentWidget },
+    { path: '/rnn/lstm', component: TextGenLstm },
 
     { path: '/sandbox/fetch', component: FetchWidget },
     { path: '/sandbox/array', component: TypedArrayWidget },
@@ -61,6 +65,8 @@ export const breadcrumbNameMap: IBreadcrumbMap = {
     '/mobilenet/objdetector': 'Transfer Learning: Object Detector',
 
     '/rnn/jena': 'Jena Weather',
+    '/rnn/sentiment': 'Sentiment',
+    '/rnn/lstm': 'Lstm Text',
 
     '/sandbox/array': 'TypedArray',
     '/sandbox/fetch': 'Fetch',

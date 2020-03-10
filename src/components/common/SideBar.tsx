@@ -85,8 +85,13 @@ const SideBar = (props: IProps): JSX.Element => {
                         </Link>
                     </Item>
                     <Item key='5.2'>
+                        <Link to='/rnn/sentiment'>
+                            <span> 词嵌入 </span>
+                        </Link>
+                    </Item>
+                    <Item key='5.3'>
                         <Link to='/rnn/lstm'>
-                            <span> LSTM </span>
+                            <span> 文本生成 LSTM </span>
                         </Link>
                     </Item>
                 </SubMenu>

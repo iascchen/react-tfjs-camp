@@ -24,7 +24,7 @@
  *
  * This file is used to load the Jena weather data in both
  * - the browser: see [index.js](./index.js), and
- * - the Node.js backend environment: see [train-rnn.js](./train-rnn.js).
+ * - the Node.js backend environment: see [train-jena.js](./train-jena.js).
  */
 
 import * as tf from '@tensorflow/tfjs-node'

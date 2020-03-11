@@ -118,7 +118,7 @@ export const buildSimpleRNNModel = (inputShape: tf.Shape): tf.LayersModel => {
 
 export const buildGRUModel = (inputShape: tf.Shape, dropout?: number, recurrentDropout?: number): tf.LayersModel => {
     // TODO(cais): Recurrent dropout is currently not fully working.
-    //   Make it work and add a flag to train-rnn.js.
+    //   Make it work and add a flag to train-jena.js.
     const model = tf.sequential()
     const rnnUnits = 32
     model.add(tf.layers.gru({

@@ -18,10 +18,9 @@ const loadTruncatedBase = async (): Promise<IModelWithFineTuning> => {
     const mobilenet = await tf.loadLayersModel(MOBILENET_MODEL_PATH)
 
     // Return a model that outputs an internal activation.
-    const fineTuningLayers = []
+    const fineTuningLayers: tf.layers.Layer[] = []
     const layer = mobilenet.getLayer(topLayerName)
-    const truncatedBase =
-        tf.model({ inputs: mobilenet.inputs, outputs: layer.output })
+    const truncatedBase = tf.model({ inputs: mobilenet.inputs, outputs: layer.output })
     // Freeze the model's layers.
     for (const layer of truncatedBase.layers) {
         layer.trainable = false

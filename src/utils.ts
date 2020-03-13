@@ -100,6 +100,29 @@ export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buf
     }
 }
 
+// const base64ToArray = (base64: string): [Uint8Array, string] => {
+//     const arr = base64.split(',')
+//     const mime = arr[0].match(/:(.*?);/)[1]
+//     const bstr = atob(arr[1])
+//     let n = bstr.length
+//     const u8arr = new Uint8Array(n)
+//
+//     while (n--) {
+//         u8arr[n] = bstr.charCodeAt(n)
+//     }
+//     return [u8arr, mime]
+// }
+//
+// export const base64ToFile = (base64: string, filename: string): File => {
+//     const [u8arr, mime] = base64ToArray(base64)
+//     return new File([u8arr], filename, { type: mime })
+// }
+//
+// export const base64ToBlob = (base64: string): Blob => {
+//     const [u8arr, mime] = base64ToArray(base64)
+//     return new Blob([u8arr], { type: mime })
+// }
+
 export const getUploadFileBase64 = async (blob: File | Blob | undefined): Promise<string> => {
     if (!blob) {
         throw (new Error('File Blob is undefined'))

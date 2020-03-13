@@ -20,42 +20,43 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
+import * as jimp from 'jimp'
 
 // const jimp = require('jimp')
 // const tf = require('@tensorflow/tfjs')
 
-// /**
-//  * Read an image file as a TensorFlow.js tensor.
-//  *
-//  * Image resizing is performed with tf.image.resizeBilinear.
-//  *
-//  * @param {string} filePath Path to the input image file.
-//  * @param {number} height Desired height of the output image tensor, in pixels.
-//  * @param {number} width Desired width of the output image tensor, in pixels.
-//  * @return {tf.Tensor4D} The read float32-type tf.Tensor of shape
-//  *   `[1, height, width, 3]`
-//  */
-// async function readImageTensorFromFile (filePath, height, width) {
-//     return new Promise((resolve, reject) => {
-//         jimp.read(filePath, (err, image) => {
-//             if (err) {
-//                 reject(err)
-//             } else {
-//                 const h = image.bitmap.height
-//                 const w = image.bitmap.width
-//                 const buffer = tf.buffer([1, h, w, 3], 'float32')
-//                 image.scan(0, 0, w, h, function (x, y, index) {
-//                     buffer.set(image.bitmap.data[index], 0, y, x, 0)
-//                     buffer.set(image.bitmap.data[index + 1], 0, y, x, 1)
-//                     buffer.set(image.bitmap.data[index + 2], 0, y, x, 2)
-//                 })
-//                 resolve(tf.tidy(
-//                     () => tf.image.resizeBilinear(buffer.toTensor(), [height, width])))
-//             }
-//         })
-//     })
-// }
-//
+/**
+ * Read an image file as a TensorFlow.js tensor.
+ *
+ * Image resizing is performed with tf.image.resizeBilinear.
+ *
+ * @param {string} filePath Path to the input image file.
+ * @param {number} height Desired height of the output image tensor, in pixels.
+ * @param {number} width Desired width of the output image tensor, in pixels.
+ * @return {tf.Tensor4D} The read float32-type tf.Tensor of shape
+ *   `[1, height, width, 3]`
+ */
+export const readImageTensorFromFile = async (filePath: string, height: number, width: number): Promise<tf.Tensor> => {
+    return new Promise((resolve, reject) => {
+        jimp.read(filePath, (err, image) => {
+            if (err) {
+                reject(err)
+            } else {
+                const h = image.bitmap.height
+                const w = image.bitmap.width
+                const buffer: tf.TensorBuffer<tf.Rank.R4> = tf.buffer([1, h, w, 3], 'float32')
+                image.scan(0, 0, w, h, function (x, y, index) {
+                    buffer.set(image.bitmap.data[index], 0, y, x, 0)
+                    buffer.set(image.bitmap.data[index + 1], 0, y, x, 1)
+                    buffer.set(image.bitmap.data[index + 2], 0, y, x, 2)
+                })
+                resolve(tf.tidy(
+                    () => tf.image.resizeBilinear(buffer.toTensor(), [height, width])))
+            }
+        })
+    })
+}
+
 // /**
 //  * Write an image tensor to a image file.
 //  *
@@ -63,9 +64,9 @@ import * as tf from '@tensorflow/tfjs'
 //  *   Assumed to be an int32-type tensor with value in the range 0-255.
 //  * @param {string} filePath Destination file path.
 //  */
-// async function writeImageTensorToFile (imageTensor, filePath) {
-//     const imageH = imageTensor.shape[1]
-//     const imageW = imageTensor.shape[2]
+// export const writeImageTensorToFile = async (imageTensor: tf.Tensor, filePath: string) => {
+//     const imageH = imageTensor.shape[1] ?? 0
+//     const imageW = imageTensor.shape[2] ?? 0
 //     const imageData = imageTensor.dataSync()
 //
 //     const bufferLen = imageH * imageW * 4
@@ -82,8 +83,8 @@ import * as tf from '@tensorflow/tfjs'
 //     }
 //
 //     return new Promise((resolve, reject) => {
-//         new jimp(
-//             { data: new Buffer(buffer), width: imageW, height: imageH },
+//         jimp.new(
+//             { data: Buffer.from(buffer), width: imageW, height: imageH },
 //             (err, img) => {
 //                 if (err) {
 //                     reject(err)

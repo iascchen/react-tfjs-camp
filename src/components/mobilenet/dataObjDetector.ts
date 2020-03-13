@@ -101,7 +101,7 @@ class ObjectDetectionImageSynthesizer {
      *     The remaning four elements are the bounding box of the shape:
      *     [left, right, top, bottom], in the unit of pixels.
      */
-    generateExample = (numCircles: number, numLines: number, triangleProbability: number): tf.TensorContainerObject | void => {
+    generateExample = async (numCircles: number, numLines: number, triangleProbability: number): Promise<tf.TensorContainerObject | void> => {
         const _triangleProbability = triangleProbability ?? 0.5
 
         // tf.util.assert(
@@ -284,14 +284,14 @@ class ObjectDetectionImageSynthesizer {
      *     The remaning four columns are the bounding box of the shape:
      *     [left, right, top, bottom], in the unit of pixels.
      */
-    generateExampleBatch = (batchSize: number, numCircles: number, numLines: number, triangleProbability: number): tf.TensorContainerObject | void => {
+    generateExampleBatch = async (batchSize: number, numCircles: number, numLines: number, triangleProbability?: number): Promise<tf.TensorContainerObject | void> => {
         if (triangleProbability == null) {
             triangleProbability = 0.5
         }
         const imageTensors: tf.Tensor[] = []
         const targetTensors: tf.Tensor[] = []
         for (let i = 0; i < batchSize; ++i) {
-            const { image, target } = this.generateExample(numCircles, numLines, triangleProbability) as tf.TensorContainerObject
+            const { image, target } = await this.generateExample(numCircles, numLines, triangleProbability) as tf.TensorContainerObject
             imageTensors.push(image as tf.Tensor)
             targetTensors.push(target as tf.Tensor)
         }

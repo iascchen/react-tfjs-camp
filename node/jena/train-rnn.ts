@@ -162,4 +162,4 @@ if (require.main === module) {
     )
 }
 
-// ts-node --project tsconfig.node.json ./node/jena/train-jena.ts --logDir ./node/jena/logs
+// ts-node --project tsconfig.json ./node/jena/train-jena.ts --logDir ./node/jena/logs

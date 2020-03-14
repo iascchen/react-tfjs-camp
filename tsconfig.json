@@ -25,7 +25,6 @@
         "removeComments": false,
         "preserveConstEnums": true,
         "declaration": true,
-        "noUnusedLocals": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "alwaysStrict": true,

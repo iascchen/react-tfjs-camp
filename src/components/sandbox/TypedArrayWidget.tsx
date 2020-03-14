@@ -42,6 +42,9 @@ const TypedArrayWidget = (): JSX.Element => {
     const tfOnehots = labels.map(item => tf.oneHot(tf.tensor1d([item]).toInt(), labels.length))
     tfOnehots.forEach(item => item.print())
 
+    let str = '![幼儿园试题](./images/curve_02.jpg) ![表情包](/docs/images/emotion_02.jpg)'
+    str = str.replace(/.\/images/g, '/docs/images')
+
     return (
         <div>
             <div>{
@@ -55,6 +58,8 @@ const TypedArrayWidget = (): JSX.Element => {
                     return <div key={idx}>{r}</div>
                 })
             }</div>
+
+            <div>{ str }</div>
         </div>
     )
 }

@@ -15,6 +15,7 @@ export enum STATUS {
     TRAINED = 'Trained',
     PREDICTING = 'Predicting',
     PREDICTED = 'Predicted',
+    STOPPED = 'Stopped',
 }
 
 export interface ITrainInfo {

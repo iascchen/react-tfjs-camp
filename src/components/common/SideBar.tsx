@@ -30,7 +30,7 @@ const SideBar = (props: IProps): JSX.Element => {
             <Menu theme='dark' mode='inline' onClick={props.onClick}>
                 <Item key='0'>
                     <HomeOutlined/>
-                    <span><Link to='/'>Home</Link></span>
+                    <span><Link to='/'>首页</Link></span>
                 </Item>
                 <SubMenu title={<span><LineChartOutlined/><span>线性回归</span></span>}>
                     <Item key='1.1'>

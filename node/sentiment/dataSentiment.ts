@@ -21,7 +21,7 @@ import * as path from 'path'
 import { OOV_INDEX, padSequences } from './sequenceUtils'
 import { fetchLocal } from '../utils'
 
-const BASE_URL = './public/preload/data/imdb'
+const BASE_URL = '../public/preload/data/imdb'
 
 // const DATA_ZIP_URL = `${BASE_URL}/imdb_tfjs_data.zip`
 // 'https://storage.googleapis.com/learnjs-data/imdb/imdb_tfjs_data.zip'

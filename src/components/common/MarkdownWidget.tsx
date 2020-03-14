@@ -28,6 +28,7 @@ const renderers = {
 interface IProps {
     source?: string
     url?: string
+    imgPathPrefix?: string
 }
 
 const MarkdownWidget = (props: IProps): JSX.Element => {
@@ -42,7 +43,9 @@ const MarkdownWidget = (props: IProps): JSX.Element => {
         // Fetch and load MD content
         loadMD(props.url).then(
             (src) => {
-                setSource(src)
+                const prefix = props.imgPathPrefix ?? '/docs'
+                const _src = src.replace(/.\/images/g, `${prefix}/images`)
+                setSource(_src)
             }, (e) => {
                 // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 message.error(e.message)
@@ -55,8 +58,7 @@ const MarkdownWidget = (props: IProps): JSX.Element => {
 
     return (
         <MathJax.Context>
-            <ReactMarkdown source={sSource} escapeHtml={true}
-                plugins={[RemarkMathPlugin]} renderers={renderers}/>
+            <ReactMarkdown source={sSource} escapeHtml={true} plugins={[RemarkMathPlugin]} renderers={renderers}/>
         </MathJax.Context>
     )
 }

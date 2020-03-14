@@ -3,24 +3,30 @@ import { Col, Row } from 'antd'
 
 import reactLogo from '../../react_logo.svg'
 import tsLogo from '../../typescript_logo.svg'
-
 const tfLogo = '/tf_logo.jpeg'
 
 const Home = (): JSX.Element => {
     return (
-        <div>
+        <>
+            <h1>RTCamp: React Tensorflow.js Camp</h1>
             <header className='App-header'>
                 <Row>
-                    <Col span={8}><img src={reactLogo} height={200} alt='logo'/></Col>
-                    <Col span={8}><img src={tfLogo} height={200} alt='logo2'/></Col>
-                    <Col span={8}><img src={tsLogo} height={100} alt='logo3'/></Col>
+                    <Col span={8} className='centerContainer'>
+                        <img src={reactLogo} alt='logo' style={{ width: '90%' }}/>
+                    </Col>
+                    <Col span={8} className='centerContainer'>
+                        <img src={tfLogo} alt='logo' style={{ width: '100%' }}/>
+                    </Col>
+                    <Col span={8} className='centerContainer'>
+                        <img src={tsLogo} alt='logo' style={{ width: '90%' }}/>
+                    </Col>
                 </Row>
             </header>
-            <h2>RTCamp: React Tensorflow.js Camp</h2>
-            <h2>A Tensorflow.js study tool for full-stack developer, coding with React Hooks and Typescript</h2>
-            <div>Used other open source resources</div>
+
+            <h2>Full-Stack Tensorflow.js Study Camp</h2>
+            <h3>Powered by: </h3>
             <ul>
-                <li>Tensorflow.js 1.5.2, tfj-example and tfjs-model</li>
+                <li>Tensorflow.js 1.7.0, tfjs-example and tfjs-model</li>
                 <li>React 16.12 (React Hooks)</li>
                 <li>Typescript 3.7.2</li>
             </ul>
@@ -29,7 +35,7 @@ const Home = (): JSX.Element => {
                 <li>Ant.V Bizchart</li>
                 <li>Teachable Machine</li>
             </ul>
-        </div>
+        </>
     )
 }
 

@@ -18,6 +18,7 @@
 import * as tf from '@tensorflow/tfjs-node'
 import * as fs from 'fs'
 import * as path from 'path'
+import * as canvas from 'canvas'
 import { ArgumentParser } from 'argparse'
 
 import ObjectDetectionImageSynthesizer from './dataObjDetector'
@@ -202,7 +203,7 @@ const main = async (): Promise<void> => {
     console.log(`Generating ${args.numExamples} training examples...`)
     const synthDataCanvas = canvas.createCanvas(CANVAS_SIZE, CANVAS_SIZE)
     const synth = new ObjectDetectionImageSynthesizer(synthDataCanvas)
-    const { images, targets } = await synth.generateExampleBatch(args.numExamples, numCircles, numLines)
+    const { images, targets } = await synth.generateExampleBatch(args.numExamples, numCircles, numLines) as tf.TensorContainerObject
 
     const { model, fineTuningLayers } = await buildObjectDetectionModel()
     model.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(5e-3) })
@@ -210,7 +211,7 @@ const main = async (): Promise<void> => {
 
     // Initial phase of transfer learning.
     console.log('Phase 1 of 2: initial transfer learning')
-    await model.fit(images, targets, {
+    await model.fit(images as tf.Tensor, targets as tf.Tensor, {
         epochs: args.initialTransferEpochs,
         batchSize: args.batchSize,
         validationSplit: args.validationSplit,
@@ -232,7 +233,7 @@ const main = async (): Promise<void> => {
     // to do with the unfreezing of the fine-tuning layers above,
     // which leads to higher memory consumption during backpropagation.
     console.log('Phase 2 of 2: fine-tuning phase')
-    await model.fit(images, targets, {
+    await model.fit(images as tf.Tensor, targets as tf.Tensor, {
         epochs: args.fineTuningEpochs,
         batchSize: args.batchSize / 2,
         validationSplit: args.validationSplit,

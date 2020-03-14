@@ -25,6 +25,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
+import {Canvas} from 'canvas'
 // let tf // tensorflowjs module passed in for browser/node compatibility.
 
 /**
@@ -64,7 +65,7 @@ class ObjectDetectionImageSynthesizer {
     TRIANGLE_SIDE_MAX = 100
 
     // Canvas dimensions.
-    canvas: HTMLCanvasElement
+    canvas: Canvas
     w: number
     h: number
 
@@ -75,7 +76,7 @@ class ObjectDetectionImageSynthesizer {
      * @param {*} tensorFlow A tensorflow module passed in. This done for
      *   compatibility between browser and Node.js.
      */
-    constructor (canvas: HTMLCanvasElement) {
+    constructor (canvas: Canvas) {
         this.canvas = canvas
 
         // Canvas dimensions.
@@ -172,6 +173,7 @@ class ObjectDetectionImageSynthesizer {
         }
 
         return tf.tidy(() => {
+            // @ts-ignore
             const imageTensor = tf.browser.fromPixels(this.canvas)
             const shapeClassIndicator = isRectangle ? 1 : 0
             const targetTensor = tf.tensor1d([shapeClassIndicator].concat(boundingBox))

@@ -1,16 +1,15 @@
 {
-    "extends": "./tsconfig.base.json",
     "compilerOptions": {
         "allowJs": false,
         "module": "esnext",
         "jsx": "react",
         "target": "es6",
         "lib": [
-          "dom",
-          "dom.iterable",
-          "es6",
-          "es7",
-          "esnext"
+            "dom",
+            "dom.iterable",
+            "es6",
+            "es7",
+            "esnext"
         ],
         "skipLibCheck": true,
         "esModuleInterop": true,
@@ -21,9 +20,24 @@
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "declaration": true,
+        "noUnusedLocals": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        "noUnusedParameters": false,
+        "pretty": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowUnreachableCode": false
     },
     "include": [
         "src"
+    ],
+    "exclude": [
+        "node_modules"
     ]
 }

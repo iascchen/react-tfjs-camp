@@ -1,11 +1,42 @@
 {
-    "extends": "../tsconfig.base.json",
     "compilerOptions": {
         "allowJs": true,
+        "module": "commonjs",
+        "target": "es6",
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "es6",
+            "es7",
+            "esnext"
+        ],
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
         "isolatedModules": true,
-        "module": "commonjs"
+        "noEmit": true,
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "declaration": true,
+        "noUnusedLocals": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        "noUnusedParameters": false,
+        "pretty": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowUnreachableCode": false
     },
     "include": [
-        "node"
+        "src"
+    ],
+    "exclude": [
+        "node_modules"
     ]
 }

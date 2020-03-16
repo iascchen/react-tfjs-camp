@@ -25,14 +25,14 @@ const SideBar = (props: IProps): JSX.Element => {
         <div>
             <header className='App-header'>
                 <img src={logo} className='App-logo' alt='logo'/>
-                <span>RTCamp</span>
+                <h2 style={{ color: 'white' }}>RTCamp</h2>
             </header>
             <Menu theme='dark' mode='inline' onClick={props.onClick}>
                 <Item key='0'>
                     <HomeOutlined/>
                     <span><Link to='/'>首页</Link></span>
                 </Item>
-                <SubMenu title={<span><LineChartOutlined/><span>线性回归</span></span>}>
+                <SubMenu title={<span><LineChartOutlined/><span>逻辑回归 Logisttc </span></span>}>
                     <Item key='1.1'>
                         <Link to='/curve'>
                             <span> 曲线拟合 Curve </span>

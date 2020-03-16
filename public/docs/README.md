@@ -1,5 +1,7 @@
 # react-tfjs-camp 全栈 AI 训练
 
+## 开发教程 Develop Tutorial
+
 ## 第一章：概述
 
 这是一个以学习 tensorflow.js 为目的的项目。
@@ -25,34 +27,7 @@ Open [http://loalhost:3000](http://loalhost:3000)
 
 ## 第二章：从零开始 Start from scratch
 
-### 环境安装
-
-安装 Node环境
-
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash    
-    nvm install 13
-    node --version
-
-安装 yarn 工具
-    
-    curl -o- -L https://yarnpkg.com/install.sh | bash
-    yarn --version
- 
-> In China, you can use taobao npm registry
-
-    npm config set registry https://registry.npm.taobao.org
-    
-### 创建项目    
-    
-    npx create-react-app react-tfjs-camp --template typescript
-    cd react-tfjs-camp
-    yarn
-    yarn start
-    
-这是一个经典的 React 启动项目。你可以尝试一下其它的命令：
-
-    yarn test
-    yarn build
+[从零开始 Start from scratch](./dev/scratch-from-zero.md)
     
 ### 构建程序框架
 

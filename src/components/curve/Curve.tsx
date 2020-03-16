@@ -42,7 +42,7 @@ const Curve = (): JSX.Element => {
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(1)
+    const [sTabCurrent, setTabCurrent] = useState<number>(4)
 
     // General
     const [sTfBackend, setTfBackend] = useState<string>()

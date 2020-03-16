@@ -38,51 +38,48 @@ $$ y = a x^2 + b x + c $$
 
 a, b, c 三个参数随机生成。tfjs 里面有好几种用于生成随机数的方法，用起来非常简便。下面的代码生成了 0 到 10 之间的三个随机数，我们取整之后，用作 a, b, c。 
 
-		import * as tf from '@tensorflow/tfjs-node'
-		let params = tf.randomUniform([3], 0, 10).toInt()
-		params.print()
-		let [a, b, c] = Array.from(params.dataSync())
-		console.log(a, b, c)
+	import * as tf from '@tensorflow/tfjs-node'
+	let params = tf.randomUniform([3], 0, 10).toInt()
+	params.print()
+	let [a, b, c] = Array.from(params.dataSync())
+	console.log(a, b, c)
 
 上面题目中的数据，就使用以下的代码计算生成 a, b, c 分别取值 7, 3, 5。需要注意的是，这种链式的调用仅仅与顺序有关，没有先乘除后加减的计算符的优先级。
 
-		import * as tf from '@tensorflow/tfjs'
-		let x = tf.range(1, 12)
-		let y = x.pow(2).mul(a).add( x.mul(b) ).add(c)
-		x.print()
-		y.print()
+	import * as tf from '@tensorflow/tfjs'
+	let x = tf.range(1, 12)
+	let y = x.pow(2).mul(a).add( x.mul(b) ).add(c)
+	x.print()
+	y.print()
 	
 切换到命令行下，在项目目录中，试试执行这些代码吧：
 
-		$ cd node
-		$ yarn
+	$ cd node
+	$ yarn
 		
-		$ yarn run ts-node
-		> import * as tf from '@tensorflow/tfjs-node'
-		{}
-		> let params = tf.randomUniform([3], -10, 10).toInt()
-		> params.print()
-		Tensor
-		    [8, 5, 4]
-		> let [a, b, c] = Array.from(params.dataSync())
-		> console.log(a, b, c)
-		8 5 4
-		>
-		> let x = tf.range(1, 12)
-		> let y = x.pow(2).mul(a).add( x.mul(b) ).add(c)
-		undefined
-		> x.print()
-		Tensor
-		    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-		> y.print()
-		    [17, 46, 91, 152, 229, 322, 431, 556, 697, 854, 1027]
-		>
+	$ yarn run ts-node
+	> import * as tf from '@tensorflow/tfjs-node'	{}
+	> let params = tf.randomUniform([3], -10, 10).toInt()
+	> params.print()
+	Tensor
+		[8, 5, 4]
+	> let [a, b, c] = Array.from(params.dataSync())
+	> console.log(a, b, c)
+	8 5 4
+	>
+	> let x = tf.range(1, 12)
+	> let y = x.pow(2).mul(a).add( x.mul(b) ).add(c)
+	undefined
+	> x.print()
+	Tensor
+		[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+	> y.print()
+		[17, 46, 91, 152, 229, 322, 431, 556, 697, 854, 1027]
+	>
 
 ### Tensor
 
-Tensor就是一个数据单元的通用术语，也是 Tensorflow 的基础概念——张量。简单说来，就是多维数据量。下面的部分内容引用自 [CSDN 穿秋裤的兔子的文章](https://blog.csdn.net/kansas_lh/article/details/79321234)
-
-[机器学习的敲门砖：手把手教你TensorFlow初级入门](https://yq.aliyun.com/articles/64410?utm_content=m_32686)
+Tensor就是一个数据单元的通用术语，也是 Tensorflow 的基础概念——张量。简单说来，就是多维数据量。
 
 下图介绍了张量的维度（秩）：Rank/Order
 
@@ -107,29 +104,25 @@ Tensor就是一个数据单元的通用术语，也是 Tensorflow 的基础概�
 
 **注意** 我们生成的 X 是 (-1, 1) 的浮点数，而不是像前面的例子那样，直接生成整数变量。这是在机器学习中非常重要的一种手段——归一化。对变量按照每个维度做归一化，将他们变换到 (-1, 1) 或者 (0, 1) 之间，能够使不同维度的数据“公平竞争”，并减少数据溢出的风险。
 
-		const calc = useCallback((x: tf.Tensor) => {
-			const [a, b, c] = sCurveParams
-			// = a * x^2 + b * x + c
-			return x.pow(2).mul(a).add(x.mul(b)).add(c)
-		}, [sCurveParams])
+	const calc = useCallback((x: tf.Tensor) => {
+		const [a, b, c] = sCurveParams			// = a * x^2 + b * x + c
+		return x.pow(2).mul(a).add(x.mul(b)).add(c)
+	}, [sCurveParams])
     
-		logger('init data set ...')
-		// train set
-		const _trainTensorX = tf.randomUniform([totalRecord], -1, 1)
-		const _trainTensorY = calc(_trainTensorX)
-		setTrainSet({ xs: _trainTensorX, ys: _trainTensorY })
+	logger('init data set ...')
+	// train set
+	const _trainTensorX = tf.randomUniform([totalRecord], -1, 1)
+	const _trainTensorY = calc(_trainTensorX)
+	setTrainSet({ xs: _trainTensorX, ys: _trainTensorY })
 		
-		// test set
-		const _testTensorX = tf.randomUniform([testRecord], -1, 1)
-		const _testTensorY = calc(_testTensorX)
-		setTestSet({ xs: _testTensorX, ys: _testTensorY })
+	// test set
+	const _testTensorX = tf.randomUniform([testRecord], -1, 1)
+	const _testTensorY = calc(_testTensorX)
+	setTestSet({ xs: _testTensorX, ys: _testTensorY })
 
 ## 模型
 
 ### 人工神经元模型
-
-[参考链接1](https://www.jianshu.com/p/f73f5985cda4)
-[参考链接2](https://www.jianshu.com/p/3d8802fe7853)
 
 人工神经网络是一种从信息处理角度模仿人脑神经元的数学模型，最初是由生物学家大约在1943年提出来的（爷爷辈儿的理论），是一种仿生类的模型，生物学中的神经元模型通常是由树突、轴突、细胞核等组成，其基本结构如图所示。
 
@@ -161,7 +154,7 @@ f称为激活函数或作用函数，它决定节点（神经元）的输出。�
 
 人工神经网络包括：输入层、输出层、以及两者之间的隐藏层。每一层网络包括 n 个神经元，这些神经元，也可以有不同的激活函数。
 
-在随机梯度下降算法和 BP 前向计算算法完善之后，神经网络曾经有个快速发展的时期。
+在随机梯度下降算法和反向传播算法完善之后，神经网络曾经有个快速发展的时期。
 
 ![](../images/mlp_01.png)
 
@@ -177,9 +170,6 @@ f称为激活函数或作用函数，它决定节点（神经元）的输出。�
 
 要训练深度网络，就必须解决梯度不稳定的问题。这个问题卡了10多年。2010年Glorot和Bengio发现sigmoid激活函数会导致最后一层隐藏层的输出在0附近饱和，导致学习变慢的问题。他们建议使用一些替换的激活函数。2013年Sutskever, Martens, Dahl 和 Hinton研究了随机权重初始化和动量梯度下降对深度学习的影响。研究的结果是：训练的梯度不稳定跟所用的激活函数、权重初始化的方式、甚至梯度下降的具体实现形式都有关系。当然网络的结构，其他超参的取值也很重要，原因是多方面的，不过随后的发展，开发出的各种方法某种程度上克服了或则是绕过了这些障碍，最终促进了深度神经网络的成功。
 
-[神经网络与深度学习（五）：深度网络训练难点](https://blog.csdn.net/gaofeipaopaotang/article/details/80002590)
-[NN PlayGround](http://playground.tensorflow.org/)
-
 Google 提供了一个非常直观的理解多层神经网络的工具 NN PlayGround 。
 
 [NN PlayGround](http://playground.tensorflow.org/)
@@ -187,10 +177,6 @@ Google 提供了一个非常直观的理解多层神经网络的工具 NN PlayGr
 ### 激活函数
 
 常见的激活函数有：Sigmoid、ReLU、Tanh 等。
-
-[参考链接](https://www.jiqizhixin.com/graph/technologies/1697e627-30e7-48a6-b799-39e2338ffab5)
-
-[参考链接: 不会停的蜗牛](https://www.jianshu.com/p/22d9720dbf1a)
 
 #### Sigmoid S型生长曲线
 
@@ -261,19 +247,19 @@ Sigmoid将一个real value映射到（0,1）的区间，用来做二分类。而
 
 激活函数的设定和 Layer 在一起，例如：
 
-		const model = tf.sequential()
-		model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
-		for (let i = sLayerCount - 2; i > 0; i--) {
-			model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
-		}
-		model.add(tf.layers.dense({ units: 1 }))
+	const model = tf.sequential()
+	model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
+	for (let i = sLayerCount - 2; i > 0; i--) {
+		model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
+	}
+	model.add(tf.layers.dense({ units: 1 }))
 
 ## 训练
 
 在神经元网络模型确定之后，还需要设置优化器，才能进行训练。以 SGD 算法为例，通过调整 Learning Rate 参数，会改变学习的收敛速度，以及学习精度。
 
-		const optimizer = tf.train.sgd(sLearningRate)
-		model.compile({ loss: 'meanSquaredError', optimizer })
+	const optimizer = tf.train.sgd(sLearningRate)
+	model.compile({ loss: 'meanSquaredError', optimizer })
 
 训练时，还需要指定下面的参数：
 
@@ -305,12 +291,14 @@ Sigmoid将一个real value映射到（0,1）的区间，用来做二分类。而
 
 模型训练好之后，可以通过 model.predict 或 model.evaluate 来检验训练结果。
 
-		const pred = model.predict(testSet.xs as tf.Tensor) as tf.Tensor
-		setTestP(pred)
-		const evaluate = model.evaluate(testSet.xs as tf.Tensor, testSet.ys as tf.Tensor) as tf.Scalar
-		setTestV(evaluate)
+	const pred = model.predict(testSet.xs as tf.Tensor) as tf.Tensor
+	setTestP(pred)
+	const evaluate = model.evaluate(testSet.xs as tf.Tensor, testSet.ys as tf.Tensor) as tf.Scalar
+	setTestV(evaluate)
 
 ## 补充内容
+
+[参考链接 Tensorflow.js API 文档](https://js.tensorflow.org/api/latest/?hl=zh-cn)
 
 #### Tensor 的常用运算
 
@@ -361,22 +349,35 @@ tf 还有各种数学函数可以使用。
 
 ## 拓展阅读
 
-知乎上的这个《神经网络和深度学习简史》系列写的挺好的，供参考。
+关于 Tensor
 
-[神经网络和深度学习简史（第一部分）：从感知机到BP算法](https://www.jianshu.com/p/f90d923b73b5)
+* [CSDN 穿秋裤的兔子的文章](https://blog.csdn.net/kansas_lh/article/details/79321234)
+* [机器学习的敲门砖：手把手教你TensorFlow初级入门](https://yq.aliyun.com/articles/64410?utm_content=m_32686)
 
-[神经网络和深度学习简史（第二部分）：BP算法之后的又一突破——信念网络](https://www.jianshu.com/p/9dc4c2320732)
+人工神经元模型
 
-[神经网络和深度学习简史（第三部分）：90年代的兴衰——强化学习与递归神经网络](https://www.jianshu.com/p/5db8170d4bcb)
+* [参考链接，简书](https://www.jianshu.com/p/f73f5985cda4)
+* [参考链接，简书](https://www.jianshu.com/p/3d8802fe7853)
 
-[神经网络和深度学习简史（第四部分）：深度学习终迎伟大复兴](https://www.jianshu.com/p/e1bac195f06d)
+多层人工神经网络
 
-另一个《神经网络和深度学习简史》系列也可以对照阅读。
+* [神经网络与深度学习（五）：深度网络训练难点](https://blog.csdn.net/gaofeipaopaotang/article/details/80002590)
 
-[神经网络和深度学习简史（一）](https://www.jianshu.com/p/c9a2a0c446d4)
+激活函数
 
-[深度学习和神经网络简史（二）](https://www.jianshu.com/p/558a2c0a5b9b)
+* [参考链接](https://www.jiqizhixin.com/graph/technologies/1697e627-30e7-48a6-b799-39e2338ffab5)
+* [参考链接: 不会停的蜗牛](https://www.jianshu.com/p/22d9720dbf1a)
 
-[神经网络和深度学习简史（三）](https://www.jianshu.com/p/70209952de90)
+《神经网络和深度学习简史》
 
-[神经网络和深度学习简史（四）](https://www.jianshu.com/p/757c5a57c5d2)
+* [神经网络和深度学习简史（第一部分）：从感知机到BP算法](https://www.jianshu.com/p/f90d923b73b5)
+* [神经网络和深度学习简史（第二部分）：BP算法之后的又一突破——信念网络](https://www.jianshu.com/p/9dc4c2320732)
+* [神经网络和深度学习简史（第三部分）：90年代的兴衰——强化学习与递归神经网络](https://www.jianshu.com/p/5db8170d4bcb)
+* [神经网络和深度学习简史（第四部分）：深度学习终迎伟大复兴](https://www.jianshu.com/p/e1bac195f06d)
+
+《神经网络和深度学习简史》
+
+* [神经网络和深度学习简史（一）](https://www.jianshu.com/p/c9a2a0c446d4)
+* [深度学习和神经网络简史（二）](https://www.jianshu.com/p/558a2c0a5b9b)
+* [神经网络和深度学习简史（三）](https://www.jianshu.com/p/70209952de90)
+* [神经网络和深度学习简史（四）](https://www.jianshu.com/p/757c5a57c5d2)

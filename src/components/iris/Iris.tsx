@@ -196,7 +196,7 @@ const Iris = (): JSX.Element => {
     return (
         <AIProcessTabs title={'鸢尾花分类 Iris'} current={sTabCurrent} onChange={handleTabChange}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/iris.md'}/>
+                <MarkdownWidget url={'/docs/ai/iris.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Card title='Sample Data' style={{ margin: '8px' }} size='small'>

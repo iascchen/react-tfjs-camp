@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Form, InputNumber, Row, Select, Tabs } from 'antd'
+import { Button, Card, Col, Form, Slider, Row, Select, Tabs } from 'antd'
 import MathJax from '@matejmazur/react-mathjax'
 
+import { layout, tailLayout } from '../../constant'
 import { logger, loggerError, STATUS } from '../../utils'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
@@ -15,25 +16,25 @@ const { TabPane } = Tabs
 // data
 const TOTAL_RECORD = 1000
 const TEST_RECORD = TOTAL_RECORD * 0.2
-const VALIDATE_SPLIT = 0.2
 const INIT_PARAMS = [0, 1, 0]
 
 // model
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
-const ACTIVATIONS = ['sigmoid', 'relu']
+const ACTIVATIONS = ['sigmoid', 'relu', 'tanh']
 
 // train
 const NUM_EPOCHS = 200
-const BATCH_SIZE = 50
-
-const layout = {
-    labelCol: { span: 8 },
-    wrapperCol: { span: 16 }
-}
+const BATCH_SIZE = 100
+const VALIDATE_SPLIT = 0.2
 
 const genCurveParams = (): number[] => {
-    const params = tf.randomUniform([3], 0, 10).toInt()
+    const params = tf.randomUniform([3], -10, 10).toInt()
     return Array.from(params.dataSync())
+}
+
+const numberToStringWithSign = (x: number): string => {
+    const signStr = Math.sign(x) >= 0 ? '+' : ''
+    return `${signStr}${x}`
 }
 
 const Curve = (): JSX.Element => {
@@ -41,7 +42,7 @@ const Curve = (): JSX.Element => {
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(4)
+    const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
     // General
     const [sTfBackend, setTfBackend] = useState<string>()
@@ -98,25 +99,14 @@ const Curve = (): JSX.Element => {
 
         // The linear regression model.
         const _model = tf.sequential()
+        _model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
 
-        switch (sLayerCount) {
-            case 1 :
-                _model.add(tf.layers.dense({ inputShape: [1], units: 1 }))
-                break
-            case 2 :
-                _model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
-                _model.add(tf.layers.dense({ units: 1 }))
-                break
-            case 3 :
-            case 4 :
-            case 5 :
-                _model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
-                for (let i = sLayerCount - 2; i > 0; i--) {
-                    _model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
-                }
-                _model.add(tf.layers.dense({ units: 1 }))
-                break
+        for (let i = sLayerCount - 2; i > 0; i--) {
+            _model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
         }
+
+        _model.add(tf.layers.dense({ units: 1 }))
+
         setModel(_model)
 
         return () => {
@@ -192,7 +182,6 @@ const Curve = (): JSX.Element => {
             }
         }).then(
             () => {
-                // Use the model to do inference on a data point the model hasn't seen before:
                 statusRef.current = STATUS.TRAINED
             },
             loggerError
@@ -263,29 +252,37 @@ const Curve = (): JSX.Element => {
      * Render
      ***********************/
 
+    const curveParam = (): JSX.Element => {
+        return <Slider min={-10} max={10} marks={{ '-10': -10, 0: 0, 10: 10 }} />
+    }
+
     const dataAdjustCard = (): JSX.Element => {
         return (
             <Card title='Adjust Data' style={{ margin: '8px' }} size='small'>
-                <Row className='centerContainer' style={{ margin: '8px' }}>
-                    <Form {...layout} layout='inline' form={formData} onFieldsChange={handleCurveParamsChange}
-                        initialValues={{
-                            a: sCurveParams[0],
-                            b: sCurveParams[1],
-                            c: sCurveParams[2]
-                        }}>
-                        <Form.Item name='a' label='a'><InputNumber/></Form.Item>
-                        <Form.Item name='b' label='b'><InputNumber/></Form.Item>
-                        <Form.Item name='c' label='c'><InputNumber/></Form.Item>
-                    </Form>
-                </Row>
-                <Row className='centerContainer' style={{ margin: '24px' }}>
-                    <Button onClick={handleResetCurveParams}> Random a,b,c </Button>
-                </Row>
-                <Row className='centerContainer' style={{ margin: '24px' }}>
-                    <MathJax.Context>
-                        <MathJax.Node>{`y = ${sCurveParams[0]} x^2 + ${sCurveParams[1]} x + ${sCurveParams[2]}`}</MathJax.Node>
-                    </MathJax.Context>
-                </Row>
+                <Form {...layout} form={formData} onFieldsChange={handleCurveParamsChange}
+                    initialValues={{
+                        a: sCurveParams[0],
+                        b: sCurveParams[1],
+                        c: sCurveParams[2]
+                    }}>
+                    <Form.Item name='a' label='Curve param a'>
+                        {curveParam()}
+                    </Form.Item>
+                    <Form.Item name='b' label='b'>
+                        {curveParam()}
+                    </Form.Item>
+                    <Form.Item name='c' label='c'>
+                        {curveParam()}
+                    </Form.Item>
+                    <Form.Item {...tailLayout} >
+                        <Button onClick={handleResetCurveParams} style={{ width: '60%', margin: '0 20%' }}> Random a,b,c </Button>
+                        <div className='centerContainer' style={{ margin: '16px' }}>
+                            <MathJax.Context>
+                                <MathJax.Node>{`y = ${sCurveParams[0]} x^2 ${numberToStringWithSign(sCurveParams[1] as number)} x ${numberToStringWithSign(sCurveParams[2] as number)}`}</MathJax.Node>
+                            </MathJax.Context>
+                        </div>
+                    </Form.Item>
+                </Form>
             </Card>
         )
     }
@@ -310,7 +307,9 @@ const Curve = (): JSX.Element => {
             <Card title='Test Data Set' style={{ margin: '8px' }} size='small'>
                 <CurveVis xDataset={sTestSet.xs as tf.Tensor} yDataset={sTestSet.ys as tf.Tensor} pDataset={sTestP}
                     sampleCount={TEST_RECORD}/>
-                <div className='centerContainer' style={{ margin: '16px'}}><Button type='primary' onClick={handlePredict}> Validate </Button></div>
+                <div className='centerContainer' style={{ margin: '16px' }}>
+                    <Button type='primary' onClick={handlePredict}> Validate </Button>
+                </div>
                 <div>trained epoches: {sTrainStatusStr} </div>
                 <div>evaluate loss: {sTestV?.dataSync().join(' , ')}</div>
             </Card>
@@ -326,10 +325,10 @@ const Curve = (): JSX.Element => {
                     activation: 'sigmoid'
                 }}>
                     <Form.Item name='layers' label='Layer Count'>
-                        <InputNumber min={1} max={5}/>
+                        <Slider min={2} max={5} marks={{ 2: 2, 5: 5 }}/>
                     </Form.Item>
                     <Form.Item name='units' label='Unit'>
-                        <InputNumber min={4}/>
+                        <Slider min={4} max={8} step={2} marks={{ 4: 4, 6: 6, 8: 8 }}/>
                     </Form.Item>
                     <Form.Item name='activation' label='Activation'>
                         <Select>
@@ -346,36 +345,31 @@ const Curve = (): JSX.Element => {
     const trainAdjustCard = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
-                <Row>
-                    <Col span={12}>
-                        <Form {...layout} layout='inline' form={formTrain} onFinish={handleTrain} initialValues={{
-                            learningRate: 0.03
-                        }}>
-                            <Form.Item name='learningRate' label='Learning Rate'>
-                                <Select>
-                                    {LEARNING_RATES.map((v) => {
-                                        return <Option key={v} value={v}>{v}</Option>
-                                    })}
-                                </Select>
-                            </Form.Item>
-                            <Form.Item>
-                                <Button type='primary' htmlType={'submit'}> Train </Button>
-                            </Form.Item>
-                            <Form.Item>
-                                <Button onClick={handleTrainStop}> Stop </Button>
-                            </Form.Item>
-                        </Form>
-                    </Col>
-                    <Col span={12}>
-                        Status: {statusRef.current}
-                    </Col>
-                </Row>
+                <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
+                    learningRate: 0.03
+                }}>
+                    <Form.Item name='learningRate' label='Learning Rate'>
+                        <Select>
+                            {LEARNING_RATES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <Button type='primary' htmlType={'submit'} style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                        <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <div>Status: {statusRef.current}</div>
+                    </Form.Item>
+                </Form>
             </Card>
         )
     }
 
     return (
-        <AIProcessTabs title={'曲线拟合 Curve'} current={sTabCurrent} onChange={handleTabChange}>
+        <AIProcessTabs title={'曲线拟合 Curve'} current={sTabCurrent} onChange={handleTabChange}
+            invisiblePanes={[AIProcessTabPanes.PREDICT]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/curve.md'}/>
             </TabPane>
@@ -404,27 +398,18 @@ const Curve = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={12}>
+                    <Col span={6}>
+                        {trainAdjustCard()}
                         {dataAdjustCard()}
-                    </Col>
-                    <Col span={12}>
                         {modelAdjustCard()}
                     </Col>
-                    <Col span={24}>
-                        {trainAdjustCard()}
-                    </Col>
-                    <Col span={12}>
+                    <Col span={9}>
                         {trainDataCard()}
                     </Col>
-                    <Col span={12}>
+                    <Col span={9}>
                         {testDataCard()}
                     </Col>
                 </Row>
-            </TabPane>
-            <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
-                <Col span={12}>
-                    {testDataCard()}
-                </Col>
             </TabPane>
         </AIProcessTabs>
     )

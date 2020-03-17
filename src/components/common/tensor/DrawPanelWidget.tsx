@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card } from 'antd'
+import { Button, Card, Row } from 'antd'
 import { logger, getTensorLabel } from '../../../utils'
 import RowImageWidget from './RowImageWidget'
 
@@ -146,19 +146,29 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
             draw(currPos, prevPos)
         }
     }
-    return <Card title={'Drawing Panel'}>
-        <p> Press Down Left Mouse to Draw </p>
-        <p> Mouse : {JSON.stringify(currPos)} : {drawing ? 'Drawing...' : ''}</p>
-        <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ backgroundColor: 'black' }} ref={panelRef}/>
-        <div>
-            <Button onClick={handleSubmit} type='primary'>Submit</Button>
-            <Button onClick={handleClear}>Clear</Button>
-        </div>
-        <div>
-            {miniSample && <RowImageWidget data={miniSample} shape={MNIST_SHAPE} />}
-            Prediction : { props.prediction && `${getTensorLabel([props.prediction]).join(', ')}` }
-        </div>
-    </Card>
+    return (
+        <Card title={'Drawing Panel'} size='small' style={{ margin: '8px' }} >
+            <p>Press Down Left Mouse to Draw</p>
+            <p>Mouse : {JSON.stringify(currPos)} : {drawing ? 'Drawing...' : ''}</p>
+            <Row className='centerContainer'>
+                <div style={{ width: '300px', padding: '8px' }}>
+                    <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ backgroundColor: 'black' }} ref={panelRef}/>
+                </div>
+            </Row>
+            <Row className='centerContainer'>
+                <div style={{ width: '300px', padding: '8px' }}>
+                    <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Submit</Button>
+                    <Button onClick={handleClear} style={{ width: '30%', margin: '0 10%' }}>Clear</Button>
+                </div>
+            </Row>
+            <Row className='centerContainer'>
+                <div style={{ width: '300px', padding: '8px' }}>
+                    {miniSample && <RowImageWidget data={miniSample} shape={MNIST_SHAPE} />}
+                    &nbsp; Prediction : { props.prediction && `${getTensorLabel([props.prediction]).join(', ')}` }
+                </div>
+            </Row>
+        </Card>
+    )
 }
 
 export default DrawPanelWidget

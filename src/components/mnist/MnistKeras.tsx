@@ -38,7 +38,7 @@ const MnistKeras = (): JSX.Element => {
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(4)
+    const [sTabCurrent, setTabCurrent] = useState<number>(5)
 
     // General
     const [sTfBackend, setTfBackend] = useState<string>()
@@ -484,7 +484,7 @@ const MnistKeras = (): JSX.Element => {
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
-                <Col span={12}>
+                <Col span={8}>
                     <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={sDrawPred} />
                 </Col>
             </TabPane>

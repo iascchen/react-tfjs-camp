@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Table } from 'antd'
-import { arrayDispose, logger } from '../../../utils'
+import { arrayDispose, formatTensorToStringArray, getTensorLabel, logger } from '../../../utils'
 import RowImageWidget from './RowImageWidget'
 
 const MAX_SAMPLES_COUNT = 20
@@ -17,31 +17,6 @@ interface IProps {
     pageSize?: number
 
     debug?: boolean
-}
-
-export const formatTensorToStringArray = (tensor: tf.Tensor, floatFixed = 0): string[] => {
-    if (!tensor) {
-        return []
-    }
-    const _array = Array.from(tensor.dataSync())
-    return _array.map(v => v.toFixed(floatFixed))
-}
-
-export const getTensorLabel = (tensorArray: tf.Tensor[]): string[] => {
-    if (!tensorArray) {
-        return []
-    }
-
-    return tf.tidy(() => {
-        const labels = tensorArray.map((t) => {
-            if (t.dataSync().length > 1) {
-                return t.argMax(-1).dataSync().toString()
-            } else {
-                return t.dataSync().toString()
-            }
-        })
-        return labels
-    })
 }
 
 const formatImage = (sampleInfo: tf.Tensor): JSX.Element => {

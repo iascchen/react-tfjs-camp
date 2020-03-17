@@ -23,8 +23,8 @@ const IMAGE_SIZE = IMAGE_H * IMAGE_W
 const NUM_CLASSES = 10
 const NUM_DATASET_ELEMENTS = 65000
 
-const NUM_TRAIN_ELEMENTS = 55000
-const NUM_TEST_ELEMENTS = NUM_DATASET_ELEMENTS - NUM_TRAIN_ELEMENTS
+const NUM_TRAIN_ELEMENTS = 35000
+const NUM_TEST_ELEMENTS = 7000
 
 const BASE_URL = '/preload/data/mnist'
 const MNIST_IMAGES_SPRITE_PATH = `${BASE_URL}/mnist_images.png`
@@ -48,10 +48,6 @@ export class MnistWebDataset {
 
     trainIndices!: Uint32Array
     testIndices!: Uint32Array
-
-    // constructor () {
-    //     // do nothing
-    // }
 
     loadData = async (): Promise<void> => {
         // Make a request for the MNIST sprited image.
@@ -122,12 +118,17 @@ export class MnistWebDataset {
      *   labels: The one-hot encoded labels tensor, of shape
      *     `[numTrainExamples, 10]`.
      */
-    getTrainData = (): tf.TensorContainerObject => {
-        const xs = tf.tensor4d(
+    getTrainData = (numExamples?: number): tf.TensorContainerObject => {
+        let xs = tf.tensor4d(
             this.trainImages,
             [this.trainImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1])
-        const labels = tf.tensor2d(
+        let labels = tf.tensor2d(
             this.trainLabels, [this.trainLabels.length / NUM_CLASSES, NUM_CLASSES])
+
+        if (numExamples != null) {
+            xs = xs.slice([0, 0, 0, 0], [numExamples, IMAGE_H, IMAGE_W, 1])
+            labels = labels.slice([0, 0], [numExamples, NUM_CLASSES])
+        }
         return { xs, ys: labels }
     }
 
@@ -142,9 +143,8 @@ export class MnistWebDataset {
      *   labels: The one-hot encoded labels tensor, of shape
      *     `[numTestExamples, 10]`.
      */
-    getTestData = (numExamples: number = NUM_TEST_ELEMENTS): tf.TensorContainerObject => {
-        let xs = tf.tensor4d(
-            this.testImages,
+    getTestData = (numExamples?: number): tf.TensorContainerObject => {
+        let xs = tf.tensor4d(this.testImages,
             [this.testImages.length / IMAGE_SIZE, IMAGE_H, IMAGE_W, 1])
         let labels = tf.tensor2d(
             this.testLabels, [this.testLabels.length / NUM_CLASSES, NUM_CLASSES])

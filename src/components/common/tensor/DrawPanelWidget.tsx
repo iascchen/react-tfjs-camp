@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card } from 'antd'
-import { logger } from '../../../utils'
+import { logger, getTensorLabel } from '../../../utils'
 import RowImageWidget from './RowImageWidget'
 
 const CANVAS_WIDTH = 280
@@ -132,7 +132,7 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
             const _sample = tf.image.resizeBilinear(_tensor, [28, 28])
             setMiniSample(Array.from(_sample.dataSync()))
 
-            props.onSubmit(_sample)
+            props.onSubmit(_sample.expandDims(0))
         }
     }
 
@@ -156,7 +156,7 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
         </div>
         <div>
             {miniSample && <RowImageWidget data={miniSample} shape={MNIST_SHAPE} />}
-            Prediction : {props.prediction?.arraySync()}
+            Prediction : { props.prediction && `${getTensorLabel([props.prediction]).join(', ')}` }
         </div>
     </Card>
 }

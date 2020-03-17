@@ -1,5 +1,17 @@
 # 手写数字识别 MNIST
 
+## 知识点
+
+这个例子涉及以下的 AI 知识点：
+
+* 卷积神经网络
+* Tensorflow 高级API（Keras）和 核心API（Core）
+* 优化器
+
+## 问题
+
+
+
 ## 数据
 
 MNIST 数据:

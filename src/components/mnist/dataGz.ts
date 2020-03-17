@@ -17,6 +17,7 @@
 
 import * as tf from '@tensorflow/tfjs'
 import { fetchResource, logger } from '../../utils'
+import { IMAGE_H, IMAGE_W } from './data'
 
 // MNIST data constants:
 // const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
@@ -118,15 +119,15 @@ export class MnistGzDataset {
         this.testSize = this.dataset[2].length
     }
 
-    getTrainData = (): tf.TensorContainerObject => {
-        return this.getData_(true)
+    getTrainData = (numExamples?: number): tf.TensorContainerObject => {
+        return this.getData_(true, numExamples)
     }
 
-    getTestData = (): tf.TensorContainerObject => {
-        return this.getData_(false)
+    getTestData = (numExamples?: number): tf.TensorContainerObject => {
+        return this.getData_(false, numExamples)
     }
 
-    getData_ = (isTrainingData: boolean): tf.TensorContainerObject => {
+    getData_ = (isTrainingData: boolean, numExamples?: number): tf.TensorContainerObject => {
         let imagesIndex: number
         let labelsIndex: number
 
@@ -153,9 +154,14 @@ export class MnistGzDataset {
             labelOffset += 1
         }
 
-        return {
-            xs: tf.tensor4d(images, imagesShape),
-            ys: tf.oneHot(tf.tensor1d(labels, 'int32'), LABEL_FLAT_SIZE)
+        let xs = tf.tensor4d(images, imagesShape)
+        let ys = tf.oneHot(tf.tensor1d(labels, 'int32'), LABEL_FLAT_SIZE)
+
+        if (numExamples != null) {
+            xs = xs.slice([0, 0, 0, 0], [numExamples, IMAGE_H, IMAGE_W, 1])
+            ys = ys.slice([0, 0], [numExamples, LABEL_FLAT_SIZE])
         }
+
+        return { xs, ys }
     }
 }

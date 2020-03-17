@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Input, message, Row, Select, Tabs } from 'antd'
 
+import { layout, tailLayout } from '../../constant'
 import { ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
@@ -18,15 +19,6 @@ const tfvis = require('@tensorflow/tfjs-vis')
 const { Option } = Select
 const { TabPane } = Tabs
 const { TextArea } = Input
-
-const layout = {
-    labelCol: { span: 8 },
-    wrapperCol: { span: 16 }
-}
-
-const tailLayout = {
-    wrapperCol: { offset: 8, span: 16 }
-}
 
 const MODEL_OPTIONS = ['pretrained-cnn', 'multihot', 'flatten', 'cnn', 'simpleRNN', 'lstm', 'bidirectionalLSTM']
 

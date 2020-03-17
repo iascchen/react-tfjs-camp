@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Input, message, Row, Select, Tabs } from 'antd'
 
+import { layout, tailLayout } from '../../constant'
 import { fetchResource, ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
@@ -22,15 +23,6 @@ const sampleLen = 40
 const sampleStep = 3
 
 const LSTM_LAYER_SIZE = [[128], [100, 50]]
-
-const layout = {
-    labelCol: { span: 8 },
-    wrapperCol: { span: 16 }
-}
-
-const tailLayout = {
-    wrapperCol: { offset: 8, span: 16 }
-}
 
 const TextGenLstm = (): JSX.Element => {
     /***********************

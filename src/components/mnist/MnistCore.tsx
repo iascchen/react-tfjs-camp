@@ -15,14 +15,16 @@ import MarkdownWidget from '../common/MarkdownWidget'
 
 const { TabPane } = Tabs
 
-const MnistWeb = (): JSX.Element => {
+const SHOW_TEST_SAMPLE = 20
+
+const MnistCore = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
 
     const [sTabCurrent, setTabCurrent] = useState<number>(1)
 
-    const [tfBackend, setTfBackend] = useState<string>()
+    const [sTfBackend, setTfBackend] = useState<string>()
     const [status, setStatus] = useState<STATUS>(STATUS.INIT)
     const [errors, setErrors] = useState()
 
@@ -58,7 +60,7 @@ const MnistWeb = (): JSX.Element => {
                 setDataSet(mnistDataset)
 
                 tSet = mnistDataset.getTrainData()
-                vSet = mnistDataset.getTestData()
+                vSet = mnistDataset.getTestData(SHOW_TEST_SAMPLE)
 
                 setTrainSet(tSet)
                 setValidSet(vSet)
@@ -197,7 +199,7 @@ const MnistWeb = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Train' style={{ margin: '8px' }} size='small'>
                             <Button onClick={handleTrain} type='primary'> Train </Button>
-                            <p>backend: {tfBackend}</p>
+                            <p>backend: {sTfBackend}</p>
                             <p>status: {status}</p>
                             <p>errors: {errors}</p>
                         </Card>
@@ -220,4 +222,4 @@ const MnistWeb = (): JSX.Element => {
     )
 }
 
-export default MnistWeb
+export default MnistCore

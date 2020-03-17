@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Input, message, Row, Select, Tabs } from 'antd'
 
+import { layout, tailLayout } from '../../constant'
 import { ILabeledImageFileJson, ILabeledImageSet, ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
 import { MOBILENET_IMAGE_SIZE } from '../../constant'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
@@ -22,15 +23,6 @@ const TRUE_BOUNDING_BOX_LINE_WIDTH = 2
 const TRUE_BOUNDING_BOX_STYLE = 'rgb(255,0,0)'
 const PREDICT_BOUNDING_BOX_LINE_WIDTH = 2
 const PREDICT_BOUNDING_BOX_STYLE = 'rgb(0,0,255)'
-
-const layout = {
-    labelCol: { span: 8 },
-    wrapperCol: { span: 16 }
-}
-
-const tailLayout = {
-    wrapperCol: { offset: 8, span: 16 }
-}
 
 const DEFAULT_TRAIN_PARAMS = {
     initialTransferEpochs: 100,

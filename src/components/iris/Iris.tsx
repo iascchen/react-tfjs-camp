@@ -26,6 +26,7 @@ const VALIDATE_SPLIT = 0.15
 
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
 const ACTIVATIONS = ['sigmoid', 'relu', 'tanh']
+const OPTIMIZERS = ['SGD', 'Adam', 'RMSProp']
 
 const Iris = (): JSX.Element => {
     /***********************
@@ -54,6 +55,7 @@ const Iris = (): JSX.Element => {
 
     // Train
     const [sLearningRate, setLearningRate] = useState<number>(0.01)
+    const [sOptimizer, setOptimizer] = useState<string>('Adam')
     const [sLoss, setLoss] = useState<string>()
     const stopRef = useRef(false)
 
@@ -115,12 +117,25 @@ const Iris = (): JSX.Element => {
     }, [sLoss, sActivation, sDenseUnits])
 
     useEffect(() => {
-        if (!sLearningRate || !sModel || !sLoss) {
+        if (!sLearningRate || !sModel || !sLoss || !sOptimizer) {
             return
         }
         logger('init optimizer ...')
 
-        const optimizer = tf.train.adam(sLearningRate)
+        let optimizer: tf.Optimizer
+        switch (sOptimizer) {
+            case 'SGD' :
+                optimizer = tf.train.sgd(sLearningRate)
+                break
+            case 'RMSProp' :
+                optimizer = tf.train.rmsprop(sLearningRate)
+                break
+            case 'Adam' :
+            default:
+                optimizer = tf.train.adam(sLearningRate)
+                break
+        }
+
         sModel.compile({ optimizer: optimizer, loss: sLoss, metrics: ['accuracy'] })
         // setModel(model)
 
@@ -128,7 +143,7 @@ const Iris = (): JSX.Element => {
             logger('Optimizer Dispose')
             optimizer?.dispose()
         }
-    }, [sModel, sLearningRate])
+    }, [sModel, sLearningRate, sOptimizer])
 
     useEffect(() => {
         logger('init predict data set ...')
@@ -248,6 +263,11 @@ const Iris = (): JSX.Element => {
         setLearningRate(+value)
     }
 
+    const handleOptimizerChange = (value: string): void => {
+        // logger('handleOptimizerChange', value)
+        setOptimizer(value)
+    }
+
     const handleTrain = (): void => {
         if (!sModel || !sTrainSet || !sValidSet) {
             return
@@ -317,11 +337,19 @@ const Iris = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
-                    learningRate: 0.01
+                    learningRate: 0.01,
+                    optimizer: 'Adam'
                 }}>
                     <Form.Item name='learningRate' label='Learning Rate'>
                         <Select onChange={handleLearningRateChange}>
                             {LEARNING_RATES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item name='optimizer' label='Optimizer'>
+                        <Select onChange={handleOptimizerChange}>
+                            {OPTIMIZERS.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>

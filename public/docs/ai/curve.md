@@ -233,14 +233,6 @@ $$ tanh(x) = \frac{1 - e^{-2x}}{1 + e^{-2x}} $$
 
 * 还是没有改变Sigmoid函数的最大问题——由于饱和性产生的梯度消失。
 
-#### SoftMax
-
-$$ softmax(z)_j = \frac{ e^{z_i} }{ \sum e^{z_j} } for i=1..J $$
-
-Softmax用于多分类神经网络输出. 如果某一个 zj 大过其他 z, 那这个映射的分量就逼近于 1,其他就逼近于 0。
-
-Sigmoid将一个real value映射到（0,1）的区间，用来做二分类。而 softmax 把一个 k 维的real value向量（a1,a2,a3,a4….）映射成一个（b1,b2,b3,b4….）其中 bi 是一个 0～1 的常数，输出神经元之和为 1.0，所以相当于概率值，然后可以根据 bi 的概率大小来进行多分类的任务。二分类问题时 sigmoid 和 softmax 是一样的，求的都是 cross entropy loss，而 softmax 可以用于多分类问题。softmax 是 sigmoid的扩展，因为，当类别数 k＝2 时，softmax 回归退化为 logistic 回归。
-
 ### 代码中的实现
 
 在代码中，你可以选择体验的隐藏层数量、隐藏层内神经元数量、以及激活函数的不同，给训练带来的影响。

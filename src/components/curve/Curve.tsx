@@ -48,12 +48,6 @@ const Curve = (): JSX.Element => {
     const [sTfBackend, setTfBackend] = useState<string>()
     const statusRef = useRef<STATUS>(STATUS.INIT)
 
-    // Model
-    const [sModel, setModel] = useState<tf.LayersModel>()
-    const [sActivation, setActivation] = useState<string>('sigmoid')
-    const [sLayerCount, setLayerCount] = useState<number>(2)
-    const [sDenseUnits, setDenseUnits] = useState<number>(4)
-
     // Data
     const [sCurveParams, setCurveParams] = useState<number[] | string>(INIT_PARAMS)
 
@@ -62,6 +56,12 @@ const Curve = (): JSX.Element => {
 
     const [sTestP, setTestP] = useState<tf.Tensor>()
     const [sTestV, setTestV] = useState<tf.Scalar>()
+
+    // Model
+    const [sModel, setModel] = useState<tf.LayersModel>()
+    const [sActivation, setActivation] = useState<string>('sigmoid')
+    const [sLayerCount, setLayerCount] = useState<number>(2)
+    const [sDenseUnits, setDenseUnits] = useState<number>(4)
 
     // Train
     const [sLearningRate, setLearningRate] = useState<number>(0.03)
@@ -98,20 +98,20 @@ const Curve = (): JSX.Element => {
         setTfBackend(tf.getBackend())
 
         // The linear regression model.
-        const _model = tf.sequential()
-        _model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
+        const model = tf.sequential()
+        model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
 
         for (let i = sLayerCount - 2; i > 0; i--) {
-            _model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
+            model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
         }
 
-        _model.add(tf.layers.dense({ units: 1 }))
+        model.add(tf.layers.dense({ units: 1 }))
 
-        setModel(_model)
+        setModel(model)
 
         return () => {
             logger('Model Dispose')
-            _model.dispose()
+            model.dispose()
         }
     }, [sActivation, sLayerCount, sDenseUnits])
 
@@ -119,32 +119,37 @@ const Curve = (): JSX.Element => {
         if (!sModel) {
             return
         }
-        logger('init model compile ...')
+        logger('init optimizer ...')
 
         const optimizer = tf.train.sgd(sLearningRate)
         sModel.compile({ loss: 'meanSquaredError', optimizer })
+
+        return () => {
+            logger('Optimizer Dispose')
+            optimizer.dispose()
+        }
     }, [sModel, sLearningRate])
 
     useEffect(() => {
         logger('init data set ...')
 
         // train set
-        const _trainTensorX = tf.randomUniform([TOTAL_RECORD], -1, 1)
-        const _trainTensorY = calc(_trainTensorX)
-        setTrainSet({ xs: _trainTensorX, ys: _trainTensorY })
+        const trainTensorX = tf.randomUniform([TOTAL_RECORD], -1, 1)
+        const trainTensorY = calc(trainTensorX)
+        setTrainSet({ xs: trainTensorX, ys: trainTensorY })
 
         // test set
-        const _testTensorX = tf.randomUniform([TEST_RECORD], -1, 1)
-        const _testTensorY = calc(_testTensorX)
-        setTestSet({ xs: _testTensorX, ys: _testTensorY })
+        const testTensorX = tf.randomUniform([TEST_RECORD], -1, 1)
+        const testTensorY = calc(testTensorX)
+        setTestSet({ xs: testTensorX, ys: testTensorY })
 
         return () => {
             logger('Train Data Dispose')
             // Specify how to clean up after this effect:
-            _trainTensorX?.dispose()
-            _trainTensorY?.dispose()
-            _testTensorX?.dispose()
-            _testTensorY?.dispose()
+            trainTensorX?.dispose()
+            trainTensorY?.dispose()
+            testTensorX?.dispose()
+            testTensorY?.dispose()
         }
     }, [calc])
 
@@ -228,10 +233,12 @@ const Curve = (): JSX.Element => {
         setDenseUnits(units)
     }
 
-    const handleTrain = (values: any): void => {
-        const { learningRate } = values
-        setLearningRate(learningRate)
+    const handleLearningRateChange = (value: string): void => {
+        // logger('handleLearningRateChange', value)
+        setLearningRate(+value)
+    }
 
+    const handleTrain = (): void => {
         if (!sModel || !sTrainSet || !sTestSet) {
             return
         }
@@ -349,7 +356,7 @@ const Curve = (): JSX.Element => {
                     learningRate: 0.03
                 }}>
                     <Form.Item name='learningRate' label='Learning Rate'>
-                        <Select>
+                        <Select onChange={handleLearningRateChange}>
                             {LEARNING_RATES.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}

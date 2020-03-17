@@ -90,42 +90,28 @@ export const flatOneHot = (idx: number): number[] => {
     return Array.from(tf.oneHot([idx], 3).dataSync())
 }
 
-/**
- * Obtains Iris data, split into training and test sets and with the label
- * converted into one-hot format.
- *
- * @param testSplit Fraction of the data at the end to split as test data: a
- *   number between 0 and 1.
- *
- * @param returns A list of two datasets, [trainingData, testingData].
- *   The datasets represent a shuffled partition of the raw IRIS data.
- *   Elements of the yielded data will consist of [Features, Labels].
- *   - Features as a rank-1 `Tensor` of length-4 of numbers.
- *   - Labels as a rank-1 `Tensor` in one-hot format.
- */
-export const getIrisData = (testSplit: number): Array<tf.data.Dataset<tf.TensorContainer>> => {
-    // TODO(bileschi): Update shuffle etc. to use the tf.data API calls once
-    // it is possible to cache the results for performance and train-test split
-    // stability across epochs.  Once caching is available, perform batching first
-    // and then map the preprocessing functions across the batches.
-    // https://github.com/tensorflow/tfjs/issues/1025
-
+export const getIrisData = (testSplit: number, isOntHot = true,
+    shuffle = true): Array<tf.data.Dataset<tf.TensorContainer>> => {
     // Shuffle a copy of the raw data.
     const shuffled = IRIS_RAW_DATA.slice()
-    const [train, test] = splitDataSet(shuffled, testSplit, true)
+    const [train, test] = splitDataSet(shuffled, testSplit, shuffle)
 
     // Split the data into into X & y and apply feature mapping transformations
     const trainX = tf.data.array(train.map(r => r.slice(0, 4)))
     const testX = tf.data.array(test.map(r => r.slice(0, 4)))
 
-    // TODO(we should be able to just directly use tensors built from oneHot here
-    // instead of converting to tensor and back using datasync & Array.from.
-    // This causes an internal disposal error however.
-    // See https://github.com/tensorflow/tfjs/issues/1071
-    // const trainY = tf.data.array(train.map(r => tf.oneHot([r[4]], 3)))
-    // const testY = tf.data.array(test.map(r => tf.oneHot([r[4]], 3)))
-    const trainY = tf.data.array(train.map(r => flatOneHot(r[4])))
-    const testY = tf.data.array(test.map(r => flatOneHot(r[4])))
+    let trainY: tf.data.Dataset<tf.Tensor | number[]>
+    let testY: tf.data.Dataset<tf.Tensor | number[]>
+
+    if (isOntHot) {
+        // trainY = tf.data.array(train.map(r => tf.oneHot([r[4]], 3)))
+        // testY = tf.data.array(test.map(r => tf.oneHot([r[4]], 3)))
+        trainY = tf.data.array(train.map(r => flatOneHot(r[4])))
+        testY = tf.data.array(test.map(r => flatOneHot(r[4])))
+    } else {
+        trainY = tf.data.array(train.map(r => tf.tensor1d([r[4]])))
+        testY = tf.data.array(test.map(r => tf.tensor1d([r[4]])))
+    }
 
     // Recombine the X and y portions of the data.
     const trainDataset = tf.data.zip({ xs: trainX, ys: trainY })

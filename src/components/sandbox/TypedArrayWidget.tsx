@@ -45,6 +45,24 @@ const TypedArrayWidget = (): JSX.Element => {
     let str = '![幼儿园试题](./images/curve_02.jpg) ![表情包](/docs/images/emotion_02.jpg)'
     str = str.replace(/.\/images/g, '/docs/images')
 
+    const tf1 = tf.tensor([1, 2, 3, 4, 5, 6, 7, 8])
+    tf1.print()
+    const tf2 = tf1.reshape([-1, 2])
+    tf2.print()
+    // logger(tf2.shape[0])
+    // const tf3 = tf2.gather(0)
+    // tf3.print()
+    //
+    // for (let i = 0; i < tf2.shape[0]; i++) {
+    //     tf2.gather(i).print()
+    // }
+
+    // const r = tensorToDim0Array(tf2)
+    // r.map(v => v.print())
+
+    const r = tf2.split(2)
+    r.map(v => v.print())
+
     return (
         <div>
             <div>{

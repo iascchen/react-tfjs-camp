@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Table } from 'antd'
-import { arrayDispose, ISampleInfo, logger } from '../../../utils'
+import { arrayDispose, logger } from '../../../utils'
 import RowImageWidget from './RowImageWidget'
 
 const MAX_SAMPLES_COUNT = 20
@@ -19,32 +19,34 @@ interface IProps {
     debug?: boolean
 }
 
-export const prepareSamples = (_tensor: tf.Tensor, maxRow: number = MAX_SAMPLES_COUNT): ISampleInfo => {
-    // logger(_tensor.shape)
-    const length = (maxRow < _tensor?.shape[0]) ? maxRow : _tensor?.shape[0]
-    const shapeSize = _tensor?.size / _tensor?.shape[0]
-    const shape = _tensor?.shape.slice(1)
-    const shapeStr = shape?.join(', ') || '1'
-    const data = Array.from(_tensor?.dataSync()).slice(0, length * shapeSize)
-
-    return { data, shape, shapeStr, shapeSize, length }
+export const formatTensorToStringArray = (tensor: tf.Tensor, floatFixed = 0): string[] => {
+    if (!tensor) {
+        return []
+    }
+    const _array = Array.from(tensor.dataSync())
+    return _array.map(v => v.toFixed(floatFixed))
 }
 
-const formatShape = (sampleInfo: ISampleInfo, index: number, fraction = 0): JSX.Element => {
-    return (
-        <>
-            {sampleInfo?.data.slice(index * sampleInfo?.shapeSize, (index + 1) * sampleInfo?.shapeSize)
-                .map((_item, _idx) => {
-                    return _item.toFixed(fraction)
-                }).join(' , ')
+export const getTensorLabel = (tensorArray: tf.Tensor[]): string[] => {
+    if (!tensorArray) {
+        return []
+    }
+
+    return tf.tidy(() => {
+        const labels = tensorArray.map((t) => {
+            if (t.dataSync().length > 1) {
+                return t.argMax(-1).dataSync().toString()
+            } else {
+                return t.dataSync().toString()
             }
-        </>
-    )
+        })
+        return labels
+    })
 }
 
-const formatImage = (sampleInfo: ISampleInfo, index: number): JSX.Element => {
-    const data = sampleInfo ? sampleInfo.data.slice(index * sampleInfo?.shapeSize, (index + 1) * sampleInfo?.shapeSize) : []
-    const shapeArg = sampleInfo?.shape.slice(0, 2) as [number, number]
+const formatImage = (sampleInfo: tf.Tensor): JSX.Element => {
+    const data = Array.from(sampleInfo.dataSync())
+    const shapeArg = sampleInfo.shape.slice(1, 3) as [number, number]
     return <RowImageWidget data={data} shape={shapeArg}/>
 }
 
@@ -55,9 +57,13 @@ const SampleDataVis = (props: IProps): JSX.Element => {
 
     const [sampleCount] = useState(props.sampleCount)
     const [acc, setAcc] = useState(0)
-    const [xData, setXData] = useState<ISampleInfo>()
-    const [yData, setYData] = useState<ISampleInfo>()
-    const [pData, setPData] = useState<ISampleInfo>()
+
+    const [xData, setXData] = useState<tf.Tensor[]>()
+    const [yData, setYData] = useState<tf.Tensor[]>()
+    const [pData, setPData] = useState<tf.Tensor[]>()
+    const [yDataLabel, setYDataLabel] = useState<string[]>([])
+    const [pDataLabel, setPDataLabel] = useState<string[]>([])
+
     const [data, setData] = useState()
 
     const [columns, setColumns] = useState()
@@ -66,10 +72,10 @@ const SampleDataVis = (props: IProps): JSX.Element => {
      * useCallback
      ***********************/
 
-    const formatX = useCallback((sampleInfo: ISampleInfo, index: number) => {
+    const formatX = useCallback((sampleInfo: tf.Tensor) => {
         return props.xIsImage
-            ? formatImage(sampleInfo, index)
-            : formatShape(sampleInfo, index, props.xFloatFixed)
+            ? formatImage(sampleInfo)
+            : formatTensorToStringArray(sampleInfo, props?.xFloatFixed).join(', ')
     }, [props.xFloatFixed, props.xIsImage])
 
     /***********************
@@ -82,12 +88,12 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         }
         logger('init x')
 
-        const _sampleInfo = prepareSamples(props.xDataset, sampleCount)
+        const _sampleInfo = props.xDataset.split(props.xDataset.shape[0])
         setXData(_sampleInfo)
 
         return () => {
             logger('Dispose x')
-            arrayDispose(_sampleInfo.data)
+            arrayDispose(_sampleInfo)
         }
     }, [props.xDataset, sampleCount])
 
@@ -97,12 +103,15 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         }
         logger('init y')
 
-        const _sampleInfo = prepareSamples(props.yDataset, sampleCount)
+        const _sampleInfo = props.yDataset.split(props.yDataset.shape[0])
+        const _sampleLabel = getTensorLabel(_sampleInfo)
         setYData(_sampleInfo)
+        setYDataLabel(_sampleLabel)
 
         return () => {
             logger('Dispose y')
-            arrayDispose(_sampleInfo.data)
+            arrayDispose(_sampleInfo)
+            arrayDispose(_sampleLabel)
         }
     }, [props.yDataset, sampleCount])
 
@@ -112,12 +121,15 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         }
         logger('init p')
 
-        const _sampleInfo = prepareSamples(props.pDataset, sampleCount)
+        const _sampleInfo = props.pDataset.split(props.pDataset.shape[0])
+        const _sampleLabel = getTensorLabel(_sampleInfo)
         setPData(_sampleInfo)
+        setPDataLabel(_sampleLabel)
 
         return () => {
             logger('Dispose p')
-            arrayDispose(_sampleInfo.data)
+            arrayDispose(_sampleInfo)
+            arrayDispose(_sampleLabel)
         }
     }, [props.pDataset, sampleCount])
 
@@ -127,8 +139,8 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         }
         logger('init sample data [x,y] ...')
 
-        const _data = yData.data.map((v: number, i: number) => {
-            return { key: i, x: formatX(xData, i), y: v }
+        const _data = yData.map((v, i) => {
+            return { key: i, x: xData[i], y: v, yLabel: yDataLabel[i] }
         })
         setData(_data)
 
@@ -136,59 +148,62 @@ const SampleDataVis = (props: IProps): JSX.Element => {
             logger('Dispose sample data [x,y] ...')
             arrayDispose(_data)
         }
-    }, [formatX, xData, yData])
+    }, [xData, yData])
 
     useEffect(() => {
         if (!xData || !yData || !pData) {
             return
         }
         logger('init sample data [p] ...')
-        const _data = pData.data.map((v: number, i: number) => {
+        const _data = pData.map((v, i) => {
             return pData
-                ? { key: i, x: formatX(xData, i), y: yData.data[i], p: v }
+                ? { key: i, x: xData[i], y: yData[i], p: v, yLabel: yDataLabel[i], pLabel: pDataLabel[i] }
                 : null
         })
         setData(_data)
 
-        const correct = pData.data.reduce((p, c, i, _array): number => {
-            return c === yData.data[i] ? p + 1 : p
+        const correct = pData.reduce((p, c, i, _array): number => {
+            return pDataLabel[i] === yDataLabel[i] ? p + 1 : p
         }, 0)
-        setAcc(correct / pData.data.length)
-        logger('Acc = ', acc, pData.data.length)
+        setAcc(correct / pData.length)
+        logger('Acc = ', acc, pData.length)
 
         return () => {
             logger('Dispose sample data [p] ...')
             arrayDispose(_data)
         }
-    }, [formatX, pData, xData, yData])
+    }, [pData, xData, yData])
 
     useEffect(() => {
         const _columns = [
             {
                 title: 'X',
                 dataIndex: 'x',
-                key: 'x'
+                key: 'x',
+                render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
+                    return <span>{formatX(record.x as tf.Tensor)}</span>
+                }
             },
             {
                 title: 'Y',
                 dataIndex: 'y',
                 key: 'y',
-                render: (text: string, record: any): JSX.Element => {
-                    const color = (record.y === record.p) ? 'green' : 'red'
-                    return (
-                        <span style={{ color: color }}>{text}</span>
-                    )
+                render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
+                    const yArray = formatTensorToStringArray(record.y as tf.Tensor, 0)
+                    const yStr = yArray.length > 1 ? `[${yArray.join(', ')}] => ${record.yLabel}` : yArray.join(', ')
+                    const color = record.yLabel === record.pLabel ? 'green' : 'red'
+                    return <span style={{ color: color }}>{yStr}</span>
                 }
             },
             {
                 title: 'P',
                 dataIndex: 'p',
                 key: 'p',
-                render: (text: string, record: any): JSX.Element => {
-                    const color = (record.y === record.p) ? 'green' : 'red'
-                    return (
-                        <span style={{ color: color }}>{text}</span>
-                    )
+                render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
+                    const pArray = formatTensorToStringArray(record.p as tf.Tensor, 2)
+                    const pStr = pArray.length > 1 ? `[${pArray.join(', ')}] => ${record.pLabel}` : pArray.join(', ')
+                    const color = record.yLabel === record.pLabel ? 'green' : 'red'
+                    return pStr ? <span style={{ color: color }}>{pStr}</span> : <></>
                 }
             }]
         setColumns(_columns)
@@ -200,7 +215,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
 
     return (
         <div>
-            Acc = {acc}
+            Accuracy = {(acc * 100).toFixed(0) + '%'}
             <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize ?? MAX_SAMPLES_COUNT }}/>
         </div>
     )

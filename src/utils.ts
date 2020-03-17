@@ -4,6 +4,12 @@ import { UploadFile } from 'antd/es/upload/interface'
 
 export const logger = console.log
 
+export const loggerError = (e: any): void => {
+    logger(e)
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    // message.error(e)
+}
+
 export type IDataSet = tf.data.Dataset<tf.TensorContainer>
 export type IArray = any[]
 
@@ -21,14 +27,6 @@ export enum STATUS {
 export interface ITrainInfo {
     iteration?: number
     logs: tf.Logs
-}
-
-export interface ISampleInfo {
-    data: number[]
-    shape: number[]
-    shapeStr: string
-    shapeSize: number
-    length: number
 }
 
 export interface ILabeledImage {
@@ -188,10 +186,4 @@ export const checkUploadDone = (fileList: UploadFile[]): number => {
     })
     logger('waiting checkUploadDone : ', fileList.length, unload)
     return unload
-}
-
-export const loggerError = (e: any): void => {
-    logger(e)
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    // message.error(e)
 }

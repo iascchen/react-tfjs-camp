@@ -64,7 +64,8 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         logger('init x')
 
         const _sampleInfo = props.xDataset.split(props.xDataset.shape[0])
-        setXData(_sampleInfo)
+        const _data = _sampleInfo.slice(0, sampleCount)
+        setXData(_data)
 
         return () => {
             logger('Dispose x')
@@ -79,8 +80,9 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         logger('init y')
 
         const _sampleInfo = props.yDataset.split(props.yDataset.shape[0])
-        const _sampleLabel = getTensorLabel(_sampleInfo)
-        setYData(_sampleInfo)
+        const _data = _sampleInfo.slice(0, sampleCount)
+        const _sampleLabel = getTensorLabel(_data)
+        setYData(_data)
         setYDataLabel(_sampleLabel)
 
         return () => {
@@ -97,8 +99,9 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         logger('init p')
 
         const _sampleInfo = props.pDataset.split(props.pDataset.shape[0])
-        const _sampleLabel = getTensorLabel(_sampleInfo)
-        setPData(_sampleInfo)
+        const _data = _sampleInfo.slice(0, sampleCount)
+        const _sampleLabel = getTensorLabel(_data)
+        setPData(_data)
         setPDataLabel(_sampleLabel)
 
         return () => {

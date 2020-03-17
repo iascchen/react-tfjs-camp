@@ -17,7 +17,7 @@
 
 import * as tf from '@tensorflow/tfjs'
 import { fetchResource, logger } from '../../utils'
-import { IMAGE_H, IMAGE_W } from './data'
+import { IMAGE_H, IMAGE_SIZE, IMAGE_W, NUM_CLASSES, NUM_TEST_ELEMENTS, NUM_TRAIN_ELEMENTS } from './data'
 
 // MNIST data constants:
 // const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
@@ -27,14 +27,9 @@ const TRAIN_LABELS_FILE = `${BASE_URL}/train-labels-idx1-ubyte.gz`
 const TEST_IMAGES_FILE = `${BASE_URL}/t10k-images-idx3-ubyte.gz`
 const TEST_LABELS_FILE = `${BASE_URL}/t10k-labels-idx1-ubyte.gz`
 
-export const IMAGE_HEIGHT = 28
-export const IMAGE_WIDTH = 28
-
 const IMAGE_HEADER_BYTES = 16
-const IMAGE_FLAT_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH
 const LABEL_HEADER_BYTES = 8
 const LABEL_RECORD_BYTE = 1
-const LABEL_FLAT_SIZE = 10
 
 const loadHeaderValues = (buffer: Buffer, headerLength: number): number[] => {
     const headerValues = []
@@ -49,7 +44,7 @@ const loadImages = async (url: string): Promise<Float32Array[]> => {
     const buffer = await fetchResource(url, true)
 
     const headerBytes = IMAGE_HEADER_BYTES
-    const recordBytes = IMAGE_FLAT_SIZE
+    const recordBytes = IMAGE_SIZE
 
     // skip header
     const headerValues = loadHeaderValues(buffer, headerBytes)
@@ -119,11 +114,11 @@ export class MnistGzDataset {
         this.testSize = this.dataset[2].length
     }
 
-    getTrainData = (numExamples?: number): tf.TensorContainerObject => {
+    getTrainData = (numExamples = NUM_TRAIN_ELEMENTS): tf.TensorContainerObject => {
         return this.getData_(true, numExamples)
     }
 
-    getTestData = (numExamples?: number): tf.TensorContainerObject => {
+    getTestData = (numExamples = NUM_TEST_ELEMENTS): tf.TensorContainerObject => {
         return this.getData_(false, numExamples)
     }
 
@@ -141,7 +136,7 @@ export class MnistGzDataset {
         const size = this.dataset[imagesIndex].length
 
         // Only create one big array to hold batch of images.
-        const imagesShape: [number, number, number, number] = [size, IMAGE_HEIGHT, IMAGE_WIDTH, 1]
+        const imagesShape: [number, number, number, number] = [size, IMAGE_H, IMAGE_W, 1]
         const images = new Float32Array(tf.util.sizeFromShape(imagesShape))
         const labels = new Int32Array(tf.util.sizeFromShape([size, 1]))
 
@@ -150,16 +145,16 @@ export class MnistGzDataset {
         for (let i = 0; i < size; ++i) {
             images.set(this.dataset[imagesIndex][i], imageOffset)
             labels.set(this.dataset[labelsIndex][i], labelOffset)
-            imageOffset += IMAGE_FLAT_SIZE
+            imageOffset += IMAGE_SIZE
             labelOffset += 1
         }
 
         let xs = tf.tensor4d(images, imagesShape)
-        let ys = tf.oneHot(tf.tensor1d(labels, 'int32'), LABEL_FLAT_SIZE)
+        let ys = tf.oneHot(tf.tensor1d(labels, 'int32'), NUM_CLASSES)
 
         if (numExamples != null) {
             xs = xs.slice([0, 0, 0, 0], [numExamples, IMAGE_H, IMAGE_W, 1])
-            ys = ys.slice([0, 0], [numExamples, LABEL_FLAT_SIZE])
+            ys = ys.slice([0, 0], [numExamples, NUM_CLASSES])
         }
 
         return { xs, ys }

@@ -23,7 +23,7 @@ const { TabPane } = Tabs
 // Data
 const DATA_SOURCE = ['Web', 'Gz']
 const BATCH_SIZES = [64, 128, 256, 512]
-const SHOW_TEST_SAMPLE = 100
+const SHOW_SAMPLE = 50
 
 // Model
 const MODELS = ['dense', 'cnn-pooling', 'cnn-dropout']
@@ -38,7 +38,7 @@ const MnistKeras = (): JSX.Element => {
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(5)
+    const [sTabCurrent, setTabCurrent] = useState<number>(2)
 
     // General
     const [sTfBackend, setTfBackend] = useState<string>()
@@ -143,7 +143,7 @@ const MnistKeras = (): JSX.Element => {
         mnistDataset.loadData().then(
             () => {
                 tSet = mnistDataset.getTrainData()
-                vSet = mnistDataset.getTestData(SHOW_TEST_SAMPLE)
+                vSet = mnistDataset.getTestData(SHOW_SAMPLE)
 
                 setTrainSet(tSet)
                 setTestSet(vSet)
@@ -342,6 +342,7 @@ const MnistKeras = (): JSX.Element => {
                         </Select>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
+                        <div>Status: {statusRef.current}</div>
                         <div>由于数据量较大，多次加载会影响程序运行效率。</div>
                         <div style={{ color: 'red' }}>!!! 请注意 !!! 如果您是从 Github 上克隆项目，在运行之前，
                             请先前往目录 ./public/data , 运行 download_mnist.sh 脚本，下载所需的数据。</div>
@@ -422,16 +423,18 @@ const MnistKeras = (): JSX.Element => {
                     <Col span={8}>
                         {dataAdjustCard()}
                     </Col>
-                    <Col span={16}>
-                        <Card title='Train Data Set' style={{ margin: '8px' }} size='small'>
+                    <Col span={8}>
+                        <Card title={`Train Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
                             <div>{sTrainSet && <TfvisDatasetInfoWidget value={sTrainSet}/>}</div>
-                            {/* <SampleDataVis xDataset={sTrainSet?.xs as tf.Tensor} yDataset={sTrainSet?.ys as tf.Tensor} */}
-                            {/*    xIsImage pageSize={10}/> */}
+                            <SampleDataVis xDataset={sTrainSet?.xs as tf.Tensor} yDataset={sTrainSet?.ys as tf.Tensor}
+                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
                         </Card>
-                        <Card title={`Validate Data Set (Only show ${SHOW_TEST_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
+                    </Col>
+                    <Col span={8}>
+                        <Card title={`Validate Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
                             <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
                             <SampleDataVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
-                                xIsImage pageSize={10}/>
+                                xIsImage pageSize={5} />
                         </Card>
                     </Col>
                 </Row>

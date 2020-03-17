@@ -19,12 +19,13 @@ import * as tf from '@tensorflow/tfjs'
 
 export const IMAGE_H = 28
 export const IMAGE_W = 28
-const IMAGE_SIZE = IMAGE_H * IMAGE_W
-const NUM_CLASSES = 10
-const NUM_DATASET_ELEMENTS = 65000
+export const IMAGE_SIZE = IMAGE_H * IMAGE_W
+export const NUM_CLASSES = 10
 
-const NUM_TRAIN_ELEMENTS = 35000
-const NUM_TEST_ELEMENTS = 7000
+export const NUM_TRAIN_ELEMENTS = 35000
+export const NUM_TEST_ELEMENTS = 7000
+
+const NUM_DATASET_ELEMENTS = 65000
 
 const BASE_URL = '/preload/data/mnist'
 const MNIST_IMAGES_SPRITE_PATH = `${BASE_URL}/mnist_images.png`

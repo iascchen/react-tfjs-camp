@@ -100,17 +100,21 @@ export const getIrisData = (testSplit: number, isOntHot = true,
     const trainX = tf.data.array(train.map(r => r.slice(0, 4)))
     const testX = tf.data.array(test.map(r => r.slice(0, 4)))
 
-    let trainY: tf.data.Dataset<tf.Tensor | number[]>
-    let testY: tf.data.Dataset<tf.Tensor | number[]>
+    let trainY: tf.data.Dataset<number[]>
+    let testY: tf.data.Dataset<number[]>
 
     if (isOntHot) {
+        // TODO(we should be able to just directly use tensors built from oneHot here
+        // instead of converting to tensor and back using datasync & Array.from.
+        // This causes an internal disposal error however.
+        // See https://github.com/tensorflow/tfjs/issues/1071
         // trainY = tf.data.array(train.map(r => tf.oneHot([r[4]], 3)))
         // testY = tf.data.array(test.map(r => tf.oneHot([r[4]], 3)))
         trainY = tf.data.array(train.map(r => flatOneHot(r[4])))
         testY = tf.data.array(test.map(r => flatOneHot(r[4])))
     } else {
-        trainY = tf.data.array(train.map(r => tf.tensor1d([r[4]])))
-        testY = tf.data.array(test.map(r => tf.tensor1d([r[4]])))
+        trainY = tf.data.array(train.map(r => [r[4]]))
+        testY = tf.data.array(test.map(r => [r[4]]))
     }
 
     // Recombine the X and y portions of the data.

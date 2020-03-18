@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs-core'
-import { Button, Card, Col, Row, Tabs } from 'antd'
+import { Button, Card, Col, Form, Row, Select, Slider, Tabs } from 'antd'
 
 import { ITrainInfo, logger, STATUS } from '../../utils'
-import { MnistCoreDataset } from './dataCore'
-import * as modelCore from './modelCore'
+import { layout, tailLayout } from '../../constant'
 
 import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
@@ -13,32 +12,49 @@ import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 
+import { MnistCoreDataset } from './dataCore'
+import { MnistGzDataset } from './dataGz'
+import * as modelCore from './modelCore'
+
+const { Option } = Select
 const { TabPane } = Tabs
 
-const SHOW_TEST_SAMPLE = 20
+// Data
+const DATA_SOURCE = ['web-mnist', 'mnist']
+const TRAIN_STEPS = 60
+const BATCH_SIZES = [64, 128, 256, 512]
+const SHOW_SAMPLE = 50
+
+// Train
+const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
 
 const MnistCore = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(1)
+    const [sTabCurrent, setTabCurrent] = useState<number>(2)
 
+    // General
     const [sTfBackend, setTfBackend] = useState<string>()
-    const [status, setStatus] = useState<STATUS>(STATUS.INIT)
-    const [errors, setErrors] = useState()
+    const [sStatus, setStatus] = useState<STATUS>()
+    const [sErrors, setErrors] = useState()
 
-    const [dataSet, setDataSet] = useState<MnistCoreDataset>()
+    // Data
+    const [sDataSourceName, setDataSourceName] = useState()
+    const [sDataSet, setDataSet] = useState<MnistCoreDataset | MnistGzDataset>()
+    const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
+    const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
-    const [trainSet, setTrainSet] = useState<tf.TensorContainerObject>()
-    const [validSet, setValidSet] = useState<tf.TensorContainerObject>()
+    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
 
+    // Predict
     const [logMsg, setLogMsg] = useState<ITrainInfo>()
+    const [sDrawPred, setDrawPred] = useState<tf.Tensor>()
+
+    const [formTrain] = Form.useForm()
 
     const [predictSet, setPredictSet] = useState<tf.TensorContainerObject>()
-    const [predictResult, setPredictResult] = useState<tf.Tensor>()
-
-    const [drawPred, setDrawPred] = useState<tf.Tensor>()
 
     /***********************
      * useEffect
@@ -46,12 +62,18 @@ const MnistCore = (): JSX.Element => {
 
     useEffect(() => {
         logger('init data set ...')
+
         tf.backend()
         setTfBackend(tf.getBackend())
 
         setStatus(STATUS.LOADING)
 
-        const mnistDataset = new MnistCoreDataset()
+        let mnistDataset: MnistGzDataset | MnistCoreDataset
+        if (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') {
+            mnistDataset = new MnistGzDataset(sDataSourceName)
+        } else {
+            mnistDataset = new MnistCoreDataset()
+        }
 
         let tSet: tf.TensorContainerObject
         let vSet: tf.TensorContainerObject
@@ -59,11 +81,13 @@ const MnistCore = (): JSX.Element => {
             () => {
                 setDataSet(mnistDataset)
 
-                tSet = mnistDataset.getTrainData()
-                vSet = mnistDataset.getTestData(SHOW_TEST_SAMPLE)
+                tSet = mnistDataset.nextTrainBatch(SHOW_SAMPLE)
+                vSet = mnistDataset.nextTestBatch(SHOW_SAMPLE)
+
+                logger(tSet, vSet)
 
                 setTrainSet(tSet)
-                setValidSet(vSet)
+                setTestSet(vSet)
 
                 setStatus(STATUS.LOADED)
             },
@@ -77,20 +101,20 @@ const MnistCore = (): JSX.Element => {
             tf.dispose([tSet.xs, tSet.ys])
             tf.dispose([vSet.xs, vSet.ys])
         }
-    }, [])
+    }, [sDataSourceName])
 
     useEffect(() => {
         logger('init predict data set ...')
 
-        const xTest = validSet?.xs as tf.Tensor
-        const yTest = validSet?.ys as tf.Tensor
+        const xTest = sTestSet?.xs as tf.Tensor
+        const yTest = sTestSet?.ys as tf.Tensor
 
         const [ys] = tf.tidy(() => {
             const ys = yTest?.argMax(-1)
             return [ys]
         })
         setPredictSet({ xs: xTest, ys })
-    }, [validSet])
+    }, [sTestSet])
 
     /***********************
      * useEffects only for dispose
@@ -98,20 +122,11 @@ const MnistCore = (): JSX.Element => {
 
     useEffect(() => {
         // Do Nothing
-
-        return () => {
-            logger('Predict Set Dispose')
-            tf.dispose([predictSet?.xs, predictSet?.ys])
-        }
-    }, [predictSet])
-
-    useEffect(() => {
-        // Do Nothing
         return () => {
             logger('Predict Result Dispose')
-            predictResult?.dispose()
+            sPredictResult?.dispose()
         }
-    }, [predictResult])
+    }, [sPredictResult])
 
     /***********************
      * Functions
@@ -122,7 +137,8 @@ const MnistCore = (): JSX.Element => {
         predictModel(predictSet?.xs as tf.Tensor)
     }
 
-    const trainModel = (_dataset: MnistCoreDataset): void => {
+    const trainModel = (_dataset: MnistCoreDataset | MnistGzDataset, steps = TRAIN_STEPS,
+        batchSize = 128, learningRate = 0.01): void => {
         if (!_dataset) {
             return
         }
@@ -130,7 +146,7 @@ const MnistCore = (): JSX.Element => {
         setStatus(STATUS.TRAINING)
 
         const beginMs = performance.now()
-        modelCore.train(_dataset, pushTrainingLog).then(
+        modelCore.train(_dataset, pushTrainingLog, steps, batchSize, learningRate).then(
             () => {
                 setStatus(STATUS.TRAINED)
 
@@ -154,16 +170,24 @@ const MnistCore = (): JSX.Element => {
         setLogMsg(info)
     }
 
+    const handleDataSourceChange = (value: string): void => {
+        setDataSourceName(value)
+    }
+
     const handleTrain = (): void => {
-        if (!dataSet) {
+        if (!sDataSet) {
             return
         }
+        const values = formTrain.getFieldsValue()
+        const { steps, batchSize, learningRate } = values
         // Train the model using the data.
-        trainModel(dataSet)
+        trainModel(sDataSet, steps, batchSize, learningRate)
     }
 
     const handleDrawSubmit = (data: tf.Tensor): void => {
         // logger('handleDrawSubmit', data.shape)
+
+        // const pred = tf.tidy(() => sModel.predict(data)) as tf.Tensor
         const pred = modelCore.predict(data)
         logger('handleDrawSubmit', pred.dataSync())
         setDrawPred(pred)
@@ -177,46 +201,122 @@ const MnistCore = (): JSX.Element => {
      * Render
      ***********************/
 
+    const dataAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Data Source' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} initialValues={{
+                    dataSource: 'mnist'
+                }}>
+                    <Form.Item name='dataSource' label='Select Data Source'>
+                        <Select onChange={handleDataSourceChange}>
+                            {DATA_SOURCE.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <div>Status: {sStatus}</div>
+                        <ul>
+                            <li><div style={{ color: 'red' }}>!!! 请注意 !!! 如果您是从 Github 上克隆项目，在运行之前，
+                                请先前往目录 ./public/data , 运行 download_mnist.sh 脚本，下载所需的数据。</div></li>
+                            <li>如果您是在 Docker 中运行，数据已经预先放在相应的目录下。</li>
+                            <li>由于数据量较大，多次加载会影响程序运行效率。</li>
+                            <li><div style={{ color: 'red' }}>如果 Train Data Set 中的图片未能正常显示，表明要加载的训练集大小超过了您的内存。
+                                您可以减少代码中 data.js 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集</div></li>
+                        </ul>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
+
+    const trainAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Train' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
+                    learningRate: 0.1,
+                    batchSize: 256,
+                    steps: 30
+                }}>
+                    <Form.Item name='steps' label='Train Step'>
+                        <Slider min={30} max={150} step={30} marks={{ 30: 30, 90: 90, 150: 150 }} />
+                    </Form.Item>
+                    <Form.Item name='batchSize' label='Batch Size'>
+                        <Select >
+                            {BATCH_SIZES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item name='learningRate' label='Learning Rate'>
+                        <Select >
+                            {LEARNING_RATES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <Button type='primary' htmlType={'submit'} style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <div>Status: {sStatus}</div>
+                        <div>Backend: {sTfBackend}</div>
+                        <div>Errors: {sErrors}</div>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
+
     return (
-        <AIProcessTabs title={'MNIST Core Model'} current={sTabCurrent} onChange={handleTabChange}
-            invisiblePanes={[AIProcessTabPanes.MODEL]}>
+        <AIProcessTabs title={'MNIST Core API'} current={sTabCurrent} onChange={handleTabChange}
+            invisiblePanes={[AIProcessTabPanes.MODEL]} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/mnist.md'}/>
+                <MarkdownWidget url={'/docs/ai/mnist-core.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <Col span={12}>
-                    <Card title='Data Set' style={{ margin: '8px' }} size='small'>
-                        <div style={{ color: 'red' }}>!!! ATTENTION !!! Please go to ./public/data folder, run `download_data.sh`</div>
-                        <div>trainSet: {trainSet && <TfvisDatasetInfoWidget value={trainSet}/>}</div>
-                        <div>validSet: {validSet && <TfvisDatasetInfoWidget value={validSet}/>}</div>
-                    </Card>
-                </Col>
-            </TabPane>
-            <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
+                <Row>
+                    <Col span={8}>
+                        {dataAdjustCard()}
+                    </Col>
+                    <Col span={8}>
+                        <Card title={`Train Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
+                            <div>{sTrainSet && <TfvisDatasetInfoWidget value={sTrainSet}/>}</div>
+                            <SampleDataVis xDataset={sTrainSet?.xs as tf.Tensor} yDataset={sTrainSet?.ys as tf.Tensor}
+                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
+                        </Card>
+                    </Col>
+                    <Col span={8}>
+                        <Card title={`Validate Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
+                            <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
+                            <SampleDataVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
+                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
+                        </Card>
+                    </Col>
+                </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={12}>
-                        <Card title='Train' style={{ margin: '8px' }} size='small'>
-                            <Button onClick={handleTrain} type='primary'> Train </Button>
-                            <p>backend: {sTfBackend}</p>
-                            <p>status: {status}</p>
-                            <p>errors: {errors}</p>
-                        </Card>
-                        <Card title='Visualization' style={{ margin: '8px' }} size='small'>
-                            <TfvisHistoryWidget logMsg={logMsg} debug />
+                    <Col span={6}>
+                        {trainAdjustCard()}
+                    </Col>
+                    <Col span={10}>
+                        <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                            <SampleDataVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
+                                pDataset={sPredictResult} xIsImage pageSize={10} sampleCount={SHOW_SAMPLE}/>
                         </Card>
                     </Col>
-                    <Col span={12}>
-                        <Card title='Evaluate Set' style={{ margin: '8px' }} size='small'>
-                            <SampleDataVis xDataset={predictSet?.xs as tf.Tensor} yDataset={predictSet?.ys as tf.Tensor}
-                                pDataset={predictResult} xIsImage />
+                    <Col span={8}>
+                        <Card title='Training History' style={{ margin: '8px' }} size='small'>
+                            <TfvisHistoryWidget logMsg={logMsg} debug />
                         </Card>
                     </Col>
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
-                <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={drawPred} />
+                <Col span={8}>
+                    <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={sDrawPred} />
+                </Col>
             </TabPane>
         </AIProcessTabs>
     )

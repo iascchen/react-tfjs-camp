@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Form, Row, Select, Tabs } from 'antd'
+import { Button, Card, Col, Form, Row, Select, Slider, Tabs } from 'antd'
 
 import { layout, tailLayout } from '../../constant'
 import { ILayerSelectOption, ITrainInfo, logger, STATUS } from '../../utils'
@@ -14,14 +14,14 @@ import MarkdownWidget from '../common/MarkdownWidget'
 import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 
 import { MnistGzDataset } from './dataGz'
-import { MnistCoreDataset } from './dataCore'
-import { addCovDropoutLayers, addDenseLayers, addCovPoolingLayers } from './model'
+import { IMnistDataSet, MnistCoreDataset } from './dataCore'
+import { addCovDropoutLayers, addDenseLayers, addCovPoolingLayers } from './modelKeras'
 
 const { Option } = Select
 const { TabPane } = Tabs
 
 // Data
-const DATA_SOURCE = ['Web', 'Gz']
+const DATA_SOURCE = ['web-mnist', 'mnist', 'fashion']
 const BATCH_SIZES = [64, 128, 256, 512]
 const SHOW_SAMPLE = 50
 
@@ -29,7 +29,6 @@ const SHOW_SAMPLE = 50
 const MODELS = ['dense', 'cnn-pooling', 'cnn-dropout']
 
 // Train
-const EPOCHS = 5
 const VALID_SPLIT = 0.15
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
 
@@ -60,8 +59,9 @@ const MnistKeras = (): JSX.Element => {
     const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
 
     // Train
-    const [sLearningRate, setLearningRate] = useState<number>()
+    const [sEpochs, setEpochs] = useState<number>()
     const [sBatchSize, setBatchSize] = useState<number>()
+    const [sLearningRate, setLearningRate] = useState<number>()
     const stopRef = useRef(false)
 
     // Predict
@@ -131,9 +131,9 @@ const MnistKeras = (): JSX.Element => {
 
         setStatus(STATUS.LOADING)
 
-        let mnistDataset: MnistGzDataset | MnistCoreDataset
-        if (sDataSourceName === 'Gz') {
-            mnistDataset = new MnistGzDataset()
+        let mnistDataset: IMnistDataSet
+        if (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') {
+            mnistDataset = new MnistGzDataset(sDataSourceName)
         } else {
             mnistDataset = new MnistCoreDataset()
         }
@@ -201,7 +201,7 @@ const MnistKeras = (): JSX.Element => {
         let trainBatchCount = 0
         let iteration = 0
         model.fit(trainDataset.xs as tf.Tensor, trainDataset.ys as tf.Tensor, {
-            epochs: EPOCHS,
+            epochs: sEpochs,
             batchSize: sBatchSize,
             validationSplit: VALID_SPLIT,
             callbacks: {
@@ -220,13 +220,14 @@ const MnistKeras = (): JSX.Element => {
                         logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
                         predictModel(model, validDataset.xs as tf.Tensor)
                     }
-                    await tf.nextFrame()
 
                     if (stopRef.current) {
                         logger('Checked stop', stopRef.current)
                         setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
+
+                    await tf.nextFrame()
                 }
             }
         }).then(
@@ -270,13 +271,13 @@ const MnistKeras = (): JSX.Element => {
         setDrawPred(pred)
     }
 
-    const handleBatchSizeChange = (value: number): void => {
-        setBatchSize(value)
-    }
-
-    const handleLearningRateChange = (value: number): void => {
-        // logger('handleLearningRateChange', value)
-        setLearningRate(value)
+    const handleTrainParamsChange = (): void => {
+        const values = formTrain.getFieldsValue()
+        // logger('handleTrainParamsChange', value)
+        const { learningRate, epochs, batchSize } = values
+        setLearningRate(learningRate)
+        setBatchSize(batchSize)
+        setEpochs(epochs)
     }
 
     const handleTrain = (): void => {
@@ -304,7 +305,7 @@ const MnistKeras = (): JSX.Element => {
         return (
             <Card title='Data Source' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} initialValues={{
-                    dataSource: 'Web'
+                    dataSource: 'web-mnist'
                 }}>
                     <Form.Item name='dataSource' label='Select Data Source'>
                         <Select onChange={handleDataSourceChange}>
@@ -350,20 +351,25 @@ const MnistKeras = (): JSX.Element => {
     const trainAdjustCard = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
-                    learningRate: 0.001,
-                    batchSize: 256
-                }}>
-                    <Form.Item name='learningRate' label='Learning Rate'>
-                        <Select onChange={handleLearningRateChange}>
-                            {LEARNING_RATES.map((v) => {
+                <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
+                    initialValues={{
+                        learningRate: 0.001,
+                        batchSize: 256,
+                        epochs: 3
+                    }}>
+                    <Form.Item name='epochs' label='Epochs'>
+                        <Slider min={1} max={10} marks={{ 1: 1, 5: 5, 9: 9 }} />
+                    </Form.Item>
+                    <Form.Item name='batchSize' label='Batch Size'>
+                        <Select>
+                            {BATCH_SIZES.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
                     </Form.Item>
-                    <Form.Item name='batchSize' label='Batch Size'>
-                        <Select onChange={handleBatchSizeChange} >
-                            {BATCH_SIZES.map((v) => {
+                    <Form.Item name='learningRate' label='Learning Rate'>
+                        <Select>
+                            {LEARNING_RATES.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
@@ -383,7 +389,7 @@ const MnistKeras = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'MNIST LayerModel'} current={sTabCurrent} onChange={handleTabChange} >
+        <AIProcessTabs title={'MNIST Layer Model'} current={sTabCurrent} onChange={handleTabChange} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/mnist.md'}/>
             </TabPane>

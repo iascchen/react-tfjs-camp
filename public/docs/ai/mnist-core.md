@@ -1,25 +1,22 @@
-# 手写数字识别 MNIST
+# 时装识别 MNIST
 
 ## 知识点
 
+由于手写数字识别太简单，XXX 又准备了 mnist-fashion 数据集，以支持更复杂些的 AI 问题。
+
 这个例子涉及以下的 AI 知识点：
 
-* 卷积神经网络
-* MaxPooling
-* Dropout
-* Tensorflow 高级API（Keras）
 * Tensorflow 核心API（Core）
 
 ## 问题
 
-
+如何使用 Tensorflow.js 核心 API 来构造深度学习神经网络。
 
 ## 数据
 
 MNIST 数据:
 
 * gz 压缩格式的数据，包括 60000 个样本的训练集和测试集数据及其标注：下载地址为 [https://storage.googleapis.com/cvdf-datasets/mnist/](https://storage.googleapis.com/cvdf-datasets/mnist/)
-* png 数据，为 Web 版本预处理的图片数据，包括 55000 个数据
 
 ## 模型
 

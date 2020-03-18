@@ -56,8 +56,8 @@ export const breadcrumbNameMap: IBreadcrumbMap = {
     '/curve': 'Curve',
     '/iris': 'Iris',
 
-    '/mnist/keras': 'MNIST LayerModel',
-    '/mnist/core': 'MNIST Core',
+    '/mnist/keras': 'MNIST Layer Model',
+    '/mnist/core': 'MNIST Core API',
 
     '/mobilenet/basic': 'Mobilenet Classifier',
     '/mobilenet/knn': 'Teachable Machine',

@@ -169,7 +169,7 @@ const Curve = (): JSX.Element => {
             batchSize: BATCH_SIZE,
             validationSplit: VALIDATE_SPLIT,
             callbacks: {
-                onEpochEnd: (epoch: number) => {
+                onEpochEnd: async (epoch: number) => {
                     const trainStatus = `${(epoch + 1).toString()}/${NUM_EPOCHS.toString()} = ${((epoch + 1) / NUM_EPOCHS * 100).toFixed(0)} %`
                     setTrainStatusStr(trainStatus)
 
@@ -182,6 +182,8 @@ const Curve = (): JSX.Element => {
                         setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
+
+                    await tf.nextFrame()
                 }
             }
         }).then(

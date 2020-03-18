@@ -47,12 +47,12 @@ const SideBar = (props: IProps): JSX.Element => {
                 <SubMenu title={<span><CalculatorOutlined/><span>手写数字识别 MNIST</span></span>}>
                     <Item key='3.1'>
                         <Link to='/mnist/keras'>
-                            <span> Tfjs Layer Model </span>
+                            <span> Mnist Layer Model </span>
                         </Link>
                     </Item>
                     <Item key='3.2'>
                         <Link to='/mnist/core'>
-                            <span> Tfjs-core 版 </span>
+                            <span> Mnist Core API </span>
                         </Link>
                     </Item>
                 </SubMenu>

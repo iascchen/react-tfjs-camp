@@ -17,17 +17,7 @@
 
 import * as tf from '@tensorflow/tfjs'
 
-import { MnistCoreDataset } from './dataCore'
-
-// Hyperparameters.
-const LEARNING_RATE = 0.1
-const BATCH_SIZE = 64
-const TRAIN_STEPS = 100
-
-// Data constants.
-const IMAGE_SIZE = 28
-const LABELS_SIZE = 10
-const optimizer = tf.train.sgd(LEARNING_RATE)
+import { IMAGE_H, IMAGE_W, IMnistDataSet, NUM_CLASSES } from './dataCore'
 
 // Variables that we want to optimize
 const conv1OutputDepth = 8
@@ -35,13 +25,12 @@ const conv1Weights = tf.variable(tf.randomNormal([5, 5, 1, conv1OutputDepth], 0,
 
 const conv2InputDepth = conv1OutputDepth
 const conv2OutputDepth = 16
-const conv2Weights = tf.variable(
-    tf.randomNormal([5, 5, conv2InputDepth, conv2OutputDepth], 0, 0.1))
+const conv2Weights = tf.variable(tf.randomNormal([5, 5, conv2InputDepth, conv2OutputDepth], 0, 0.1))
 
 const fullyConnectedWeights = tf.variable(
-    tf.randomNormal([7 * 7 * conv2OutputDepth, LABELS_SIZE], 0,
+    tf.randomNormal([7 * 7 * conv2OutputDepth, NUM_CLASSES], 0,
         1 / Math.sqrt(7 * 7 * conv2OutputDepth)))
-const fullyConnectedBias = tf.variable(tf.zeros([LABELS_SIZE]))
+const fullyConnectedBias = tf.variable(tf.zeros([NUM_CLASSES]))
 
 // Loss function
 const loss = (labels: tf.Tensor, ys: tf.Tensor): tf.Scalar => {
@@ -50,7 +39,7 @@ const loss = (labels: tf.Tensor, ys: tf.Tensor): tf.Scalar => {
 
 // Our actual model
 export const model = (inputXs: tf.Tensor): tf.Tensor => {
-    const xs = inputXs.as4D(-1, IMAGE_SIZE, IMAGE_SIZE, 1)
+    const xs = inputXs.as4D(-1, IMAGE_H, IMAGE_W, 1)
 
     const strides = 2
     const pad = 0
@@ -76,13 +65,15 @@ export const model = (inputXs: tf.Tensor): tf.Tensor => {
 }
 
 // Train the model.
-export const train = async (data: MnistCoreDataset, log: Function): Promise<void> => {
+export const train = async (data: IMnistDataSet, log: Function,
+    steps: number, batchSize: number, learningRate: number): Promise<void> => {
     const returnCost = true
+    const optimizer = tf.train.adam(learningRate)
 
-    for (let i = 0; i < TRAIN_STEPS; i++) {
+    for (let i = 0; i < steps; i++) {
         const cost = optimizer.minimize(() => {
-            const batch = data.nextTrainBatch(BATCH_SIZE)
-            const _labels = batch.labels as tf.Tensor
+            const batch = data.nextTrainBatch(batchSize)
+            const _labels = batch.ys as tf.Tensor
             const _xs = batch.xs as tf.Tensor
             return loss(_labels, model(_xs))
         }, returnCost)
@@ -95,8 +86,7 @@ export const train = async (data: MnistCoreDataset, log: Function): Promise<void
 // Predict the digit number from a batch of input images.
 export const predict = (x: tf.Tensor): tf.Tensor => {
     const pred = tf.tidy(() => {
-        const axis = 1
-        return model(x).argMax(axis)
+        return model(x)
     })
     return pred
 }

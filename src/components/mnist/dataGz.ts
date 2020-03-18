@@ -17,19 +17,21 @@
 
 import * as tf from '@tensorflow/tfjs'
 import { fetchResource, logger } from '../../utils'
-import { IMAGE_H, IMAGE_SIZE, IMAGE_W, NUM_CLASSES, NUM_TEST_ELEMENTS, NUM_TRAIN_ELEMENTS } from './data'
+import { IMnistDataSet, IMAGE_H, IMAGE_W, IMAGE_SIZE, NUM_CLASSES } from './dataCore'
 
-// MNIST data constants:
-// const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
-const BASE_URL = '/preload/data/mnist'
-const TRAIN_IMAGES_FILE = `${BASE_URL}/train-images-idx3-ubyte.gz`
-const TRAIN_LABELS_FILE = `${BASE_URL}/train-labels-idx1-ubyte.gz`
-const TEST_IMAGES_FILE = `${BASE_URL}/t10k-images-idx3-ubyte.gz`
-const TEST_LABELS_FILE = `${BASE_URL}/t10k-labels-idx1-ubyte.gz`
+const NUM_TRAIN_ELEMENTS = 35000
+const NUM_TEST_ELEMENTS = 7000
 
 const IMAGE_HEADER_BYTES = 16
 const LABEL_HEADER_BYTES = 8
 const LABEL_RECORD_BYTE = 1
+
+/**
+ * A class that fetches the sprited MNIST dataset and returns shuffled batches.
+ *
+ * NOTE: This will get much easier. For now, we do data fetching and
+ * manipulation manually.
+ */
 
 const loadHeaderValues = (buffer: Buffer, headerLength: number): number[] => {
     const headerValues = []
@@ -65,7 +67,7 @@ const loadImages = async (url: string): Promise<Float32Array[]> => {
     return images
 }
 
-const loadLabels = async (url: string): Promise<Int32Array[]> => {
+const loadLabels = async (url: string): Promise<Uint8Array[]> => {
     const buffer = await fetchResource(url, true)
 
     const headerBytes = LABEL_HEADER_BYTES
@@ -78,7 +80,7 @@ const loadLabels = async (url: string): Promise<Int32Array[]> => {
     const labels = []
     let index = headerBytes
     while (index < buffer.byteLength) {
-        const array = new Int32Array(recordBytes)
+        const array = new Uint8Array(recordBytes)
         for (let i = 0; i < recordBytes; i++) {
             array[i] = buffer.readUInt8(index++)
         }
@@ -88,52 +90,64 @@ const loadLabels = async (url: string): Promise<Int32Array[]> => {
     return labels
 }
 
-/** Helper class to handle loading training and test data. */
-export class MnistGzDataset {
-    dataset: [Float32Array[], Int32Array[], Float32Array[], Int32Array[]]
-    trainSize: number
-    testSize: number
-    trainBatchIndex: number
-    testBatchIndex: number
+export class MnistGzDataset implements IMnistDataSet {
+    source: string
+    baseUrl: string
+    trainImagesFileUrl: string
+    trainLabelsFileUrl: string
+    testImagesFileUrl: string
+    testLabelsFileUrl: string
 
-    constructor () {
-        this.dataset = [[], [], [], []]
-        this.trainSize = 0
-        this.testSize = 0
-        this.trainBatchIndex = 0
-        this.testBatchIndex = 0
+    trainImages!: Float32Array[]
+    testImages!: Float32Array[]
+    trainLabels!: Uint8Array[]
+    testLabels!: Uint8Array[]
+
+    trainIndices!: Uint32Array
+    testIndices!: Uint32Array
+
+    shuffledTrainIndex = 0
+    shuffledTestIndex = 0
+
+    constructor (source: string) {
+        this.source = source
+
+        this.baseUrl = `/preload/data/${source}`
+        this.trainImagesFileUrl = `${this.baseUrl}/train-images-idx3-ubyte.gz`
+        this.trainLabelsFileUrl = `${this.baseUrl}/train-labels-idx1-ubyte.gz`
+        this.testImagesFileUrl = `${this.baseUrl}/t10k-images-idx3-ubyte.gz`
+        this.testLabelsFileUrl = `${this.baseUrl}/t10k-labels-idx1-ubyte.gz`
     }
 
     /** Loads training and test data. */
     loadData = async (): Promise<void> => {
-        this.dataset = await Promise.all([
-            loadImages(TRAIN_IMAGES_FILE), loadLabels(TRAIN_LABELS_FILE),
-            loadImages(TEST_IMAGES_FILE), loadLabels(TEST_LABELS_FILE)
-        ])
-        this.trainSize = this.dataset[0].length
-        this.testSize = this.dataset[2].length
+        // Create shuffled indices into the train/test set for when we select a
+        // random dataset element for training / validation.
+        this.trainIndices = tf.util.createShuffledIndices(NUM_TRAIN_ELEMENTS)
+        this.testIndices = tf.util.createShuffledIndices(NUM_TEST_ELEMENTS)
+
+        // Slice the the images and labels into train and test sets.
+        this.trainImages = await loadImages(this.trainImagesFileUrl)
+        this.trainImages = this.trainImages.slice(0, NUM_TRAIN_ELEMENTS)
+        this.trainLabels = await loadLabels(this.trainLabelsFileUrl)
+        this.trainLabels = this.trainLabels.slice(0, NUM_TRAIN_ELEMENTS)
+
+        this.testImages = await loadImages(this.testImagesFileUrl)
+        this.testImages = this.testImages.slice(0, NUM_TEST_ELEMENTS)
+        this.testLabels = await loadLabels(this.testLabelsFileUrl)
+        this.testLabels = this.testLabels.slice(0, NUM_TEST_ELEMENTS)
     }
 
     getTrainData = (numExamples = NUM_TRAIN_ELEMENTS): tf.TensorContainerObject => {
-        return this.getData_(true, numExamples)
+        return this.getData_(this.trainImages, this.trainLabels, numExamples)
     }
 
     getTestData = (numExamples = NUM_TEST_ELEMENTS): tf.TensorContainerObject => {
-        return this.getData_(false, numExamples)
+        return this.getData_(this.testImages, this.testLabels, numExamples)
     }
 
-    getData_ = (isTrainingData: boolean, numExamples?: number): tf.TensorContainerObject => {
-        let imagesIndex: number
-        let labelsIndex: number
-
-        if (isTrainingData) {
-            imagesIndex = 0
-            labelsIndex = 1
-        } else {
-            imagesIndex = 2
-            labelsIndex = 3
-        }
-        const size = this.dataset[imagesIndex].length
+    getData_ = (imageSet: Float32Array[], labelSet: Uint8Array[], numExamples?: number): tf.TensorContainerObject => {
+        const size = imageSet.length
 
         // Only create one big array to hold batch of images.
         const imagesShape: [number, number, number, number] = [size, IMAGE_H, IMAGE_W, 1]
@@ -143,8 +157,8 @@ export class MnistGzDataset {
         let imageOffset = 0
         let labelOffset = 0
         for (let i = 0; i < size; ++i) {
-            images.set(this.dataset[imagesIndex][i], imageOffset)
-            labels.set(this.dataset[labelsIndex][i], labelOffset)
+            images.set(imageSet[i], imageOffset)
+            labels.set(labelSet[i], labelOffset)
             imageOffset += IMAGE_SIZE
             labelOffset += 1
         }
@@ -156,6 +170,43 @@ export class MnistGzDataset {
             xs = xs.slice([0, 0, 0, 0], [numExamples, IMAGE_H, IMAGE_W, 1])
             ys = ys.slice([0, 0], [numExamples, NUM_CLASSES])
         }
+
+        return { xs, ys }
+    }
+
+    nextTrainBatch = (batchSize: number): tf.TensorContainerObject => {
+        return this.nextBatch(batchSize, [this.trainImages, this.trainLabels],
+            () => {
+                this.shuffledTrainIndex = (this.shuffledTrainIndex + 1) % this.trainIndices.length
+                return this.trainIndices[this.shuffledTrainIndex]
+            })
+    }
+
+    nextTestBatch = (batchSize: number): tf.TensorContainerObject => {
+        return this.nextBatch(batchSize, [this.testImages, this.testLabels],
+            () => {
+                this.shuffledTestIndex = (this.shuffledTestIndex + 1) % this.testIndices.length
+                return this.testIndices[this.shuffledTestIndex]
+            })
+    }
+
+    nextBatch = (batchSize: number, data: [Float32Array[], Uint8Array[]], index: Function): tf.TensorContainerObject => {
+        const batchImagesArray = new Float32Array(batchSize * IMAGE_SIZE)
+        const batchLabelsArray = new Uint8Array(batchSize * NUM_CLASSES)
+
+        for (let i = 0; i < batchSize; i++) {
+            const idx = index() as number
+
+            const image = data[0].slice(idx, idx + 1)[0]
+            batchImagesArray.set(image, i * IMAGE_SIZE)
+
+            const label = data[1].slice(idx, idx + 1)[0]
+            const ys = Array.from(tf.oneHot([label], NUM_CLASSES).dataSync())
+            batchLabelsArray.set(ys, i * NUM_CLASSES)
+        }
+
+        const xs = tf.tensor4d(batchImagesArray, [batchSize, IMAGE_H, IMAGE_W, 1])
+        const ys = tf.tensor2d(batchLabelsArray, [batchSize, NUM_CLASSES])
 
         return { xs, ys }
     }

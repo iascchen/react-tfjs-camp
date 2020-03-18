@@ -89,7 +89,7 @@ const Iris = (): JSX.Element => {
     }, [sTargetEncode])
 
     useEffect(() => {
-        if (!sLearningRate || !sLoss || !sDenseUnits) {
+        if (!sActivation || !sDenseUnits) {
             return
         }
         logger('init model ...')
@@ -113,7 +113,7 @@ const Iris = (): JSX.Element => {
     }, [sActivation, sDenseUnits])
 
     useEffect(() => {
-        if (!sModel) {
+        if (!sModel || !sLearningRate || !sOptimizer || !sLoss) {
             return
         }
         logger('init optimizer ...')
@@ -191,18 +191,20 @@ const Iris = (): JSX.Element => {
             epochs: EPOCHS,
             validationData: validDataset,
             callbacks: {
-                onEpochEnd: (epoch, logs) => {
+                onEpochEnd: async (epoch, logs) => {
                     logger('onEpochEnd', epoch)
 
                     logs && addTrainInfo({ iteration: epoch, logs })
                     predictModel(model, sPredictSet?.xs)
+                    await tf.nextFrame()
                 },
-                onBatchEnd: () => {
+                onBatchEnd: async () => {
                     if (stopRef.current) {
                         logger('onBatchEnd Checked stop', stopRef.current)
                         setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
+                    await tf.nextFrame()
                 }
             }
         }).then(

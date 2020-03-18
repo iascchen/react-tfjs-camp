@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs'
-import { IMAGE_H, IMAGE_W } from './data'
+import { IMAGE_H, IMAGE_W } from './dataCore'
 
 export const addCovDropoutLayers = (model: tf.Sequential): void => {
     model.add(tf.layers.conv2d({

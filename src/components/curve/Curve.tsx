@@ -8,6 +8,7 @@ import { logger, loggerError, STATUS } from '../../utils'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import ModelInfo from '../common/tensor/ModelInfo'
+
 import CurveVis from './CurveVis'
 
 const { Option } = Select
@@ -46,7 +47,7 @@ const Curve = (): JSX.Element => {
 
     // General
     const [sTfBackend, setTfBackend] = useState<string>()
-    const statusRef = useRef<STATUS>(STATUS.INIT)
+    const [sStatus, setStatus] = useState<STATUS>()
 
     // Data
     const [sCurveParams, setCurveParams] = useState<number[] | string>(INIT_PARAMS)
@@ -70,7 +71,6 @@ const Curve = (): JSX.Element => {
 
     const [formData] = Form.useForm()
     const [formModel] = Form.useForm()
-    const [formTrain] = Form.useForm()
 
     /***********************
      * useCallback
@@ -106,7 +106,6 @@ const Curve = (): JSX.Element => {
         }
 
         model.add(tf.layers.dense({ units: 1 }))
-
         setModel(model)
 
         return () => {
@@ -162,7 +161,7 @@ const Curve = (): JSX.Element => {
             return
         }
 
-        statusRef.current = STATUS.TRAINING
+        setStatus(STATUS.TRAINING)
         stopRef.current = false
 
         model.fit(trainSet.xs as tf.Tensor, trainSet.ys as tf.Tensor, {
@@ -180,14 +179,14 @@ const Curve = (): JSX.Element => {
 
                     if (stopRef.current) {
                         logger('Checked stop', stopRef.current)
-                        statusRef.current = STATUS.STOPPED
+                        setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
                 }
             }
         }).then(
             () => {
-                statusRef.current = STATUS.TRAINED
+                setStatus(STATUS.TRAINED)
             },
             loggerError
         )
@@ -224,7 +223,7 @@ const Curve = (): JSX.Element => {
         setCurveParams([a, b, c])
     }
 
-    const handleModelChange = (): void => {
+    const handleModelParamsChange = (): void => {
         const values = formModel.getFieldsValue()
         // logger('handleSuperParamsChange', values)
         const { layers, activation, units } = values
@@ -317,8 +316,8 @@ const Curve = (): JSX.Element => {
                 <div className='centerContainer' style={{ margin: '16px' }}>
                     <Button type='primary' onClick={handlePredict}> Validate </Button>
                 </div>
-                <div>trained epoches: {sTrainStatusStr} </div>
-                <div>evaluate loss: {sTestV?.dataSync().join(' , ')}</div>
+                <div>Trained epoches: {sTrainStatusStr} </div>
+                <div>Evaluate loss: {sTestV?.dataSync().join(' , ')}</div>
             </Card>
         )
     }
@@ -326,7 +325,7 @@ const Curve = (): JSX.Element => {
     const modelAdjustCard = (): JSX.Element => {
         return (
             <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} form={formModel} onFieldsChange={handleModelChange} initialValues={{
+                <Form {...layout} form={formModel} onFieldsChange={handleModelParamsChange} initialValues={{
                     layers: 2,
                     units: 4,
                     activation: 'sigmoid'
@@ -352,7 +351,7 @@ const Curve = (): JSX.Element => {
     const trainAdjustCard = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
+                <Form {...layout} onFinish={handleTrain} initialValues={{
                     learningRate: 0.03
                 }}>
                     <Form.Item name='learningRate' label='Learning Rate'>
@@ -367,7 +366,8 @@ const Curve = (): JSX.Element => {
                         <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
-                        <div>Status: {statusRef.current}</div>
+                        <div>Status: {sStatus}</div>
+                        <div>Backend: {sTfBackend}</div>
                     </Form.Item>
                 </Form>
             </Card>
@@ -398,7 +398,6 @@ const Curve = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Model' style={{ margin: '8px' }} size='small'>
                             {sModel ? <ModelInfo model={sModel}/> : ''}
-                            <div>Backend: {sTfBackend}</div>
                         </Card>
                     </Col>
                 </Row>

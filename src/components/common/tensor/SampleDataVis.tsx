@@ -193,7 +193,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
 
     return (
         <div>
-            Accuracy = {(acc * 100).toFixed(0) + '%'}
+            {pData && <span>Accuracy = {(acc * 100).toFixed(0) + '%'}</span>}
             <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize ?? MAX_SAMPLES_COUNT }}/>
         </div>
     )

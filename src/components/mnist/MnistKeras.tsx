@@ -2,20 +2,20 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Row, Select, Tabs } from 'antd'
 
+import { layout, tailLayout } from '../../constant'
+import { ILayerSelectOption, ITrainInfo, logger, STATUS } from '../../utils'
 import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
+import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 
-import { layout, tailLayout } from '../../constant'
-import { ILayerSelectOption, ITrainInfo, logger, STATUS } from '../../utils'
 import { MnistGzDataset } from './dataGz'
 import { MnistCoreDataset } from './dataCore'
 import { addCovDropoutLayers, addDenseLayers, addCovPoolingLayers } from './model'
-import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -42,7 +42,7 @@ const MnistKeras = (): JSX.Element => {
 
     // General
     const [sTfBackend, setTfBackend] = useState<string>()
-    const statusRef = useRef<STATUS>(STATUS.INIT)
+    const [sStatus, setStatus] = useState<STATUS>()
     const [sErrors, setErrors] = useState()
 
     // Data
@@ -129,7 +129,7 @@ const MnistKeras = (): JSX.Element => {
     useEffect(() => {
         logger('init data set ...')
 
-        statusRef.current = STATUS.LOADING
+        setStatus(STATUS.LOADING)
 
         let mnistDataset: MnistGzDataset | MnistCoreDataset
         if (sDataSourceName === 'Gz') {
@@ -148,7 +148,7 @@ const MnistKeras = (): JSX.Element => {
                 setTrainSet(tSet)
                 setTestSet(vSet)
 
-                statusRef.current = STATUS.LOADED
+                setStatus(STATUS.LOADED)
             },
             (error) => {
                 logger(error)
@@ -193,7 +193,7 @@ const MnistKeras = (): JSX.Element => {
             return
         }
 
-        statusRef.current = STATUS.TRAINING
+        setStatus(STATUS.TRAINING)
         stopRef.current = false
 
         const beginMs = performance.now()
@@ -216,7 +216,7 @@ const MnistKeras = (): JSX.Element => {
                 onBatchEnd: async (batch, logs) => {
                     trainBatchCount++
                     logs && addTrainInfo({ iteration: iteration++, logs })
-                    if (batch % 50 === 0) {
+                    if (batch % 10 === 0) {
                         logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
                         predictModel(model, validDataset.xs as tf.Tensor)
                     }
@@ -224,44 +224,27 @@ const MnistKeras = (): JSX.Element => {
 
                     if (stopRef.current) {
                         logger('Checked stop', stopRef.current)
-                        statusRef.current = STATUS.STOPPED
+                        setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
                 }
             }
         }).then(
             () => {
-                statusRef.current = STATUS.TRAINED
+                setStatus(STATUS.TRAINED)
 
                 const secSpend = (performance.now() - beginMs) / 1000
                 logger(`Spend : ${secSpend.toString()}s`)
             },
             (error) => {
-                statusRef.current = STATUS.STOPPED
+                setStatus(STATUS.STOPPED)
                 setErrors(error)
             }
         )
     }
 
-    const evaluateModel = (_model: tf.LayersModel, _validDataset: tf.TensorContainerObject): void => {
-        if (!_model || !_validDataset) {
-            return
-        }
-        const evalOutput = _model.evaluate(_validDataset.xs as tf.Tensor, _validDataset.ys as tf.Tensor) as tf.Tensor[]
-        logger(`Final evaluate Loss: ${evalOutput[0].dataSync()[0].toFixed(3)} %`)
-        logger(`Final evaluate Accuracy: ${evalOutput[1].dataSync()[0].toFixed(3)} %`)
-    }
-
     const addTrainInfo = (info: ITrainInfo): void => {
         setLogMsg(info)
-    }
-
-    const handleEvaluate = (): void => {
-        if (!sModel || !sTestSet) {
-            return
-        }
-        // Evaluate the model using the data.
-        evaluateModel(sModel, sTestSet)
     }
 
     const handleDataSourceChange = (value: string): void => {
@@ -284,7 +267,6 @@ const MnistKeras = (): JSX.Element => {
         }
         // logger('handleDrawSubmit', data.shape)
         const pred = tf.tidy(() => sModel.predict(data)) as tf.Tensor
-        // logger('handleDrawSubmit', pred.dataSync())
         setDrawPred(pred)
     }
 
@@ -310,16 +292,6 @@ const MnistKeras = (): JSX.Element => {
         stopRef.current = true
     }
 
-    const handleWeightSave = (): void => {
-        logger('handleWeightSave')
-        // stopRef.current = true
-    }
-
-    const handleWeightLoad = (): void => {
-        logger('handleWeightLoad')
-        // stopRef.current = true
-    }
-
     const handleTabChange = (current: number): void => {
         setTabCurrent(current)
     }
@@ -342,11 +314,15 @@ const MnistKeras = (): JSX.Element => {
                         </Select>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
-                        <div>Status: {statusRef.current}</div>
-                        <div>由于数据量较大，多次加载会影响程序运行效率。</div>
-                        <div style={{ color: 'red' }}>!!! 请注意 !!! 如果您是从 Github 上克隆项目，在运行之前，
-                            请先前往目录 ./public/data , 运行 download_mnist.sh 脚本，下载所需的数据。</div>
-                        <div>如果您是在 Docker 中运行，数据已经预先放在相应的目录下。</div>
+                        <div>Status: {sStatus}</div>
+                        <ul>
+                            <li><div style={{ color: 'red' }}>!!! 请注意 !!! 如果您是从 Github 上克隆项目，在运行之前，
+                            请先前往目录 ./public/data , 运行 download_mnist.sh 脚本，下载所需的数据。</div></li>
+                            <li>如果您是在 Docker 中运行，数据已经预先放在相应的目录下。</li>
+                            <li>由于数据量较大，多次加载会影响程序运行效率。</li>
+                            <li><div style={{ color: 'red' }}>如果 Train Data Set 中的图片未能正常显示，表明要加载的训练集大小超过了您的内存。
+                                您可以减少代码中 data.js 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集</div></li>
+                        </ul>
                     </Form.Item>
                 </Form>
             </Card>
@@ -397,16 +373,9 @@ const MnistKeras = (): JSX.Element => {
                         <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
-                        <div>backend: {sTfBackend}</div>
-                        <div>Status: {statusRef.current}</div>
+                        <div>Status: {sStatus}</div>
+                        <div>Backend: {sTfBackend}</div>
                         <div>Errors: {sErrors}</div>
-                    </Form.Item>
-                    <Form.Item {...tailLayout}>
-                        <Button onClick={handleWeightSave} style={{ width: '30%', margin: '0 10%' }}> Save </Button>
-                        <Button onClick={handleWeightLoad} style={{ width: '30%', margin: '0 10%' }}> Load </Button>
-                    </Form.Item>
-                    <Form.Item {...tailLayout}>
-                        <Button onClick={handleEvaluate} style={{ width: '30%', margin: '0 10%' }}> Evaluate </Button>
                     </Form.Item>
                 </Form>
             </Card>
@@ -434,7 +403,7 @@ const MnistKeras = (): JSX.Element => {
                         <Card title={`Validate Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
                             <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
                             <SampleDataVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
-                                xIsImage pageSize={5} />
+                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
                         </Card>
                     </Col>
                 </Row>
@@ -476,7 +445,7 @@ const MnistKeras = (): JSX.Element => {
                     <Col span={10}>
                         <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
                             <SampleDataVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
-                                pDataset={sPredictResult} xIsImage pageSize={10}/>
+                                pDataset={sPredictResult} xIsImage pageSize={10} sampleCount={SHOW_SAMPLE}/>
                         </Card>
                     </Col>
                     <Col span={8}>

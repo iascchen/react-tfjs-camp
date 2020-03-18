@@ -36,11 +36,10 @@ const Iris = (): JSX.Element => {
     const [sTabCurrent, setTabCurrent] = useState<number>(4)
 
     const [sTfBackend, setTfBackend] = useState<string>()
-    const statusRef = useRef<STATUS>(STATUS.INIT)
+    const [sStatus, setStatus] = useState<STATUS>()
 
     // Data
     const [sTargetEncode, setTargetEncode] = useState(ONE_HOT)
-    const [sShuffle, setShuffle] = useState(true)
 
     const [sTrainSet, setTrainSet] = useState<IDataSet>()
     const [sValidSet, setValidSet] = useState<IDataSet>()
@@ -56,12 +55,11 @@ const Iris = (): JSX.Element => {
     // Train
     const [sLearningRate, setLearningRate] = useState<number>(0.01)
     const [sOptimizer, setOptimizer] = useState<string>('Adam')
-    const [sLoss, setLoss] = useState<string>()
+    const [sLoss, setLoss] = useState<string>('categoricalCrossentropy')
     const stopRef = useRef(false)
 
     const [sTrainInfos, setTrainInfos] = useState<ITrainInfo[]>([])
 
-    const [formData] = Form.useForm()
     const [formModel] = Form.useForm()
     const [formTrain] = Form.useForm()
 
@@ -70,9 +68,12 @@ const Iris = (): JSX.Element => {
      ***********************/
 
     useEffect(() => {
-        logger('Encode data set ...')
+        if (!sTargetEncode) {
+            return
+        }
+        logger('encode dataset ...')
 
-        const [tSet, vSet] = data.getIrisData(VALIDATE_SPLIT, sTargetEncode === ONE_HOT, sShuffle)
+        const [tSet, vSet] = data.getIrisData(VALIDATE_SPLIT, sTargetEncode === ONE_HOT)
 
         // Batch datasets.
         setTrainSet(tSet.batch(BATCH_SIZE))
@@ -83,12 +84,12 @@ const Iris = (): JSX.Element => {
         setLoss(loss)
 
         return () => {
-            logger('Model Dispose')
+            logger('Encode Data Dispose')
         }
-    }, [sTargetEncode, sShuffle])
+    }, [sTargetEncode])
 
     useEffect(() => {
-        if (!sLearningRate || !sLoss) {
+        if (!sLearningRate || !sLoss || !sDenseUnits) {
             return
         }
         logger('init model ...')
@@ -103,21 +104,16 @@ const Iris = (): JSX.Element => {
             inputShape: [data.IRIS_NUM_FEATURES]
         }))
         model.add(tf.layers.dense({ units: 3, activation: 'softmax' }))
-        // _model.summary()
-
-        const optimizer = tf.train.adam(sLearningRate)
-        model.compile({ optimizer: optimizer, loss: sLoss, metrics: ['accuracy'] })
-
         setModel(model)
 
         return () => {
             logger('Model Dispose')
             model?.dispose()
         }
-    }, [sLoss, sActivation, sDenseUnits])
+    }, [sActivation, sDenseUnits])
 
     useEffect(() => {
-        if (!sLearningRate || !sModel || !sLoss || !sOptimizer) {
+        if (!sModel) {
             return
         }
         logger('init optimizer ...')
@@ -143,7 +139,7 @@ const Iris = (): JSX.Element => {
             logger('Optimizer Dispose')
             optimizer?.dispose()
         }
-    }, [sModel, sLearningRate, sOptimizer])
+    }, [sModel, sLearningRate, sOptimizer, sLoss])
 
     useEffect(() => {
         logger('init predict data set ...')
@@ -186,7 +182,7 @@ const Iris = (): JSX.Element => {
             return
         }
 
-        statusRef.current = STATUS.TRAINING
+        setStatus(STATUS.TRAINING)
         stopRef.current = false
         resetTrainInfo()
 
@@ -204,14 +200,14 @@ const Iris = (): JSX.Element => {
                 onBatchEnd: () => {
                     if (stopRef.current) {
                         logger('onBatchEnd Checked stop', stopRef.current)
-                        statusRef.current = STATUS.STOPPED
+                        setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
                 }
             }
         }).then(
             () => {
-                statusRef.current = STATUS.TRAINED
+                setStatus(STATUS.TRAINED)
 
                 const secPerEpoch = (performance.now() - beginMs) / (1000 * EPOCHS)
                 logger(secPerEpoch)
@@ -242,7 +238,12 @@ const Iris = (): JSX.Element => {
         setTrainInfos([...sTrainInfos])
     }
 
-    const handleModelChange = (): void => {
+    const handleTargetEncodeChange = (value: string): void => {
+        // logger('handleTargetEncodeChange', value)
+        setTargetEncode(value)
+    }
+
+    const handleModelParamsChange = (): void => {
         const values = formModel.getFieldsValue()
         // logger('handleSuperParamsChange', values)
         const { activation, units } = values
@@ -250,29 +251,18 @@ const Iris = (): JSX.Element => {
         setDenseUnits(units)
     }
 
-    const handleTargetEncodeChange = (): void => {
-        const values = formData.getFieldsValue()
-        logger('handleTargetEncodeChange', values)
-        const { encode, shuffle } = values
-        setTargetEncode(encode)
-        setShuffle(shuffle)
-    }
-
-    const handleLearningRateChange = (value: string): void => {
-        // logger('handleLearningRateChange', value)
-        setLearningRate(+value)
-    }
-
-    const handleOptimizerChange = (value: string): void => {
-        // logger('handleOptimizerChange', value)
-        setOptimizer(value)
+    const handleTrainParamsChange = (): void => {
+        const values = formTrain.getFieldsValue()
+        // logger('handleTrainParamsChange', value)
+        const { learningRate, optimizer } = values
+        setLearningRate(learningRate)
+        setOptimizer(optimizer)
     }
 
     const handleTrain = (): void => {
         if (!sModel || !sTrainSet || !sValidSet) {
             return
         }
-        // Train the model using the data.
         trainModel(sModel, sTrainSet, sValidSet)
     }
 
@@ -292,12 +282,9 @@ const Iris = (): JSX.Element => {
     const dataAdjustCard = (): JSX.Element => {
         return (
             <Card title='Adjust Data' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} form={formData} onFieldsChange={handleTargetEncodeChange}
-                    initialValues={{
-                        encode: ONE_HOT
-                    }}>
+                <Form {...layout} initialValues={{ encode: ONE_HOT }}>
                     <Form.Item name='encode' label='Target Encode'>
-                        <Select>
+                        <Select onChange={handleTargetEncodeChange}>
                             {TARGET_ENCODE.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
@@ -314,7 +301,7 @@ const Iris = (): JSX.Element => {
     const modelAdjustCard = (): JSX.Element => {
         return (
             <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} form={formModel} onFieldsChange={handleModelChange} initialValues={{
+                <Form {...layout} form={formModel} onFieldsChange={handleModelParamsChange} initialValues={{
                     units: 10,
                     activation: 'sigmoid'
                 }}>
@@ -336,19 +323,20 @@ const Iris = (): JSX.Element => {
     const trainAdjustCard = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
-                    learningRate: 0.01,
-                    optimizer: 'Adam'
-                }}>
+                <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
+                    initialValues={{
+                        learningRate: 0.01,
+                        optimizer: 'Adam'
+                    }}>
                     <Form.Item name='learningRate' label='Learning Rate'>
-                        <Select onChange={handleLearningRateChange}>
+                        <Select>
                             {LEARNING_RATES.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
                     </Form.Item>
                     <Form.Item name='optimizer' label='Optimizer'>
-                        <Select onChange={handleOptimizerChange}>
+                        <Select>
                             {OPTIMIZERS.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
@@ -362,7 +350,8 @@ const Iris = (): JSX.Element => {
                         <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
-                        <div>Status: {statusRef.current}</div>
+                        <div>Status: {sStatus}</div>
+                        <div>Backend: {sTfBackend}</div>
                     </Form.Item>
                 </Form>
             </Card>
@@ -396,7 +385,6 @@ const Iris = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Model' style={{ margin: '8px' }} size='small'>
                             {sModel ? <ModelInfo model={sModel}/> : ''}
-                            <div>backend: {sTfBackend}</div>
                         </Card>
                     </Col>
                 </Row>

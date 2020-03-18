@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs-core'
 import { Button, Card, Col, Form, Row, Select, Slider, Tabs } from 'antd'
 
@@ -46,15 +46,12 @@ const MnistCore = (): JSX.Element => {
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
-    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
-
     // Predict
+    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
     const [logMsg, setLogMsg] = useState<ITrainInfo>()
     const [sDrawPred, setDrawPred] = useState<tf.Tensor>()
 
     const [formTrain] = Form.useForm()
-
-    const [predictSet, setPredictSet] = useState<tf.TensorContainerObject>()
 
     /***********************
      * useEffect
@@ -83,9 +80,6 @@ const MnistCore = (): JSX.Element => {
 
                 tSet = mnistDataset.nextTrainBatch(SHOW_SAMPLE)
                 vSet = mnistDataset.nextTestBatch(SHOW_SAMPLE)
-
-                logger(tSet, vSet)
-
                 setTrainSet(tSet)
                 setTestSet(vSet)
 
@@ -102,19 +96,6 @@ const MnistCore = (): JSX.Element => {
             tf.dispose([vSet.xs, vSet.ys])
         }
     }, [sDataSourceName])
-
-    useEffect(() => {
-        logger('init predict data set ...')
-
-        const xTest = sTestSet?.xs as tf.Tensor
-        const yTest = sTestSet?.ys as tf.Tensor
-
-        const [ys] = tf.tidy(() => {
-            const ys = yTest?.argMax(-1)
-            return [ys]
-        })
-        setPredictSet({ xs: xTest, ys })
-    }, [sTestSet])
 
     /***********************
      * useEffects only for dispose
@@ -134,7 +115,7 @@ const MnistCore = (): JSX.Element => {
 
     const pushTrainingLog = (iteration: number, loss: number): void => {
         addTrainInfo({ iteration: iteration, logs: { loss } })
-        predictModel(predictSet?.xs as tf.Tensor)
+        predictModel(sTestSet?.xs as tf.Tensor)
     }
 
     const trainModel = (_dataset: MnistCoreDataset | MnistGzDataset, steps = TRAIN_STEPS,
@@ -186,10 +167,7 @@ const MnistCore = (): JSX.Element => {
 
     const handleDrawSubmit = (data: tf.Tensor): void => {
         // logger('handleDrawSubmit', data.shape)
-
-        // const pred = tf.tidy(() => sModel.predict(data)) as tf.Tensor
         const pred = modelCore.predict(data)
-        logger('handleDrawSubmit', pred.dataSync())
         setDrawPred(pred)
     }
 
@@ -272,7 +250,7 @@ const MnistCore = (): JSX.Element => {
         <AIProcessTabs title={'MNIST Core API'} current={sTabCurrent} onChange={handleTabChange}
             invisiblePanes={[AIProcessTabPanes.MODEL]} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/ai/mnist-core.md'}/>
+                <MarkdownWidget url={'/docs/ai/mnist.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Row>

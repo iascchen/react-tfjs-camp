@@ -49,9 +49,6 @@ const MnistKeras = (): JSX.Element => {
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
-    // const [sPredictSet, setPredictSet] = useState<tf.TensorContainerObject>()
-    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
-
     // Model
     const [sModelName, setModelName] = useState('cnn-dropout')
     const [sModel, setModel] = useState<tf.LayersModel>()
@@ -65,6 +62,7 @@ const MnistKeras = (): JSX.Element => {
     const stopRef = useRef(false)
 
     // Predict
+    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
     const [logMsg, setLogMsg] = useState<ITrainInfo>()
     const [sDrawPred, setDrawPred] = useState<tf.Tensor>()
 

@@ -1,15 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Card, Col, Row, Select, Tabs } from 'antd'
+import { Card, Col, Form, Row, Select, Tabs } from 'antd'
 
-import { logger, STATUS, ILayerSelectOption } from '../../utils'
-import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
+import { logger, STATUS, ILayerSelectOption, loggerError } from '../../utils'
+import { layout, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH, tailLayout } from '../../constant'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
+import { ImagenetClasses } from './ImagenetClasses'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -18,14 +19,14 @@ const MobilenetClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
-    const [sTabCurrent, setTabCurrent] = useState<number>(1)
+    const [sTabCurrent, setTabCurrent] = useState<number>(5)
 
-    const [tfBackend, setTfBackend] = useState<string>()
-    const [status, setStatus] = useState<STATUS>(STATUS.INIT)
+    const [sTfBackend, setTfBackend] = useState<string>()
+    const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
 
     const [sModel, setModel] = useState<tf.LayersModel>()
-    const [layersOption, setLayersOption] = useState<ILayerSelectOption[]>()
-    const [curLayer, setCurLayer] = useState<tf.layers.Layer>()
+    const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
+    const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
 
     const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
 
@@ -43,34 +44,32 @@ const MobilenetClassifier = (): JSX.Element => {
 
         setStatus(STATUS.LOADING)
 
-        let _model: tf.LayersModel
+        let model: tf.LayersModel
         tf.loadLayersModel(MOBILENET_MODEL_PATH).then(
             (mobilenet) => {
-                _model = mobilenet
+                model = mobilenet
 
                 // Warmup the model. This isn't necessary, but makes the first prediction
                 // faster. Call `dispose` to release the WebGL memory allocated for the return
                 // value of `predict`.
-                const _temp = _model.predict(tf.zeros([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])) as tf.Tensor
-                _temp.dispose()
+                const temp = model.predict(tf.zeros([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])) as tf.Tensor
+                temp.dispose()
 
-                setModel(_model)
+                setModel(model)
 
-                const _layerOptions: ILayerSelectOption[] = _model?.layers.map((l, index) => {
+                const layerOptions: ILayerSelectOption[] = model?.layers.map((l, index) => {
                     return { name: l.name, index }
                 })
-                setLayersOption(_layerOptions)
+                setLayersOption(layerOptions)
 
                 setStatus(STATUS.LOADED)
             },
-            (error) => {
-                logger(error)
-            }
+            loggerError
         )
 
         return () => {
             logger('Model Dispose')
-            _model?.dispose()
+            model?.dispose()
         }
     }, [])
 
@@ -83,6 +82,24 @@ const MobilenetClassifier = (): JSX.Element => {
             return
         }
         const [p] = tf.tidy(() => {
+            // let _sample = tf.image.resizeBilinear(imageTensor as tf.Tensor4D, [224, 224])
+            //
+            // const [_sampleMax] = _sample.max().dataSync()
+            // const [_sampleMin] = _sample.min().dataSync()
+            // logger('_sampleMax', _sampleMax, _sampleMin)
+            // if (_sampleMax > 1) {
+            //     logger('[0, 255]')
+            //     // const offset = tf.scalar(127.5)
+            //     // Normalize the image from [0, 255] to [-1, 1].
+            //     _sample = _sample.sub(127.5).div(127.5)
+            // } else if (_sampleMin > 0) {
+            //     // logger('[0, 1]')
+            //     // _sample = _sample.sub(0.5).mul(2)
+            // } else if (_sampleMin < 0) {
+            //     logger('[-1, 1]')
+            //     // do nothing
+            // }
+
             const _sample = tf.image.resizeBilinear(imageTensor as tf.Tensor4D, [224, 224])
             const offset = tf.scalar(127.5)
             // Normalize the image from [0, 255] to [-1, 1].
@@ -116,27 +133,41 @@ const MobilenetClassifier = (): JSX.Element => {
 
     return (
         <AIProcessTabs title={'Mobilenet Classifier'} current={sTabCurrent} onChange={handleTabChange}
-            invisiblePanes={[AIProcessTabPanes.DATA, AIProcessTabPanes.TRAIN]}>
+            invisiblePanes={[AIProcessTabPanes.TRAIN]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/mobilenet.md'}/>
+                <MarkdownWidget url={'/docs/ai/mobilenet.md'}/>
+            </TabPane>
+            <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
+                <h2> 1000 Classes of ImageNet </h2>
+                {Object.keys(ImagenetClasses).map((key, index) => `[ ${key} : ${ImagenetClasses[index]} ], `)}
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>
                     <Col span={12}>
-                        <Card title='Mobilenet Model' style={{ margin: '8px' }} size='small'>
+                        <Card title='Mobilenet Model Info' style={{ margin: '8px' }} size='small'>
                             <TfvisModelWidget model={sModel}/>
-                            <p>status: {status}</p>
                         </Card>
                     </Col>
                     <Col span={12}>
-                        <Card title='Layers' style={{ margin: '8px' }} size='small'>
-                            Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                                {layersOption?.map((v) => {
-                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
-                                })}
-                            </Select>
-                            <TfvisLayerWidget layer={curLayer}/>
-                            <p>backend: {tfBackend}</p>
+                        <Card title='Show Layer' style={{ margin: '8px' }} size='small'>
+                            <Form {...layout} initialValues={{
+                                layer: 0
+                            }}>
+                                <Form.Item name='layer' label='Show Layer'>
+                                    <Select onChange={handleLayerChange} >
+                                        {sLayersOption?.map((v) => {
+                                            return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                        })}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item {...tailLayout}>
+                                    <p>status: {sStatus}</p>
+                                    <p>backend: {sTfBackend}</p>
+                                </Form.Item>
+                            </Form>
+                        </Card>
+                        <Card title='Layer Info' style={{ margin: '8px' }} size='small'>
+                            <TfvisLayerWidget layer={sCurLayer}/>
                         </Card>
                     </Col>
                 </Row>
@@ -144,12 +175,12 @@ const MobilenetClassifier = (): JSX.Element => {
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
                 <Row>
                     <Col span={12}>
-                        <Card title='Predict' style={{ margin: '8px' }} size='small'>
+                        <Card title='Prediction with picture' style={{ margin: '8px' }} size='small'>
                             <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
                         </Card>
                     </Col>
                     <Col span={12}>
-                        <Card title='Prediction' size='small'>
+                        <Card title='Prediction with camera' style={{ margin: '8px' }} size='small'>
                             <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
                                 isPreview />
                         </Card>

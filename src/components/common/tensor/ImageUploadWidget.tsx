@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button } from 'antd'
+import { Button, Row } from 'antd'
 
 import PicturesWall from '../../common/PicturesWall'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
@@ -13,11 +13,11 @@ interface IProps {
     onSubmit?: (tensor: tf.Tensor) => void
 }
 
-const IMAGE_SIZE = 224
+const IMAGE_SIZE = 360
 
 const ImageUploadWidget = (props: IProps): JSX.Element => {
-    const [imgViewSrc, setImgViewSrc] = useState<string>('/images/cat.jpg')
-    const [label, setLabel] = useState()
+    const [sImgViewSrc, setImgViewSrc] = useState<string>('/images/cat.jpg')
+    const [sLabel, setLabel] = useState()
 
     const imageViewRef = useRef<HTMLImageElement>(null)
 
@@ -32,8 +32,8 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
             setLabel(`${knnRet.label} : ${JSON.stringify(knnRet.confidences)}`)
         } else {
             // Imagenet Classes
-            const imagenetRet = props.prediction as tf.Tensor
-            const labelIndex = imagenetRet.arraySync() as number
+            const imagenetPred = props.prediction as tf.Tensor
+            const labelIndex = imagenetPred.arraySync() as number
             logger('labelIndex', labelIndex)
             const _label = props.labelsMap ? props.labelsMap[labelIndex] : ImagenetClasses[labelIndex]
             setLabel(`${labelIndex.toString()} : ${_label}`)
@@ -59,15 +59,18 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
 
     return (
         <>
+            <Row className='centerContainer'>
+                <img src={sImgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} />
+            </Row>
+            <Row className='centerContainer'>
+                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '8px' }}>Predict</Button>
+            </Row>
+            <Row className='centerContainer' >
+                {sLabel && (
+                    <span>{sLabel}</span>
+                )}
+            </Row>
             <PicturesWall onPreview={handlePreview} />
-            <div>Current Image</div>
-            <div><img src={imgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} /></div>
-            <div>
-                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>
-                    Predict
-                </Button>
-            </div>
-            Prediction Result : {label}
         </>
     )
 }

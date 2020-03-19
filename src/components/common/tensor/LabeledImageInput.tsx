@@ -10,8 +10,6 @@ const { Dragger } = Upload
 const MAX_FILES = 50
 
 interface IProps {
-    value?: ILabeledImageSet
-
     onChange?: (value: string) => void
 }
 
@@ -25,17 +23,6 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
     const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
 
     const labelRef = useRef<Input>(null)
-
-    useEffect(() => {
-        if (!props.value) {
-            return
-        }
-
-        const { label, imageList } = props.value
-        label && setLabel(label)
-
-        // imageList && setImageList(imageList)
-    }, [props.value])
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -128,9 +115,8 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
      ***********************/
 
     return (
-        <Card>
-            <Input onChange={handleLabelChange} defaultValue={label} ref={labelRef}
-                placeholder={'Label. such as: cat, dog...'} />
+        <Card title={ <div> Label <Input onChange={handleLabelChange} defaultValue={label} ref={labelRef}
+            placeholder={'Label. such as: cat, dog...'} /> </div> }>
             <Dragger action={handleUpload} onChange={handleImageChange} onPreview={handlePreview}
                 fileList={imageList} multiple
                 className='upload-list-inline' listType='picture-card'>

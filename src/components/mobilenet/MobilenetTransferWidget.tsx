@@ -3,15 +3,8 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Divider, message, Row, Select, Tabs } from 'antd'
 
 import {
-    arrayDispose,
-    ILabeledImage,
-    ILabeledImageFileJson,
-    ILabeledImageSet, ILabelMap,
-    ILayerSelectOption,
-    logger,
-    STATUS
+    arrayDispose, ILabeledImage, ILabeledImageFileJson, ILabeledImageSet, ILabelMap, ILayerSelectOption, logger, STATUS
 } from '../../utils'
-import { MOBILENET_IMAGE_SIZE } from '../../constant'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
@@ -20,6 +13,7 @@ import LabeledCaptureSetWidget from '../common/tensor/LabeledCaptureSetWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 
+import { MOBILENET_IMAGE_SIZE } from './mobilenetUtils'
 import { createModel, createTruncatedMobileNet } from './modelTransfer'
 import { TransferDataset } from './dataTransfer'
 

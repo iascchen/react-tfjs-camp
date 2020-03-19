@@ -36,7 +36,8 @@
   }
 }
 
-.centerContainer { display: flex; justify-content: center; }
+.centerHeader { display: flex; justify-content: center }
+.centerContainer { display: flex; justify-content: center ; margin: 8px}
 
 h1 {
   font-size: calc(10px + 2vmin);

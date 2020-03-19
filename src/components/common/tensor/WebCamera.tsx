@@ -5,16 +5,16 @@ import { Button, Row, Col } from 'antd'
 import { CameraOutlined } from '@ant-design/icons'
 
 import { IKnnPredictResult, ILabelMap, logger } from '../../../utils'
-import { MOBILENET_IMAGE_SIZE } from '../../../constant'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
+
 import TensorImageThumbWidget from './TensorImageThumbWidget'
 
 const VIDEO_SHAPE = [480, 360] // [width, height]
 const webcamConfig = {
     // facingMode: 'user',
-    centerCrop: false,
-    resizeWidth: MOBILENET_IMAGE_SIZE,
-    resizeHeight: MOBILENET_IMAGE_SIZE
+    // resizeWidth: VIDEO_SHAPE[0],
+    // resizeHeight: VIDEO_SHAPE[1],
+    centerCrop: false
 }
 
 export interface IWebCameraHandler {

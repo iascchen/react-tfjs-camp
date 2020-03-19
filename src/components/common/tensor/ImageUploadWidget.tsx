@@ -13,7 +13,7 @@ interface IProps {
     onSubmit?: (tensor: tf.Tensor) => void
 }
 
-const IMAGE_SIZE = 360
+const IMAGE_HEIGHT = 360
 
 const ImageUploadWidget = (props: IProps): JSX.Element => {
     const [sImgViewSrc, setImgViewSrc] = useState<string>('/images/cat.jpg')
@@ -60,7 +60,7 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
     return (
         <>
             <Row className='centerContainer'>
-                <img src={sImgViewSrc} height={IMAGE_SIZE} ref={imageViewRef} />
+                <img src={sImgViewSrc} height={IMAGE_HEIGHT} ref={imageViewRef} />
             </Row>
             <Row className='centerContainer'>
                 <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '8px' }}>Predict</Button>

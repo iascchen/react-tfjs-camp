@@ -11,7 +11,7 @@ import ErrorBoundary from './components/common/ErrorBoundary'
 const { Header, Sider, Footer } = Layout
 
 const App = (): JSX.Element => {
-    const [sCollapsed, setCollapsed] = useState(false)
+    const [sCollapsed, setCollapsed] = useState(true)
 
     const onCollapse = (): void => {
         setCollapsed(collapsed => !collapsed)

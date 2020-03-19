@@ -20,6 +20,7 @@ const TensorImageThumbWidget = (props: IProps): JSX.Element => {
         const width = props.width ?? DEFAULT_SIZE
         const height = props.height ?? DEFAULT_SIZE
         const sample: tf.Tensor3D = tf.tidy(() => {
+            // Normalize the image from [0, 255] to [0, 1].
             const image = props.data.toFloat().div(255)
             return tf.image.resizeBilinear(image as tf.Tensor3D, [height, width])
         })

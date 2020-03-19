@@ -2,14 +2,16 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Card, Col, Form, Row, Select, Tabs } from 'antd'
 
-import { logger, STATUS, ILayerSelectOption, loggerError } from '../../utils'
-import { layout, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH, tailLayout } from '../../constant'
+import { ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
+import { layout, tailLayout } from '../../constant'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
+
+import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH, formatImageForMobilenet } from './mobilenetUtils'
 import { ImagenetClasses } from './ImagenetClasses'
 
 const { Option } = Select
@@ -82,31 +84,7 @@ const MobilenetClassifier = (): JSX.Element => {
             return
         }
         const [p] = tf.tidy(() => {
-            // let _sample = tf.image.resizeBilinear(imageTensor as tf.Tensor4D, [224, 224])
-            //
-            // const [_sampleMax] = _sample.max().dataSync()
-            // const [_sampleMin] = _sample.min().dataSync()
-            // logger('_sampleMax', _sampleMax, _sampleMin)
-            // if (_sampleMax > 1) {
-            //     logger('[0, 255]')
-            //     // const offset = tf.scalar(127.5)
-            //     // Normalize the image from [0, 255] to [-1, 1].
-            //     _sample = _sample.sub(127.5).div(127.5)
-            // } else if (_sampleMin > 0) {
-            //     // logger('[0, 1]')
-            //     // _sample = _sample.sub(0.5).mul(2)
-            // } else if (_sampleMin < 0) {
-            //     logger('[-1, 1]')
-            //     // do nothing
-            // }
-
-            const _sample = tf.image.resizeBilinear(imageTensor as tf.Tensor4D, [224, 224])
-            const offset = tf.scalar(127.5)
-            // Normalize the image from [0, 255] to [-1, 1].
-            const normalized = _sample.sub(offset).div(offset)
-            // Reshape to a single-element batch so we can pass it to predict.
-            const batched = normalized.reshape([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])
-
+            const batched = formatImageForMobilenet(imageTensor)
             const result = sModel?.predict(batched) as tf.Tensor
             logger(result)
 
@@ -154,7 +132,7 @@ const MobilenetClassifier = (): JSX.Element => {
                                 layer: 0
                             }}>
                                 <Form.Item name='layer' label='Show Layer'>
-                                    <Select onChange={handleLayerChange} >
+                                    <Select onChange={handleLayerChange}>
                                         {sLayersOption?.map((v) => {
                                             return <Option key={v.index} value={v.index}>{v.name}</Option>
                                         })}
@@ -181,8 +159,8 @@ const MobilenetClassifier = (): JSX.Element => {
                     </Col>
                     <Col span={12}>
                         <Card title='Prediction with camera' style={{ margin: '8px' }} size='small'>
-                            <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
-                                isPreview />
+                            <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict}
+                                prediction={sPredictResult} isPreview/>
                         </Card>
                     </Col>
                 </Row>

@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs'
-import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from '../../constant'
+import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
 
 const LABEL_MULTIPLIER = [MOBILENET_IMAGE_SIZE, 1, 1, 1, 1]
 

@@ -4,12 +4,12 @@ import { Button, Card, Col, Form, Input, message, Row, Select, Tabs } from 'antd
 
 import { layout, tailLayout } from '../../constant'
 import { ILabeledImageFileJson, ILabeledImageSet, ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
-import { MOBILENET_IMAGE_SIZE } from '../../constant'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 
+import { MOBILENET_IMAGE_SIZE } from './mobilenetUtils'
 import { buildObjectDetectionModel, customLossFunction } from './modelObjDetector'
 import ObjectDetectionImageSynthesizer from './dataObjDetector'
 

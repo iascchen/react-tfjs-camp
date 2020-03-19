@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs'
-import { MOBILENET_MODEL_PATH } from '../../constant'
+import { MOBILENET_MODEL_PATH } from './mobilenetUtils'
 import { logger } from '../../utils'
 
 export const createTruncatedMobileNet = async (): Promise<tf.LayersModel> => {

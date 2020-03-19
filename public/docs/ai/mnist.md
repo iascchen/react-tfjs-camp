@@ -7,8 +7,8 @@
 * 卷积神经网络
 * MaxPooling
 * Dropout
-* Tensorflow 高级API（Keras）
-* Tensorflow 核心API（Core）
+* Tensorflow Layer Model（Keras）
+* Tensorflow 核心API（Core API）
 
 ## 问题
 

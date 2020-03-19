@@ -1,5 +1,4 @@
 import React, { useRef } from 'react'
-import * as tf from '@tensorflow/tfjs'
 import { Button, Col, Form, Row } from 'antd'
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons'
 
@@ -15,17 +14,14 @@ const formItemLayout = {
 
 export const formatDataJson = (values: any): ILabeledImageFileJson => {
     logger(values)
-    // const { keys: _keys, labeledImageList } = values
-    // const ret = _keys.map((key: number) => JSON.parse(labeledImageList[key]))
 
-    const formModel = { labeledImageSetList: values.labeledImageList }
+    const { labeledImageList } = values
+    const valuesObj = labeledImageList.map((v: any) => JSON.parse(v))
+    const formModel = { labeledImageSetList: valuesObj }
     return formModel
 }
 
 interface IProps {
-    model?: tf.LayersModel
-    prediction?: tf.Tensor
-
     onSave?: (value: any) => void
 }
 
@@ -35,7 +31,7 @@ const LabeledImageInputSet = (props: IProps): JSX.Element => {
     const [form] = Form.useForm()
 
     const handleSubmit = (values: any): void => {
-        logger(values)
+        // logger(values)
         props.onSave && props.onSave(formatDataJson(values))
     }
 

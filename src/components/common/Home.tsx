@@ -11,13 +11,13 @@ const Home = (): JSX.Element => {
             <h1>RTCamp: React Tensorflow.js Camp</h1>
             <header className='App-header'>
                 <Row>
-                    <Col span={8} className='centerContainer'>
+                    <Col span={8} className='centerHeader'>
                         <img src={reactLogo} alt='logo' style={{ width: '90%' }}/>
                     </Col>
-                    <Col span={8} className='centerContainer'>
+                    <Col span={8} className='centerHeader'>
                         <img src={tfLogo} alt='logo' style={{ width: '100%' }}/>
                     </Col>
-                    <Col span={8} className='centerContainer'>
+                    <Col span={8} className='centerHeader'>
                         <img src={tsLogo} alt='logo' style={{ width: '90%' }}/>
                     </Col>
                 </Row>

@@ -25,7 +25,6 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-// let tf // tensorflowjs module passed in for browser/node compatibility.
 
 /**
  * Generate a random color style for canvas strokes and fills.

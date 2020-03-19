@@ -1,7 +1,8 @@
 import React, { forwardRef, Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { WebcamIterator } from '@tensorflow/tfjs-data/dist/iterators/webcam_iterator'
-import { Button } from 'antd'
+import { Button, Row, Col } from 'antd'
+import { CameraOutlined } from '@ant-design/icons'
 
 import { IKnnPredictResult, ILabelMap, logger } from '../../../utils'
 import { MOBILENET_IMAGE_SIZE } from '../../../constant'
@@ -82,21 +83,18 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
         if (!sCamera) {
             return
         }
-        const img = await sCamera.capture()
-        const processedImg: tf.Tensor3D = tf.tidy(() => img.toFloat().div(255))
-        img.dispose()
-
-        props.isPreview && setPreview(processedImg)
-        return processedImg
+        return sCamera.capture()
     }
 
     const handleCapture = async (): Promise<void> => {
-        await capture()
+        const imgTensor = await capture()
+        props.isPreview && setPreview(imgTensor as tf.Tensor3D)
     }
 
     const handleSubmit = async (): Promise<void> => {
         const imgTensor = await capture()
         if (imgTensor) {
+            props.isPreview && setPreview(imgTensor)
             props.onSubmit && props.onSubmit(imgTensor)
         }
     }
@@ -107,27 +105,36 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
 
     return (
         <>
-            <div>
+            <Row className='centerContainer'>
                 <video autoPlay muted playsInline width={VIDEO_SHAPE[0]} height={VIDEO_SHAPE[1]} ref={videoRef}
                     style={{ backgroundColor: 'lightgray' }}/>
-            </div>
-            <div style={{ margin: 16 }}>
+            </Row>
+            <Row className='centerContainer'>
+                <div style={{ width: 500, padding: '8px' }}>
+                    {props.isPreview && (
+                        <Button style={{ width: '30%', margin: '0 10%' }} icon={<CameraOutlined />}
+                            onClick={handleCapture} >Capture</Button>
+                    )}
+                    <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Predict</Button>
+                </div>
+            </Row>
+            <Row >
                 {props.isPreview && (
-                    <Button onClick={handleCapture} icon='camera'
-                        style={{ width: '30%', margin: '0 10%' }}>Capture</Button>
+                    <Col span={12}>
+                        <div className='centerContainer'>Captured Images</div>
+                        <div className='centerContainer'>
+                            {sPreview && <TensorImageThumbWidget width={VIDEO_SHAPE[0] / 2} height={VIDEO_SHAPE[1] / 2}
+                                data={sPreview}/>}
+                        </div>
+                    </Col>
                 )}
-                <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Predict</Button>
-            </div>
-            {props.isPreview && (
-                <>
-                    <div>Captured Images</div>
-                    <div>
-                        {sPreview && <TensorImageThumbWidget width={VIDEO_SHAPE[0] / 2} height={VIDEO_SHAPE[1] / 2}
-                            data={sPreview}/>}
-                    </div>
-                </>
-            )}
-            Prediction Result : {sLabel}
+                {sLabel && (
+                    <Col span={12}>
+                        <div className='centerContainer'> Prediction Result </div>
+                        <div className='centerContainer' style={{ margin: '8px' }}>{sLabel}</div>
+                    </Col>
+                )}
+            </Row>
         </>
     )
 }

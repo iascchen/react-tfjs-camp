@@ -19,8 +19,9 @@ const TensorImageThumbWidget = (props: IProps): JSX.Element => {
 
         const width = props.width ?? DEFAULT_SIZE
         const height = props.height ?? DEFAULT_SIZE
-        const sample = tf.tidy(() => {
-            return tf.image.resizeBilinear(props.data, [height, width])
+        const sample: tf.Tensor3D = tf.tidy(() => {
+            const image = props.data.toFloat().div(255)
+            return tf.image.resizeBilinear(image as tf.Tensor3D, [height, width])
         })
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         tf.browser.toPixels(sample, rowCanvasRef.current).then(

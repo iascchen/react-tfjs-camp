@@ -22,6 +22,8 @@ import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 import { formatImageForMobilenet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
 import { RcFile, UploadChangeParam } from 'antd/es/upload'
 import { UploadFile } from 'antd/es/upload/interface'
+import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
+import VectorWidget from '../common/tensor/VectorWidget'
 
 const { TabPane } = Tabs
 
@@ -40,9 +42,11 @@ const MobilenetClassifier = (): JSX.Element => {
 
     const [sKnn, setKnn] = useState<knnClassifier.KNNClassifier>()
     const [sModel, setModel] = useState<tf.LayersModel>()
+    const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
 
     const [sLabeledImgs, setLabeledImgs] = useState<ILabeledImageSet[]>()
-    const [sPredictResult, setPredictResult] = useState<tf.Tensor | IKnnPredictResult>()
+    const [sPredictResult, setPredictResult] = useState<IKnnPredictResult>()
+    const [sPredictFeature, setPredictFeature] = useState<tf.Tensor>()
 
     const [sUploadingJson, setUploadingJson] = useState<UploadFile>()
     const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
@@ -79,6 +83,7 @@ const MobilenetClassifier = (): JSX.Element => {
                 _temp.dispose()
 
                 setModel(model)
+                setCurLayer(layer)
                 setStatus(STATUS.LOADED)
             },
             (error) => {
@@ -178,6 +183,7 @@ const MobilenetClassifier = (): JSX.Element => {
             const res = await sKnn?.predictClass(imgFeature, KNN_TOPK)
             // logger('handlePredict', res)
             setPredictResult(res)
+            setPredictFeature(imgFeature)
         } catch (e) {
             // logger(e)
             await message.error(e.message)
@@ -237,10 +243,11 @@ const MobilenetClassifier = (): JSX.Element => {
         const knnNumClasses = sKnn?.getNumClasses() ?? 0
         const examples = sKnn?.getClassExampleCount()
         return (<div className='centerContainer'>
-            { knnNumClasses > 0
+            { sKnn && knnNumClasses > 0
                 ? <div>
-                    <p> KNN have {knnNumClasses} classes. </p>
-                    <p> {JSON.stringify(examples)} </p>
+                    <div> KNN have {knnNumClasses} classes. </div>
+                    <div> {JSON.stringify(examples)} </div>
+                    <div> <VectorWidget data={sKnn.getClassifierDataset()} /> </div>
                 </div>
                 : <div>
                     <p>KNN not trained</p>
@@ -294,20 +301,23 @@ const MobilenetClassifier = (): JSX.Element => {
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
-                <Col span={8} offset={8}>
+                <Col span={12} offset={6}>
                     <Card title='Mobilenet' style={{ margin: '8px' }} size='small'>
-                        <div className='centerContainer'>预训练 Mobilenet 模型 : {sStatus}</div>
-                    </Card>
-                    <Divider orientation={'center'}>Mobilenet 的 conv_preds 层输出</Divider>
-                    <Divider orientation={'center'}>作为 KNN 的样本输入</Divider>
-                    <Card title='KNN 样本库' style={{ margin: '8px' }} size='small'>
-                        {knnInfo()}
+                        <h3 className='centerContainer'>预训练 Mobilenet 模型 : {sStatus}</h3>
+                        <h3 className='centerContainer'>Mobilenet 的 conv_preds 层输出</h3>
+                        <Card title='conv_preds Layer Info' style={{ margin: '8px' }} size='small'>
+                            <TfvisLayerWidget layer={sCurLayer}/>
+                        </Card>
+                        <h3 className='centerContainer'>作为 KNN 的样本输入</h3>
+                        <Card title='KNN 样本库' style={{ margin: '8px' }} size='small'>
+                            {knnInfo()}
+                        </Card>
                     </Card>
                 </Col>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={8}>
+                    <Col span={12}>
                         <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
                             <Button onClick={handleKnnReset} style={{ width: '30%', margin: '0 10%' }}> Reset
                                     Model </Button>
@@ -317,7 +327,7 @@ const MobilenetClassifier = (): JSX.Element => {
                             <p>backend: {sTfBackend}</p>
                         </Card>
                     </Col>
-                    <Col span={16}>
+                    <Col span={12}>
                         {dataTrainSetCard()}
                     </Col>
                 </Row>
@@ -334,6 +344,9 @@ const MobilenetClassifier = (): JSX.Element => {
                             <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict}
                                 prediction={sPredictResult} isPreview/>
                         </Card>
+                    </Col>
+                    <Col span={24}>
+                        {sKnn && <VectorWidget data={sKnn.getClassifierDataset()} predFeature={sPredictFeature}/>}
                     </Col>
                 </Row>
             </TabPane>

@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import * as knnClassifier from '@tensorflow-models/knn-classifier'
-import { Button, Card, Col, Divider, message, Row, Tabs, Upload } from 'antd'
+import { Button, Card, Col, message, Row, Tabs, Upload } from 'antd'
 import { SaveOutlined, UploadOutlined } from '@ant-design/icons'
 
 import {
@@ -10,7 +10,7 @@ import {
     IKnnPredictResult, ILabeledImage,
     ILabeledImageFileJson,
     ILabeledImageSet,
-    logger,
+    logger, loggerError,
     STATUS
 } from '../../utils'
 import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
@@ -86,9 +86,7 @@ const MobilenetClassifier = (): JSX.Element => {
                 setCurLayer(layer)
                 setStatus(STATUS.LOADED)
             },
-            (error) => {
-                logger(error)
-            }
+            loggerError
         )
 
         return () => {
@@ -318,17 +316,18 @@ const MobilenetClassifier = (): JSX.Element => {
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
                     <Col span={12}>
+                        {dataTrainSetCard()}
+                    </Col>
+                    <Col span={12}>
                         <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
+                            <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}>
+                                Train
+                            </Button>
                             <Button onClick={handleKnnReset} style={{ width: '30%', margin: '0 10%' }}> Reset
-                                    Model </Button>
-                            <Button onClick={handleTrain} type='primary'
-                                style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                                Model </Button>
                             {knnInfo()}
                             <p>backend: {sTfBackend}</p>
                         </Card>
-                    </Col>
-                    <Col span={12}>
-                        {dataTrainSetCard()}
                     </Col>
                 </Row>
             </TabPane>
@@ -336,13 +335,12 @@ const MobilenetClassifier = (): JSX.Element => {
                 <Row>
                     <Col span={12}>
                         <Card title='Prediction with picture' style={{ margin: '8px' }} size='small'>
-                            <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
+                            <ImageUploadWidget onSubmit={handlePredict} prediction={sPredictResult}/>
                         </Card>
                     </Col>
                     <Col span={12}>
                         <Card title='Prediction with camera' style={{ margin: '8px' }} size='small'>
-                            <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict}
-                                prediction={sPredictResult} isPreview/>
+                            <WebCamera ref={webcamRef} onSubmit={handlePredict} prediction={sPredictResult} isPreview/>
                         </Card>
                     </Col>
                     <Col span={24}>

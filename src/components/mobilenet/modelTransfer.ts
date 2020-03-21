@@ -13,7 +13,7 @@ export const createTruncatedMobileNet = async (): Promise<tf.LayersModel> => {
     return truncatedMobileNet
 }
 
-export const createModel = (truncatedMobileNet: tf.LayersModel, outputClasses: number, learningRate = 0.15, denseUnits = 10): tf.LayersModel => {
+export const createModel = (truncatedMobileNet: tf.LayersModel, outputClasses: number, denseUnits = 10): tf.LayersModel => {
     const inputShape = truncatedMobileNet.outputs[0].shape.slice(1)
     logger('inputShape', inputShape)
     const modelWillTrained = tf.sequential({
@@ -21,33 +21,19 @@ export const createModel = (truncatedMobileNet: tf.LayersModel, outputClasses: n
             // Flattens the input to a vector so we can use it in a dense layer. While
             // technically a layer, this only performs a reshape (and has no training
             // parameters).
-
             tf.layers.flatten({ inputShape }),
+
             // Layer 1.
             tf.layers.dense({
-                units: denseUnits,
-                activation: 'relu',
-                kernelInitializer: 'varianceScaling',
-                useBias: true
+                units: denseUnits, activation: 'relu', kernelInitializer: 'varianceScaling', useBias: true
             }),
+
             // Layer 2. The number of units of the last layer should correspond
             // to the number of classes we want to predict.
             tf.layers.dense({
-                units: outputClasses,
-                kernelInitializer: 'varianceScaling',
-                useBias: false,
-                activation: 'softmax'
+                units: outputClasses, kernelInitializer: 'varianceScaling', useBias: false, activation: 'softmax'
             })
         ]
     })
-
-    // Creates the optimizers which drives training of the model.
-    const optimizer = tf.train.adam(learningRate)
-    // We use categoricalCrossentropy which is the loss function we use for
-    // categorical classification which measures the error between our predicted
-    // probability distribution over classes (probability that an input is of each
-    // class), versus the label (100% probability in the true class)>
-    modelWillTrained.compile({ optimizer: optimizer, loss: 'categoricalCrossentropy' })
-
     return modelWillTrained
 }

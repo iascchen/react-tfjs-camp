@@ -4,13 +4,15 @@ import { WebcamIterator } from '@tensorflow/tfjs-data/dist/iterators/webcam_iter
 import { Button, Row, Col } from 'antd'
 import { CameraOutlined } from '@ant-design/icons'
 
-import { IKnnPredictResult, ILabelMap, logger } from '../../../utils'
+import {IKnnPredictResult, ILabelMap, logger, loggerError} from '../../../utils'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
 
 import TensorImageThumbWidget from './TensorImageThumbWidget'
 
 const VIDEO_SHAPE = [480, 360] // [width, height]
-const webcamConfig = {
+const IMAGE_HEIGHT = 86
+
+const DEFAULT_CONFIG = {
     // facingMode: 'user',
     // resizeWidth: VIDEO_SHAPE[0],
     // resizeHeight: VIDEO_SHAPE[1],
@@ -22,10 +24,10 @@ export interface IWebCameraHandler {
 }
 
 interface IProps {
-    model?: tf.LayersModel
     prediction?: tf.Tensor | IKnnPredictResult
     isPreview?: boolean
     labelsMap?: ILabelMap
+    config?: tf.data.WebcamConfig
 
     onSubmit?: (tensor: tf.Tensor) => void
 }
@@ -47,18 +49,20 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
         }
 
         let _cam: WebcamIterator
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        tf.data.webcam(videoRef.current, webcamConfig).then(
+
+        const config = props.config ? props.config : DEFAULT_CONFIG
+        tf.data.webcam(videoRef.current, config).then(
             (cam) => {
                 _cam = cam
                 setCamera(cam)
-            }
+            },
+            loggerError
         )
 
         return () => {
             _cam?.stop()
         }
-    }, [videoRef])
+    }, [videoRef, props.config])
 
     useEffect(() => {
         if (!props.prediction) {
@@ -115,7 +119,9 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
                         <Button style={{ width: '30%', margin: '0 10%' }} icon={<CameraOutlined />}
                             onClick={handleCapture} >Capture</Button>
                     )}
-                    <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Predict</Button>
+                    {props.onSubmit && (
+                        <Button onClick={handleSubmit} type='primary' style={{ width: '30%', margin: '0 10%' }}>Predict</Button>
+                    )}
                 </div>
             </Row>
             <Row >
@@ -123,8 +129,7 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
                     <Col span={12}>
                         <div className='centerContainer'>Captured Images</div>
                         <div className='centerContainer'>
-                            {sPreview && <TensorImageThumbWidget width={VIDEO_SHAPE[0] / 2} height={VIDEO_SHAPE[1] / 2}
-                                data={sPreview}/>}
+                            {sPreview && <TensorImageThumbWidget height={IMAGE_HEIGHT} data={sPreview}/>}
                         </div>
                     </Col>
                 )}

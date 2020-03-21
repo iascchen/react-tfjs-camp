@@ -1,26 +1,13 @@
 import React, { useRef } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Col, Form, Row } from 'antd'
+import { Button, Col, Form, message, Row } from 'antd'
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons'
 
-import { ILabeledImage, ILabeledImageFileJson, logger } from '../../../utils'
+import { formItemLayout } from '../../../constant'
+import { ILabeledImage, logger } from '../../../utils'
 import LabeledCaptureInput from './LabeledCaptureInput'
 
-const formItemLayout = {
-    wrapperCol: {
-        xs: { span: 24 },
-        sm: { span: 24 }
-    }
-}
-
-export const formatDataJson = (values: any): ILabeledImageFileJson => {
-    logger(values)
-    const formModel = { labeledImageSetList: values.labeledImageList }
-    return formModel
-}
-
 interface IProps {
-    model?: tf.LayersModel
     prediction?: tf.Tensor
 
     onSave?: (value: any) => void
@@ -28,16 +15,18 @@ interface IProps {
 }
 
 const LabeledCaptureInputSet = (props: IProps): JSX.Element => {
-    // const [dyncId, setDyncId] = useState<number>(0)
-    // const [keys] = useState<number[]>([])
-
     const downloadRef = useRef<HTMLAnchorElement>(null)
-
     const [form] = Form.useForm()
 
     const handleSubmit = (values: any): void => {
         logger('handleSubmit', values)
-        props.onSave && props.onSave(formatDataJson(values))
+        const labeledList = values.labeledImageList
+        if (labeledList.length >= 2) {
+            props.onSave && props.onSave({ labeledImageSetList: labeledList })
+        } else {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            message.error('At least have 2 lebels!')
+        }
     }
 
     const handleCapture = async (label: string): Promise<ILabeledImage | void> => {
@@ -59,8 +48,8 @@ const LabeledCaptureInputSet = (props: IProps): JSX.Element => {
                 <Form.List name='labeledImageList'>
                     {(fields, { add, remove }) => {
                         return (<>
-                            {fields.map((field, index) => (
-                                <Form.Item required={false} key={index} {...formItemLayout} >
+                            {fields.map((field) => (
+                                <Form.Item required={false} key={field.key} {...formItemLayout} >
                                     <Row>
                                         <Col span={22}>
                                             <Form.Item {...field}>

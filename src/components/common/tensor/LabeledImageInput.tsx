@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useReducer, useRef, useState } from 'react'
+import React, { ChangeEvent, useEffect, useReducer, useState } from 'react'
 import { Card, Input, message, Modal, Upload } from 'antd'
 import { InboxOutlined } from '@ant-design/icons'
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/es/upload/interface'
@@ -21,8 +21,6 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
     const [imageList, setImageList] = useState<UploadFile[]>([])
 
     const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
-
-    const labelRef = useRef<Input>(null)
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -116,8 +114,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
 
     return (
         <Card size='small'>
-            <Input onChange={handleLabelChange} defaultValue={label} ref={labelRef}
-                placeholder={'Label. such as: cat, dog...'} />
+            <Input onChange={handleLabelChange} placeholder={'Label. such as: cat, dog...'} />
             <Dragger action={handleUpload} onChange={handleImageChange} onPreview={handlePreview}
                 fileList={imageList} multiple
                 className='upload-list-inline' listType='picture-card'>

@@ -172,9 +172,3 @@ export const applyColorMap = (x: tf.Tensor4D): tf.Tensor => {
         return buffer.toTensor()
     })
 }
-
-// module.exports = {
-//     applyColorMap,
-//     // readImageTensorFromFile,
-//     // writeImageTensorToFile
-// }

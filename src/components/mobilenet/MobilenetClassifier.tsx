@@ -154,13 +154,12 @@ const MobilenetClassifier = (): JSX.Element => {
                 <Row>
                     <Col span={12}>
                         <Card title='Prediction with picture' style={{ margin: '8px' }} size='small'>
-                            <ImageUploadWidget model={sModel} onSubmit={handlePredict} prediction={sPredictResult}/>
+                            <ImageUploadWidget onSubmit={handlePredict} prediction={sPredictResult}/>
                         </Card>
                     </Col>
                     <Col span={12}>
                         <Card title='Prediction with camera' style={{ margin: '8px' }} size='small'>
-                            <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict}
-                                prediction={sPredictResult} isPreview/>
+                            <WebCamera ref={webcamRef} onSubmit={handlePredict} prediction={sPredictResult} isPreview/>
                         </Card>
                     </Col>
                 </Row>

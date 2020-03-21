@@ -1,19 +1,33 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Divider, message, Row, Select, Tabs } from 'antd'
+import { Button, Card, Col, Form, message, Row, Select, Slider, Tabs, Upload } from 'antd'
+import { SaveOutlined, UploadOutlined } from '@ant-design/icons'
+import { RcFile, UploadChangeParam } from 'antd/es/upload'
+import { UploadFile } from 'antd/es/upload/interface'
 
 import {
-    arrayDispose, ILabeledImage, ILabeledImageFileJson, ILabeledImageSet, ILabelMap, ILayerSelectOption, logger, STATUS
+    checkUploadDone,
+    getUploadFileArray,
+    getUploadFileBase64,
+    ILabeledImage,
+    ILabeledImageFileJson,
+    ILabeledImageSet,
+    ILabelMap,
+    ILayerSelectOption,
+    logger, loggerError,
+    STATUS
 } from '../../utils'
+import { layout, tailLayout } from '../../constant'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import LabeledCaptureInputSet from '../common/tensor/LabeledCaptureInputSet'
-import LabeledCaptureSetWidget from '../common/tensor/LabeledCaptureSetWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
+import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
+import TensorImageThumbWidget from '../common/tensor/TensorImageThumbWidget'
 
-import { MOBILENET_IMAGE_SIZE } from './mobilenetUtils'
+import { decodeImageTensor, encodeImageTensor, formatImageForMobilenet, MOBILENET_IMAGE_SIZE } from './mobilenetUtils'
 import { createModel, createTruncatedMobileNet } from './modelTransfer'
 import { TransferDataset } from './dataTransfer'
 
@@ -23,38 +37,63 @@ const tfvis = require('@tensorflow/tfjs-vis')
 const { Option } = Select
 const { TabPane } = Tabs
 
+const IMAGE_HEIGHT = 100
+const MOBLILENET_CONFIG = {
+    // facingMode: 'user',
+    resizeWidth: MOBILENET_IMAGE_SIZE,
+    resizeHeight: MOBILENET_IMAGE_SIZE,
+    centerCrop: false
+}
+
+// Model
+const DENSE_UNITS = [10, 100, 200]
+
+// Train
+const BATCH_SIZES = [32, 64]
+const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03]
+
 const MobilenetTransferWidget = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(1)
+    const [sTabCurrent, setTabCurrent] = useState<number>(4)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
-
-    const [sOutputClasses, setOutputClasses] = useState<number>(4)
-    const [sLearningRate, setLearningRate] = useState<number>(0.0001)
-    const [sDenseUnits, setDenseUnits] = useState<number>(100)
 
     const [sTruncatedModel, setTruncatedModel] = useState<tf.LayersModel>()
     const [sModel, setModel] = useState<tf.LayersModel>()
     const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
     const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
 
+    // Data
+    const [waitingPush, forceWaitingPush] = useReducer((x: number) => x + 1, 0)
+    const [sUploadingJson, setUploadingJson] = useState<UploadFile>()
     const [sLabeledImgs, setLabeledImgs] = useState<ILabeledImageSet[]>()
-    const [sBatchSize, setBatchSize] = useState<number>(0.4)
-    const [sEpochs, setEpochs] = useState<number>(10)
-
+    const [sImgUid, genImgUid] = useReducer((x: number) => x + 1, 0)
+    const [sLabelsMap, setLabelsMap] = useState<ILabelMap>()
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
 
-    const [sImgUid, genImgUid] = useReducer((x: number) => x + 1, 0)
+    // Model
+    const [sDenseUnits, setDenseUnits] = useState<number>(100)
+    const [sOutputClasses, setOutputClasses] = useState<number>(4)
 
-    const [sLabelsMap, setLabelsMap] = useState<ILabelMap>()
+    // Train
+    const [sEpochs, setEpochs] = useState<number>(10)
+    const [sBatchSize, setBatchSize] = useState<number>(128)
+    const [sLearningRate, setLearningRate] = useState<number>(0.001)
+
+    // Predict
     const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
 
     const webcamRef = useRef<IWebCameraHandler>(null)
+    const webcamRef2 = useRef<IWebCameraHandler>(null)
     const historyRef = useRef<HTMLDivElement>(null)
+    const downloadRef = useRef<HTMLAnchorElement>(null)
+
+    const [formModel] = Form.useForm()
+    const [formTrain] = Form.useForm()
 
     /***********************
      * useEffect
@@ -68,15 +107,14 @@ const MobilenetTransferWidget = (): JSX.Element => {
         tf.backend()
         setTfBackend(tf.getBackend())
 
-        let _truncatedModel: tf.LayersModel
+        let truncatedModel: tf.LayersModel
         createTruncatedMobileNet().then(
             (result) => {
-                _truncatedModel = result
+                truncatedModel = result
                 setTruncatedModel(result)
                 setStatus(STATUS.LOADED)
             },
             (e) => {
-                logger(e)
                 // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 message.error(e.message)
             }
@@ -84,33 +122,34 @@ const MobilenetTransferWidget = (): JSX.Element => {
 
         return () => {
             logger('TruncatedModel Dispose')
-            _truncatedModel?.dispose()
+            truncatedModel?.dispose()
         }
     }, [])
 
     useEffect(() => {
-        logger('init model ...')
-        if (!sTruncatedModel) {
+        if (!sUploadingJson) {
             return
         }
 
-        setStatus(STATUS.LOADING)
+        const timer = setInterval(async (): Promise<void> => {
+            logger('Waiting upload...')
+            if (checkUploadDone([sUploadingJson]) > 0) {
+                forceWaitingPush()
+            } else {
+                clearInterval(timer)
 
-        const _model = createModel(sTruncatedModel, sOutputClasses, sLearningRate, sDenseUnits)
-        setModel(_model)
-
-        const _layerOptions: ILayerSelectOption[] = _model?.layers.map((l, index) => {
-            return { name: l.name, index }
-        })
-        setLayersOption(_layerOptions)
-
-        setStatus(STATUS.LOADED)
+                const buffer = await getUploadFileArray(sUploadingJson.originFileObj)
+                const fileJson: ILabeledImageFileJson = JSON.parse(buffer.toString())
+                const decoded = decodeImageTensor(fileJson.labeledImageSetList)
+                setLabeledImgs(decoded)
+                setUploadingJson(undefined)
+            }
+        }, 10)
 
         return () => {
-            logger('Model Dispose')
-            _model?.dispose()
+            clearInterval(timer)
         }
-    }, [sTruncatedModel, sOutputClasses, sLearningRate, sDenseUnits])
+    }, [waitingPush])
 
     useEffect(() => {
         if (!sLabeledImgs || !sTruncatedModel) {
@@ -138,6 +177,50 @@ const MobilenetTransferWidget = (): JSX.Element => {
         }
     }, [sLabeledImgs])
 
+    useEffect(() => {
+        logger('init model ...')
+        if (!sTruncatedModel) {
+            return
+        }
+
+        setStatus(STATUS.LOADING)
+
+        const _model = createModel(sTruncatedModel, sOutputClasses, sDenseUnits)
+        setModel(_model)
+
+        const _layerOptions: ILayerSelectOption[] = _model?.layers.map((l, index) => {
+            return { name: l.name, index }
+        })
+        setLayersOption(_layerOptions)
+
+        setStatus(STATUS.LOADED)
+
+        return () => {
+            logger('Model Dispose')
+            _model?.dispose()
+        }
+    }, [sTruncatedModel, sOutputClasses, sDenseUnits])
+
+    useEffect(() => {
+        logger('compile model ...')
+        if (!sModel) {
+            return
+        }
+
+        // Creates the optimizers which drives training of the model.
+        const optimizer = tf.train.adam(sLearningRate)
+        // We use categoricalCrossentropy which is the loss function we use for
+        // categorical classification which measures the error between our predicted
+        // probability distribution over classes (probability that an input is of each
+        // class), versus the label (100% probability in the true class)>
+        sModel.compile({ optimizer: optimizer, loss: 'categoricalCrossentropy' })
+
+        return () => {
+            logger('Model Dispose')
+            optimizer?.dispose()
+        }
+    }, [sModel, sLearningRate])
+
     /***********************
      * Functions
      ***********************/
@@ -150,39 +233,21 @@ const MobilenetTransferWidget = (): JSX.Element => {
 
         setStatus(STATUS.TRAINING)
 
-        // We parameterize batch size as a fraction of the entire dataset because the
-        // number of examples that are collected depends on how many examples the user
-        // collects. This allows us to have a flexible batch size.
-        const _tensorX = _trainSet.xs as tf.Tensor
-        const _tensorY = _trainSet.ys as tf.Tensor
-        const batchSize = Math.floor(_tensorX.shape[0] * sBatchSize)
-        if (!(batchSize > 0)) {
-            throw new Error('Batch size is 0 or NaN. Please choose a non-zero fraction.')
-        }
-
-        // const surface = { name: 'Logs', tab: 'Train Logs' }
         // Train the model! Model.fit() will shuffle xs & ys so we don't have to.
-        sModel.fit(_tensorX, _tensorY, {
-            batchSize,
+        sModel.fit(_trainSet.xs as tf.Tensor, _trainSet.ys as tf.Tensor, {
             epochs: sEpochs,
-            callbacks: tfvis.show.fitCallbacks(historyRef?.current, ['loss', 'acc', 'val_loss', 'val_acc'])
+            batchSize: sBatchSize,
+            callbacks: tfvis.show.fitCallbacks(historyRef?.current, ['loss', 'acc'])
         }).then(
             () => {
                 setStatus(STATUS.TRAINED)
             },
-            () => {
-                // ignore
-            })
+            loggerError
+        )
     }
 
     const handleTrain = (): void => {
         sTrainSet && train(sTrainSet)
-    }
-
-    const handleLoadModel = (): void => {
-        // TODO : Load saved model
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        message.info('TODO: Not Implemented')
     }
 
     const handlePredict = (imgTensor: tf.Tensor): void => {
@@ -191,16 +256,16 @@ const MobilenetTransferWidget = (): JSX.Element => {
         }
         setStatus(STATUS.PREDICTING)
         // console.log('handlePredict', imgTensor)
-        const [imgFeature] = tf.tidy(() => {
-            const batched = imgTensor.reshape([1, MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE, 3])
+        const [imgPred] = tf.tidy(() => {
+            const batched = formatImageForMobilenet(imgTensor)
             const embeddings = sTruncatedModel?.predict(batched)
             const result = sModel?.predict(embeddings as tf.Tensor) as tf.Tensor
-            const imgFeature = result.argMax(-1)
-            return [imgFeature]
+            const imgPred = result.argMax(-1)
+            return [imgPred]
         })
-        logger('Predict', imgFeature)
+        logger('Predict', imgPred)
         setStatus(STATUS.PREDICTED)
-        setPredictResult(imgFeature)
+        setPredictResult(imgPred)
     }
 
     const handleLayerChange = (value: number): void => {
@@ -214,11 +279,7 @@ const MobilenetTransferWidget = (): JSX.Element => {
 
         const labeledImageSetList = value.labeledImageSetList
         setLabeledImgs(labeledImageSetList)
-    }
-
-    const handleLoadJson = (values: ILabeledImageSet[]): void => {
-        sLabeledImgs && arrayDispose(sLabeledImgs)
-        setLabeledImgs(values)
+        setStatus(STATUS.LOADED)
     }
 
     const handleLabeledCapture = async (label: string): Promise<ILabeledImage | void> => {
@@ -238,6 +299,58 @@ const MobilenetTransferWidget = (): JSX.Element => {
         }
     }
 
+    const handleModelParamsChange = (): void => {
+        const values = formModel.getFieldsValue()
+        // logger('handleTrainParamsChange', value)
+        const { denseUnits } = values
+        setDenseUnits(denseUnits)
+    }
+
+    const handleTrainParamsChange = (): void => {
+        const values = formTrain.getFieldsValue()
+        // logger('handleTrainParamsChange', value)
+        const { learningRate, epochs, batchSize } = values
+        setLearningRate(learningRate)
+        setBatchSize(batchSize)
+        setEpochs(epochs)
+    }
+
+    const handleJsonSave = (): void => {
+        if (!sLabeledImgs) {
+            return
+        }
+
+        const fileJson: ILabeledImageFileJson = { labeledImageSetList: encodeImageTensor(sLabeledImgs) }
+        const a = downloadRef.current
+        if (a) {
+            const blob = new Blob(
+                [JSON.stringify(fileJson, null, 2)],
+                { type: 'application/json' })
+            const blobUrl = window.URL.createObjectURL(blob)
+            logger(blobUrl)
+
+            // logger(a)
+            const filename = 'labeledImages.json'
+            a.href = blobUrl
+            a.download = filename
+            a.click()
+            window.URL.revokeObjectURL(blobUrl)
+        }
+    }
+
+    const handleJsonChange = ({ file }: UploadChangeParam): void => {
+        logger('handleFileChange', file.name)
+
+        setUploadingJson(file)
+        forceWaitingPush()
+    }
+
+    const handleUpload = async (file: RcFile): Promise<string> => {
+        setStatus(STATUS.LOADING)
+        // logger(file)
+        return getUploadFileBase64(file)
+    }
+
     const handleTabChange = (current: number): void => {
         setTabCurrent(current)
     }
@@ -249,73 +362,164 @@ const MobilenetTransferWidget = (): JSX.Element => {
     const _tensorX = sTrainSet?.xs as tf.Tensor4D
     const _tensorY = sTrainSet?.ys as tf.Tensor
 
+    const dataTrainSetCard = (): JSX.Element => {
+        return <Card title='Mobilenet Transfer Learning Train Set' style={{ margin: '8px' }} size='small'>
+            <div className='centerContainer'>
+                <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false}>
+                    <Button style={{ width: '300', margin: '0 10%' }}>
+                        <UploadOutlined/> Load Data Set
+                    </Button>
+                </Upload>
+                <Button style={{ width: '300', margin: '0 10%' }} onClick={handleJsonSave}>
+                    <SaveOutlined/> Save Data Set
+                </Button>
+            </div>
+            <div> Status: {sStatus}</div>
+            <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
+            <a ref={downloadRef}/>
+
+            {sLabeledImgs?.map((labeled, index) => {
+                const title = `${labeled.label}(${labeled.imageList?.length.toString()})`
+                return <Card key={index} title={title} style={{ margin: '8px' }} size='small'>
+                    {
+                        labeled.imageList?.map((imgItem: ILabeledImage) => {
+                            if (imgItem.tensor) {
+                                return <TensorImageThumbWidget key={imgItem.uid} data={imgItem.tensor} height={IMAGE_HEIGHT}/>
+                            } else if (imgItem.img) {
+                                return <img key={imgItem.uid} src={imgItem.img} alt={imgItem.name}
+                                    height={IMAGE_HEIGHT} style={{ margin: 4 }}/>
+                            } else {
+                                return <></>
+                            }
+                        })
+                    }
+                </Card>
+            })}
+        </Card>
+    }
+
+    const modelAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Adjust Dense Net' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} form={formModel} onFinish={handleTrain} onFieldsChange={handleModelParamsChange}
+                    initialValues={{
+                        denseUnits: 100
+                    }}>
+                    <Form.Item name='denseUnits' label='Dense Units'>
+                        <Select>
+                            {DENSE_UNITS.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item label='Output Classes'>
+                        <div>{sOutputClasses}</div>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
+
+    const trainAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Train' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
+                    initialValues={{
+                        learningRate: 0.0001,
+                        batchSize: 32,
+                        epochs: 30
+                    }}>
+                    <Form.Item name='epochs' label='Epochs'>
+                        <Slider min={10} max={50} step={10} marks={{ 10: 10, 30: 30, 50: 50 }} />
+                    </Form.Item>
+                    <Form.Item name='batchSize' label='Batch Size'>
+                        <Select>
+                            {BATCH_SIZES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item name='learningRate' label='Learning Rate'>
+                        <Select>
+                            {LEARNING_RATES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <Button type='primary' htmlType={'submit'} style={{ width: '60%', margin: '0 20%' }}> Train </Button>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <div>Status: {sStatus}</div>
+                        <div>Backend: {sTfBackend}</div>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
+
     return (
         <AIProcessTabs title={'Mobilenet Transfer Learning'} current={sTabCurrent} onChange={handleTabChange} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/mobilenet.md'}/>
+                <MarkdownWidget url={'/docs/ai/mobilenet.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Row>
                     <Col span={12}>
-                        <Card title='Prediction' size='small'>
-                            <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
-                                labelsMap={sLabelsMap} isPreview />
-                        </Card>
-                        <Card>
-                            <LabeledCaptureInputSet model={sModel} onSave={handleLabeledImagesSubmit}
-                                onCapture={handleLabeledCapture}/>
+                        <Card title='Captures Label Panel' size='small' style={{ margin: '8px' }}>
+                            <WebCamera ref={webcamRef} config={MOBLILENET_CONFIG}/>
+                            <LabeledCaptureInputSet onSave={handleLabeledImagesSubmit} onCapture={handleLabeledCapture}/>
                             <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
                         </Card>
                     </Col>
                     <Col span={12}>
-                        <LabeledCaptureSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
-                        <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
+                        {dataTrainSetCard()}
                     </Col>
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>
-                    <Col span={24}>
+                    <Col span={12}>
                         <Card title='Mobilenet' style={{ margin: '8px' }} size='small'>
-                            预训练模型
-                        </Card>
-                    </Col>
-                    <Divider orientation={'center'}>Mobilenet 的输出作为 Dense 网络的输入</Divider>
-                    <Col span={12}>
-                        <Card title='Expand Dense Net' style={{ margin: '8px' }} size='small'>
-                            <TfvisModelWidget model={sModel}/>
-                            <p>status: {sStatus}</p>
-                            <p>backend: {sTfBackend}</p>
+                            <h3 className='centerContainer'>预训练 Mobilenet 模型 : {sStatus}</h3>
+                            <h3 className='centerContainer'>截取 Mobilenet 到 conv_pw_13_relu 层</h3>
+                            <Card title='Expand Dense Net' style={{ margin: '8px' }} size='small'>
+                                <TfvisModelWidget model={sTruncatedModel}/>
+                            </Card>
                         </Card>
                     </Col>
                     <Col span={12}>
-                        <Card title='Layers of expand Dense Net' style={{ margin: '8px' }} size='small'>
-                                Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                                {sLayersOption?.map((v) => {
-                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
-                                })}
-                            </Select>
-                            <TfvisLayerWidget layer={sCurLayer}/>
+                        {modelAdjustCard()}
+                        <Card title='+ Expand Dense Net' style={{ margin: '8px' }} size='small'>
+                            <h3 className='centerContainer'>将 Mobilenet 的 conv_pw_13_relu 层输出</h3>
+                            <h3 className='centerContainer'>输入到 Dense 网络中</h3>
+                            <Card title='Expand Dense Net' style={{ margin: '8px' }} size='small'>
+                                <TfvisModelWidget model={sModel}/>
+                                <p>status: {sStatus}</p>
+                                <p>backend: {sTfBackend}</p>
+                            </Card>
+                            <Card title='Layers of expand Dense Net' style={{ margin: '8px' }} size='small'>
+                                        Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
+                                    {sLayersOption?.map((v) => {
+                                        return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                    })}
+                                </Select>
+                                <TfvisLayerWidget layer={sCurLayer}/>
+                            </Card>
                         </Card>
                     </Col>
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={12}>
-                        <Card title='Transfer Learning Train Set' style={{ margin: '8px' }} size='small'>
-                            <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
-                            <LabeledCaptureSetWidget model={sModel} labeledImgs={sLabeledImgs} onJsonLoad={handleLoadJson}/>
-                        </Card>
+                    <Col span={8}>
+                        {dataTrainSetCard()}
                     </Col>
-                    <Col span={12}>
-                        <Card title='Transfer Learning Train Set' style={{ margin: '8px' }} size='small'>
-                            <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                            <Button onClick={handleLoadModel} style={{ width: '30%', margin: '0 10%' }}> Load
-                                Model </Button>
-                            <div>status: {sStatus}</div>
-                            <div>backend: {sTfBackend}</div>
-                        </Card>
+                    <Col span={8}>
+                        {trainAdjustCard()}
+                        {modelAdjustCard()}
+                    </Col>
+                    <Col span={8}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
                             <div ref={historyRef} />
                         </Card>
@@ -323,12 +527,20 @@ const MobilenetTransferWidget = (): JSX.Element => {
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
-                <Col span={12}>
-                    <Card title='Prediction' size='small'>
-                        <WebCamera ref={webcamRef} model={sModel} onSubmit={handlePredict} prediction={sPredictResult}
-                            labelsMap={sLabelsMap} isPreview />
-                    </Card>
-                </Col>
+                <Row>
+                    <Col span={12}>
+                        <Card title='Prediction with picture' style={{ margin: '8px' }} size='small'>
+                            <ImageUploadWidget onSubmit={handlePredict} prediction={sPredictResult}
+                                labelsMap={sLabelsMap} />
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card title='Prediction with camera' style={{ margin: '8px' }} size='small'>
+                            <WebCamera ref={webcamRef2} onSubmit={handlePredict} prediction={sPredictResult}
+                                labelsMap={sLabelsMap} isPreview/>
+                        </Card>
+                    </Col>
+                </Row>
             </TabPane>
         </AIProcessTabs>
     )

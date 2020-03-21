@@ -7,7 +7,6 @@ import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
 import { IKnnPredictResult, ILabelMap, logger } from '../../../utils'
 
 interface IProps {
-    model?: tf.LayersModel
     prediction?: tf.Tensor | IKnnPredictResult
     labelsMap?: ILabelMap
     onSubmit?: (tensor: tf.Tensor) => void

@@ -2,15 +2,9 @@ import React, { useRef } from 'react'
 import { Button, Col, Form, Row } from 'antd'
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons'
 
+import { formItemLayout } from '../../../constant'
 import { ILabeledImageFileJson, logger } from '../../../utils'
 import LabeledImageInput from './LabeledImageInput'
-
-const formItemLayout = {
-    wrapperCol: {
-        xs: { span: 24 },
-        sm: { span: 24 }
-    }
-}
 
 export const formatDataJson = (values: any): ILabeledImageFileJson => {
     logger(values)

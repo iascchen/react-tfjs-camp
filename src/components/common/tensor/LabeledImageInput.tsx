@@ -10,7 +10,7 @@ const { Dragger } = Upload
 const MAX_FILES = 50
 
 interface IProps {
-    onChange?: (value: string) => void
+    onChange?: (value: ILabeledImageSet) => void
 }
 
 const LabeledImageInput = (props: IProps): JSX.Element => {
@@ -52,7 +52,7 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
                 const { onChange } = props
                 if (onChange) {
                     logger('Uploaded')
-                    onChange(JSON.stringify(itemData))
+                    onChange(itemData)
                 }
             }
         }, 10)
@@ -115,8 +115,9 @@ const LabeledImageInput = (props: IProps): JSX.Element => {
      ***********************/
 
     return (
-        <Card title={ <div> Label <Input onChange={handleLabelChange} defaultValue={label} ref={labelRef}
-            placeholder={'Label. such as: cat, dog...'} /> </div> }>
+        <Card size='small'>
+            <Input onChange={handleLabelChange} defaultValue={label} ref={labelRef}
+                placeholder={'Label. such as: cat, dog...'} />
             <Dragger action={handleUpload} onChange={handleImageChange} onPreview={handlePreview}
                 fileList={imageList} multiple
                 className='upload-list-inline' listType='picture-card'>

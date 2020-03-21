@@ -16,8 +16,7 @@ export const formatDataJson = (values: any): ILabeledImageFileJson => {
     logger(values)
 
     const { labeledImageList } = values
-    const valuesObj = labeledImageList.map((v: any) => JSON.parse(v))
-    const formModel = { labeledImageSetList: valuesObj }
+    const formModel = { labeledImageSetList: labeledImageList }
     return formModel
 }
 
@@ -27,11 +26,9 @@ interface IProps {
 
 const LabeledImageInputSet = (props: IProps): JSX.Element => {
     const downloadRef = useRef<HTMLAnchorElement>(null)
-
     const [form] = Form.useForm()
 
     const handleSubmit = (values: any): void => {
-        // logger(values)
         props.onSave && props.onSave(formatDataJson(values))
     }
 
@@ -45,8 +42,8 @@ const LabeledImageInputSet = (props: IProps): JSX.Element => {
                 <Form.List name='labeledImageList'>
                     {(fields, { add, remove }) => {
                         return (<>
-                            {fields.map((field, index) => (
-                                <Form.Item required={false} key={index} {...formItemLayout} >
+                            {fields.map((field) => (
+                                <Form.Item required={false} key={field.key} {...formItemLayout} >
                                     <Row>
                                         <Col span={22}>
                                             <Form.Item {...field}>

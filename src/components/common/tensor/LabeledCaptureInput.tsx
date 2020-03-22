@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, useState } from 'react'
 import { Button, Card, Input, Modal } from 'antd'
 import { CameraOutlined, DeleteOutlined } from '@ant-design/icons'
 
@@ -9,8 +9,6 @@ import * as tf from '@tensorflow/tfjs'
 const DEFAULT_HEIGHT = 100
 
 interface IProps {
-    value?: ILabeledImageSet
-
     onCapture?: (label: string) => Promise<ILabeledImage | void>
     onChange?: (value: ILabeledImageSet) => void
 }
@@ -22,15 +20,15 @@ const LabeledCaptureInput = (props: IProps): JSX.Element => {
     const [sLabel, setLabel] = useState<string>('')
     const [sImageList, setImageList] = useState<ILabeledImage[]>([])
 
-    useEffect(() => {
-        if (!props.value) {
-            return
-        }
-
-        const { label, imageList } = props.value
-        label && setLabel(label)
-        imageList && setImageList(imageList)
-    }, [props.value])
+    // useEffect(() => {
+    //     if (!props.value) {
+    //         return
+    //     }
+    //
+    //     const { label, imageList } = props.value
+    //     label && setLabel(label)
+    //     imageList && setImageList(imageList)
+    // }, [props.value])
 
     const pushToParentForm = (): void => {
         const { onChange } = props

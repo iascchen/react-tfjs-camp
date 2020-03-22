@@ -1,5 +1,4 @@
 import React, { useRef } from 'react'
-import * as tf from '@tensorflow/tfjs'
 import { Button, Col, Form, message, Row } from 'antd'
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons'
 
@@ -8,8 +7,6 @@ import { ILabeledImage, logger } from '../../../utils'
 import LabeledCaptureInput from './LabeledCaptureInput'
 
 interface IProps {
-    prediction?: tf.Tensor
-
     onSave?: (value: any) => void
     onCapture?: (label: string) => Promise<ILabeledImage | void>
 }
@@ -76,7 +73,6 @@ const LabeledCaptureInputSet = (props: IProps): JSX.Element => {
                         </>)
                     }}
                 </Form.List>
-
             </Form>
             <a ref={downloadRef}/>
         </>

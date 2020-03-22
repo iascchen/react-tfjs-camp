@@ -52,7 +52,7 @@ const DENSE_UNITS = [10, 100, 200]
 const BATCH_SIZES = [32, 64]
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03]
 
-const MobilenetTransferWidget = (): JSX.Element => {
+const MobilenetTransfer = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -499,11 +499,19 @@ const MobilenetTransferWidget = (): JSX.Element => {
                                 <p>backend: {sTfBackend}</p>
                             </Card>
                             <Card title='Layers of expand Dense Net' style={{ margin: '8px' }} size='small'>
-                                        Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                                    {sLayersOption?.map((v) => {
-                                        return <Option key={v.index} value={v.index}>{v.name}</Option>
-                                    })}
-                                </Select>
+                                <Form {...layout} initialValues={{
+                                    layer: 0
+                                }}>
+                                    <Form.Item name='layer' label='Show Layer'>
+                                        <Select onChange={handleLayerChange} >
+                                            {sLayersOption?.map((v) => {
+                                                return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                            })}
+                                        </Select>
+                                    </Form.Item>
+                                </Form>
+                            </Card>
+                            <Card title='Layer Info' style={{ margin: '8px' }} size='small'>
                                 <TfvisLayerWidget layer={sCurLayer}/>
                             </Card>
                         </Card>
@@ -546,4 +554,4 @@ const MobilenetTransferWidget = (): JSX.Element => {
     )
 }
 
-export default MobilenetTransferWidget
+export default MobilenetTransfer

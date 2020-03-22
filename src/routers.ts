@@ -11,7 +11,7 @@ import MnistCore from './components/mnist/MnistCore'
 
 import MobilenetClassifier from './components/mobilenet/MobilenetClassifier'
 import MobilenetKnnClassifier from './components/mobilenet/MobilenetKnnClassifier'
-import MobilenetTransferWidget from './components/mobilenet/MobilenetTransferWidget'
+import MobilenetTransfer from './components/mobilenet/MobilenetTransfer'
 import MobilenetObjDetector from './components/mobilenet/MobilenetObjDetector'
 
 import RnnJena from './components/rnn/RnnJena'
@@ -33,7 +33,7 @@ const routes: RouteConfig[] = [
 
     { path: '/mobilenet/basic', component: MobilenetClassifier },
     { path: '/mobilenet/knn', component: MobilenetKnnClassifier },
-    { path: '/mobilenet/transfer', component: MobilenetTransferWidget },
+    { path: '/mobilenet/transfer', component: MobilenetTransfer },
     { path: '/mobilenet/objdetector', component: MobilenetObjDetector },
 
     { path: '/rnn/jena', component: RnnJena },

@@ -32,9 +32,6 @@ const loadTruncatedBase = async (): Promise<IModelWithFineTuning> => {
         }
     }
 
-    // tf.util.assert(
-    //     fineTuningLayers.length > 1,
-    //     ()`Did not find any layers that match the prefixes ${topLayerGroupNames}`)
     return { model: truncatedBase, fineTuningLayers }
 }
 

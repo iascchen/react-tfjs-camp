@@ -283,7 +283,7 @@ class ObjectDetectionImageSynthesizer {
      *     The remaning four columns are the bounding box of the shape:
      *     [left, right, top, bottom], in the unit of pixels.
      */
-    generateExampleBatch = async (batchSize: number, numCircles: number, numLines: number, triangleProbability?: number): Promise<tf.TensorContainerObject | void> => {
+    generateExampleBatch = async (batchSize: number, numCircles: number, numLines: number, triangleProbability?: number): Promise<tf.TensorContainerObject> => {
         if (triangleProbability == null) {
             triangleProbability = 0.5
         }
@@ -297,7 +297,7 @@ class ObjectDetectionImageSynthesizer {
         const images = tf.stack(imageTensors)
         const targets = tf.stack(targetTensors)
         tf.dispose([imageTensors, targetTensors])
-        return { images, targets }
+        return { xs: images, ys: targets }
     }
 
     dispose = (): void => {

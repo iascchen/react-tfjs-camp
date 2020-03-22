@@ -30,7 +30,7 @@ const { TabPane } = Tabs
 const KNN_TOPK = 10
 const IMAGE_HEIGHT = 100
 
-const MobilenetClassifier = (): JSX.Element => {
+const MobilenetKnnClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -352,4 +352,4 @@ const MobilenetClassifier = (): JSX.Element => {
     )
 }
 
-export default MobilenetClassifier
+export default MobilenetKnnClassifier

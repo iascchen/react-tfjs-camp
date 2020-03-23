@@ -152,7 +152,7 @@ const ObjDetectorSampleVis = (props: IProps): JSX.Element => {
                 dataIndex: 'y',
                 key: 'y',
                 render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
-                    const yArray = formatTensorToStringArray(record.y as tf.Tensor, 3)
+                    const yArray = formatTensorToStringArray(record.y as tf.Tensor, 1)
                     const yStr = yArray.join(', ')
                     return <span>{yStr}</span>
                 }
@@ -162,7 +162,7 @@ const ObjDetectorSampleVis = (props: IProps): JSX.Element => {
                 dataIndex: 'p',
                 key: 'p',
                 render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
-                    const pArray = formatTensorToStringArray(record.p as tf.Tensor, 3)
+                    const pArray = formatTensorToStringArray(record.p as tf.Tensor, 1)
                     const pStr = pArray.join(', ')
                     return pStr ? <span>{pStr}</span> : <></>
                 }

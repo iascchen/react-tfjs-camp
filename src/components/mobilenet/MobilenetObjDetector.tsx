@@ -386,8 +386,8 @@ const MobilenetObjDetector = (): JSX.Element => {
         setSampleTrueTarget(sSample.ys as tf.Tensor)
 
         // Visualize the true and predicted bounding boxes.
-        const modelOut = Array.from(result.mul(MOBILENET_IMAGE_SIZE).dataSync())
-        const targetsArray = Array.from((sSample.ys as tf.Tensor).mul(MOBILENET_IMAGE_SIZE).dataSync())
+        const modelOut = Array.from(result.dataSync())
+        const targetsArray = Array.from((sSample.ys as tf.Tensor).dataSync())
         drawBoundingBoxes(canvasPredictRef.current, targetsArray.slice(1), modelOut.slice(1))
     }
 
@@ -427,10 +427,10 @@ const MobilenetObjDetector = (): JSX.Element => {
         return <Card title='Train' style={{ margin: '8px' }} size='small'>
             <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
                 initialValues={{
-                    numExamples: 200,
+                    numExamples: 400,
                     initialTransferEpochs: 50,
-                    fineTuningEpochs: 50,
-                    batchSize: 32,
+                    fineTuningEpochs: 100,
+                    batchSize: 64,
                     validationSplit: 0.15
                 }}>
                 <Form.Item name='numExamples' label='Sample counts'>

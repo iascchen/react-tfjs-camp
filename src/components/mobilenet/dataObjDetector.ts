@@ -25,7 +25,6 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-import {MOBILENET_IMAGE_SIZE} from './mobilenetUtils'
 
 /**
  * Generate a random color style for canvas strokes and fills.
@@ -104,11 +103,6 @@ class ObjectDetectionImageSynthesizer {
     generateExample = async (numCircles: number, numLines: number, triangleProbability: number): Promise<tf.TensorContainerObject | void> => {
         const _triangleProbability = triangleProbability ?? 0.5
 
-        // tf.util.assert(
-        //     triangleProbability >= 0 && triangleProbability <= 1,
-        //     'triangleProbability must be a number >= 0 and <= 1, but got ' +
-        //     `${triangleProbability}`)
-
         const ctx = this.canvas.getContext('2d')
         if (!ctx) {
             return
@@ -173,8 +167,8 @@ class ObjectDetectionImageSynthesizer {
 
         return tf.tidy(() => {
             const imageTensor = tf.browser.fromPixels(this.canvas).toFloat()
-            const shapeClassIndicator = isRectangle ? 1 * MOBILENET_IMAGE_SIZE : 0
-            const targetTensor = tf.tensor1d([shapeClassIndicator].concat(boundingBox)).div(MOBILENET_IMAGE_SIZE)
+            const shapeClassIndicator = isRectangle ? 1 : 0
+            const targetTensor = tf.tensor1d([shapeClassIndicator].concat(boundingBox))
             return { image: imageTensor, target: targetTensor }
         })
     }

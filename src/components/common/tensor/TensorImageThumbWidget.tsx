@@ -54,8 +54,8 @@ const TensorImageThumbWidget = (props: IProps): JSX.Element => {
     }
 
     return <>
-        <span style={{ padding: '8px', border: '1px solid lightgray', borderRadius: '2px' }} >
-            <canvas ref={rowCanvasRef} />
+        <span>
+            <canvas ref={rowCanvasRef} style={{ margin: '4px', padding: '8px', border: '1px solid lightgray', borderRadius: '2px'}} />
         </span>
         {props.uid && <EyeOutlined onClick={handlePreview}/>}
         {props.uid && <DeleteOutlined onClick={handleDelete}/>}

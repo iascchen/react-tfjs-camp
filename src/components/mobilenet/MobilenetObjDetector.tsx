@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Form, Input, message, Row, Select, Slider, Tabs } from 'antd'
+import { Button, Card, Col, Form, message, Row, Select, Slider, Tabs } from 'antd'
 
 import { layout, tailLayout } from '../../constant'
-import { logger, loggerError, STATUS } from '../../utils'
+import { formatTensorToStringArray, logger, loggerError, STATUS } from '../../utils'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
@@ -29,11 +29,13 @@ const TRUE_BOUNDING_BOX_STYLE = 'rgb(255,0,0)'
 const PREDICT_BOUNDING_BOX_LINE_WIDTH = 2
 const PREDICT_BOUNDING_BOX_STYLE = 'rgb(0,0,255)'
 
+const MODEL_URL_NAME = 'mobilenet-simple-obj-detector'
+
 const MobilenetObjDetector = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
-    const [sTabCurrent, setTabCurrent] = useState<number>(4)
+    const [sTabCurrent, setTabCurrent] = useState<number>(5)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -52,19 +54,20 @@ const MobilenetObjDetector = (): JSX.Element => {
 
     // Train
     const [sNumExamples, setNumExamples] = useState<number>(200)
+    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
+    const stopRef = useRef(false)
 
     // Predict
-    const [sTrueTarget, setTrueTarget] = useState<number[]>()
-    const [sPredictResult, setPredictResult] = useState<number[]>()
-    const [sTrueObjectClass, setTrueObjectClass] = useState<string>()
-    const [sPredictedObjectClass, setPredictedObjectClass] = useState<string>()
+    const [sSample, setSample] = useState<tf.TensorContainerObject>()
+    const [sSamplePredictResult, setSamplePredictResult] = useState<tf.Tensor>()
+    const [sSampleTrueTarget, setSampleTrueTarget] = useState<tf.Tensor>()
 
     const historyRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const canvasPredictRef = useRef<HTMLCanvasElement>(null)
 
     const [formData] = Form.useForm()
     const [formTrain] = Form.useForm()
-    const [formPredict] = Form.useForm()
 
     /***********************
      * useEffect
@@ -123,7 +126,86 @@ const MobilenetObjDetector = (): JSX.Element => {
      * Functions
      ***********************/
 
+    const myCallback = {
+        onBatchBegin: async (batch: number) => {
+            if (!sModel) {
+                return
+            }
+            if (sModel && stopRef.current) {
+                logger('Checked stop', stopRef.current)
+                setStatus(STATUS.STOPPED)
+                sModel.stopTraining = stopRef.current
+            }
+            await tf.nextFrame()
+        },
+        onBatchEnd: async (batch: number) => {
+            if (!sModel || !sTestSet) {
+                return
+            }
+
+            const result = await sModel.predict(sTestSet.xs as tf.Tensor) as tf.Tensor
+            // logger('sModel.predict', result)
+            setPredictResult(result)
+
+            await tf.nextFrame()
+        }
+    }
+
+    const train = async (initialTransferEpochs: number, fineTuningEpochs: number, batchSize: number, validationSplit: number): Promise<void> => {
+        if (!sModel || !sFineTuningLayers || !sDataSynth) {
+            return
+        }
+        setStatus(STATUS.TRAINING)
+        stopRef.current = false
+
+        const tBegin = tf.util.now()
+        console.log(`Generating ${sNumExamples} training examples...`)
+        const { xs, ys } = await sDataSynth.generateExampleBatch(sNumExamples, sNumCircles, sNumLines)
+
+        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(5e-3) })
+        const callbacks = [tfvis.show.fitCallbacks(historyRef?.current, ['loss', 'acc', 'val_loss', 'val_acc']),
+            myCallback]
+
+        // Initial phase of transfer learning.
+        console.log('Phase 1 of 2: initial transfer learning')
+        await sModel.fit(xs as tf.Tensor, ys as tf.Tensor, {
+            epochs: initialTransferEpochs,
+            batchSize,
+            validationSplit,
+            callbacks
+        })
+
+        // Fine-tuning phase of transfer learning.
+        // Unfreeze layers for fine-tuning.
+        for (const layer of sFineTuningLayers) {
+            layer.trainable = true
+        }
+        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(2e-3) })
+
+        // Do fine-tuning.
+        // The batch size is reduced to avoid CPU/GPU OOM. This has
+        // to do with the unfreezing of the fine-tuning layers above,
+        // which leads to higher memory consumption during backpropagation.
+        console.log('Phase 2 of 2: fine-tuning phase')
+        await sModel.fit(xs as tf.Tensor, ys as tf.Tensor, {
+            epochs: fineTuningEpochs,
+            batchSize: batchSize / 2,
+            validationSplit,
+            callbacks
+        })
+
+        // After Fine-tuning phase of transfer learning.
+        // Freeze layers for fine-tuning again .
+        for (const layer of sFineTuningLayers) {
+            layer.trainable = false
+        }
+
+        logger(`Model training took ${(tf.util.now() - tBegin) / 1e3} s`)
+    }
+
     const drawBoundingBoxes = (canvas: HTMLCanvasElement, trueBoundingBox: number[], predictBoundingBox: number[]): void => {
+        logger('drawBoundingBoxes', trueBoundingBox, predictBoundingBox)
+
         tf.util.assert(
             trueBoundingBox != null && trueBoundingBox.length === 4,
             () => 'Expected boundingBoxArray to have length 4, ' + `but got [${trueBoundingBox.join(',')}] instead`)
@@ -175,186 +257,12 @@ const MobilenetObjDetector = (): JSX.Element => {
         ctx.fillText('predicted', left, bottom)
     }
 
-    const runAndVisualizeInference = async (model: tf.LayersModel): Promise<void> => {
-        if (!canvasRef.current) {
-            return
-        }
-        // Synthesize an input image and show it in the canvas.
-        const synth = new ObjectDetectionImageSynthesizer(canvasRef.current)
-
-        const numExamples = 1
-        const numCircles = 10
-        const numLineSegments = 10
-        const { images, targets } = await synth.generateExampleBatch(numExamples, numCircles, numLineSegments) as tf.TensorContainerObject
-
-        // const t0 = tf.util.now()
-        // Runs inference with the model.
-        const result = await model.predict(images as tf.Tensor) as tf.Tensor
-        const modelOut = Array.from(result.dataSync())
-        setPredictResult(modelOut)
-        // inferenceTimeMs.textContent = `${(tf.util.now() - t0).toFixed(1)}`
-
-        // Visualize the true and predicted bounding boxes.
-        const targetsArray = Array.from((targets as tf.Tensor).dataSync())
-        setTrueTarget(targetsArray)
-
-        const boundingBoxArray = targetsArray.slice(1)
-        drawBoundingBoxes(canvasRef.current, boundingBoxArray, modelOut.slice(1))
-        // Display the true and predict object classes.
-        const trueClassName = targetsArray[0] > 0 ? 'rectangle' : 'triangle'
-        setTrueObjectClass(trueClassName)
-        // trueObjectClass.textContent = trueClassName
-
-        // The model predicts a number to indicate the predicted class
-        // of the object. It is trained to predict 0 for triangle and
-        // 224 (canvas.width) for rectangel. This is how the model combines
-        // the class loss with the bounding-box loss to form a single loss
-        // value. Therefore, at inference time, we threshold the number
-        // by half of 224 (canvas.width).
-        const shapeClassificationThreshold = canvasRef.current.width / 2
-        const predictClassName = (modelOut[0] > shapeClassificationThreshold) ? 'rectangle' : 'triangle'
-        // predictedObjectClass.textContent = predictClassName
-        setPredictedObjectClass(predictClassName)
-
-        // if (predictClassName === trueClassName) {
-        //     predictedObjectClass.classList.remove('shape-class-wrong')
-        //     predictedObjectClass.classList.add('shape-class-correct')
-        // } else {
-        //     predictedObjectClass.classList.remove('shape-class-correct')
-        //     predictedObjectClass.classList.add('shape-class-wrong')
-        // }
-
-        // Tensor memory cleanup.
-        tf.dispose([images, targets])
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
     }
-
-    const train = async (initialTransferEpochs: number, fineTuningEpochs: number, batchSize: number, validationSplit: number): Promise<void> => {
-        if (!sModel || !sFineTuningLayers || !sDataSynth) {
-            return
-        }
-        setStatus(STATUS.TRAINING)
-
-        const tBegin = tf.util.now()
-        console.log(`Generating ${sNumExamples} training examples...`)
-        const { xs, ys } = await sDataSynth.generateExampleBatch(sNumExamples, sNumCircles, sNumLines)
-
-        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(5e-3) })
-        const callbacks = tfvis.show.fitCallbacks(historyRef?.current, ['loss', 'acc', 'val_loss', 'val_acc'])
-
-        // sDataSynth.generateExample()
-
-        // Initial phase of transfer learning.
-        console.log('Phase 1 of 2: initial transfer learning')
-        await sModel.fit(xs as tf.Tensor, ys as tf.Tensor, {
-            epochs: initialTransferEpochs,
-            batchSize,
-            validationSplit,
-            callbacks
-        })
-
-        // Fine-tuning phase of transfer learning.
-        // Unfreeze layers for fine-tuning.
-        for (const layer of sFineTuningLayers) {
-            layer.trainable = true
-        }
-        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(2e-3) })
-
-        // Do fine-tuning.
-        // The batch size is reduced to avoid CPU/GPU OOM. This has
-        // to do with the unfreezing of the fine-tuning layers above,
-        // which leads to higher memory consumption during backpropagation.
-        console.log('Phase 2 of 2: fine-tuning phase')
-        await sModel.fit(xs as tf.Tensor, ys as tf.Tensor, {
-            epochs: fineTuningEpochs,
-            batchSize: batchSize / 2,
-            validationSplit,
-            callbacks
-        })
-
-        for (const layer of sFineTuningLayers) {
-            layer.trainable = false
-        }
-
-        logger(`Model training took ${(tf.util.now() - tBegin) / 1e3} s`)
-    }
-
-    const handlePredict = (): void => {
-        if (!sModel) {
-            return
-        }
-        setStatus(STATUS.PREDICTING)
-
-        runAndVisualizeInference(sModel).then(
-            () => {
-                setStatus(STATUS.PREDICTED)
-            },
-            loggerError
-        )
-    }
-
-    const handleLayerChange = (value: string): void => {
-        logger('handleLayerChange', value)
-        const _layer = sModel?.getLayer(value)
-        setCurLayer(_layer)
-    }
-
-    const handleLoadModelWeight = (): void => {
-        // // Save model.
-        // // First make sure that the base directory dists.
-        // const modelSavePath = modelSaveURL.replace('file://', '')
-        // const dirName = path.dirname(modelSavePath)
-        // if (!fs.existsSync(dirName)) {
-        //     fs.mkdirSync(dirName)
-        // }
-        // await sModel.save(modelSaveURL)
-    }
-
-    const handleSaveModelWeight = (): void => {
-        // TODO
-    }
-
-    const handleTrain = (values: any): void => {
-        logger('handleTrain', values)
-        const { initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit } = values
-        train(initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit).then(
-            () => {
-                setStatus(STATUS.TRAINED)
-            },
-            loggerError
-        )
-    }
-
-    // const handleTrainParamsChange = (): void => {
-    //     const values = formTrain.getFieldsValue()
-    //     // logger('handleTrainParamsChange', value)
-    //     const { initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit } = values
-    //
-    // }
-
-    // const handleGenDataTrain = (): void => {
-    //     if (!sDataSynth) {
-    //         return
-    //     }
-    //
-    //     const values = formTrain.getFieldsValue()
-    //     const { numExamples } = values
-    //
-    //     logger(`Generating ${numExamples} training examples...`)
-    //     setStatus(STATUS.LOADING)
-    //     sDataSynth.generateExampleBatch(numExamples, sNumCircles, sNumLines).then(
-    //         (dataSet) => {
-    //             // const { images, targets } = dataSet
-    //             if (dataSet) {
-    //                 setTestSet(dataSet)
-    //                 setStatus(STATUS.LOADED)
-    //             }
-    //         },
-    //         loggerError
-    //     )
-    // }
 
     const handleDataParamsChange = (): void => {
-        const values = formTrain.getFieldsValue()
+        const values = formData.getFieldsValue()
         // logger('handleDataParamsChange', values)
         const { numCircles, numLines } = values
         setNumCircles(numCircles)
@@ -383,8 +291,104 @@ const MobilenetObjDetector = (): JSX.Element => {
         )
     }
 
-    const handleTabChange = (current: number): void => {
-        setTabCurrent(current)
+    const handleLayerChange = (value: string): void => {
+        logger('handleLayerChange', value)
+        const _layer = sModel?.getLayer(value)
+        setCurLayer(_layer)
+    }
+
+    const handleTrainParamsChange = (): void => {
+        const values = formTrain.getFieldsValue()
+        // logger('handleTrainParamsChange', values)
+        // const { initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit } = values
+        const { numExamples } = values
+        setNumExamples(numExamples)
+    }
+
+    const handleTrain = (values: any): void => {
+        logger('handleTrain', values)
+        const { initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit } = values
+        train(initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit).then(
+            () => {
+                setStatus(STATUS.TRAINED)
+            },
+            loggerError
+        )
+    }
+
+    const handleTrainStop = (): void => {
+        logger('handleTrainStop')
+        stopRef.current = true
+    }
+
+    const handlePredict = (): void => {
+        if (!sModel || !sTestSet || !canvasPredictRef.current) {
+            return
+        }
+
+        setStatus(STATUS.PREDICTING)
+        const result = sModel.predict(sTestSet.xs as tf.Tensor) as tf.Tensor
+        logger('sModel.predict', result)
+        setPredictResult(result)
+    }
+
+    const handleLoadModelWeight = (): void => {
+        setStatus(STATUS.LOADING)
+        tf.loadLayersModel(`/model/${MODEL_URL_NAME}.json`).then(
+            (model) => {
+                model.summary()
+                setModel(model)
+                setStatus(STATUS.LOADED)
+            },
+            loggerError
+        )
+    }
+
+    const handleSaveModelWeight = (): void => {
+        if (!sModel) {
+            return
+        }
+
+        const downloadUrl = `downloads://${MODEL_URL_NAME}`
+        sModel.save(downloadUrl).then((saveResults) => {
+            logger(saveResults)
+        }, loggerError)
+        logger()
+    }
+
+    const handleGenSample = (): void => {
+        if (!canvasPredictRef.current) {
+            return
+        }
+        logger('init Data Synthesizer ...')
+
+        const synth = new ObjectDetectionImageSynthesizer(canvasPredictRef.current)
+        synth.generateExampleBatch(1, sNumCircles, sNumLines).then(
+            (dataSet) => {
+                // const { images, targets } = dataSet
+                if (dataSet) {
+                    setSample(dataSet)
+                }
+            },
+            loggerError
+        )
+    }
+
+    const handlePredictSample = (): void => {
+        if (!sModel || !sSample || !canvasPredictRef.current) {
+            return
+        }
+
+        setStatus(STATUS.PREDICTING)
+        const result = sModel.predict(sSample.xs as tf.Tensor) as tf.Tensor
+        logger('sModel.predict', result)
+        setSamplePredictResult(result)
+        setSampleTrueTarget(sSample.ys as tf.Tensor)
+
+        // Visualize the true and predicted bounding boxes.
+        const modelOut = Array.from(result.mul(MOBILENET_IMAGE_SIZE).dataSync())
+        const targetsArray = Array.from((sSample.ys as tf.Tensor).mul(MOBILENET_IMAGE_SIZE).dataSync())
+        drawBoundingBoxes(canvasPredictRef.current, targetsArray.slice(1), modelOut.slice(1))
     }
 
     /***********************
@@ -400,16 +404,17 @@ const MobilenetObjDetector = (): JSX.Element => {
                     numLines: 10
                 }}>
                 <Form.Item name='numTestExamples' label='Test Sample counts'>
-                    <Slider min={40} max={100} step={10} marks={{ 40: 40, 70: 70, 100: 100 }} />
+                    <Slider min={40} max={100} step={10} marks={{ 40: 40, 70: 70, 100: 100 }}/>
                 </Form.Item>
                 <Form.Item name='numCircles' label='Circles per sample'>
-                    <Slider min={5} max={15} step={5} marks={{ 5: 5, 10: 10, 15: 15 }} />
+                    <Slider min={5} max={15} step={5} marks={{ 5: 5, 10: 10, 15: 15 }}/>
                 </Form.Item>
                 <Form.Item name='numLines' label='Lines per sample'>
-                    <Slider min={5} max={15} step={5} marks={{ 5: 5, 10: 10, 15: 15 }} />
+                    <Slider min={5} max={15} step={5} marks={{ 5: 5, 10: 10, 15: 15 }}/>
                 </Form.Item>
                 <Form.Item {...tailLayout} >
-                    <Button type='primary' htmlType={'submit'} style={{ width: '60%', margin: '0 20%' }}> Generate Test Set </Button>
+                    <Button type='primary' htmlType={'submit'} style={{ width: '60%', margin: '0 20%' }}> Generate Test
+                        Set </Button>
                 </Form.Item>
                 <Form.Item {...tailLayout} >
                     <div>{sStatus}</div>
@@ -420,30 +425,32 @@ const MobilenetObjDetector = (): JSX.Element => {
 
     const trainAdjustCard = (): JSX.Element => {
         return <Card title='Train' style={{ margin: '8px' }} size='small'>
-            <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
-                numExamples: 200,
-                initialTransferEpochs: 50,
-                fineTuningEpochs: 50,
-                batchSize: 32,
-                validationSplit: 0.15
-            }}>
+            <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
+                initialValues={{
+                    numExamples: 200,
+                    initialTransferEpochs: 50,
+                    fineTuningEpochs: 50,
+                    batchSize: 32,
+                    validationSplit: 0.15
+                }}>
                 <Form.Item name='numExamples' label='Sample counts'>
-                    <Slider min={200} max={1000} step={200} marks={{ 200: 200, 600: 600, 1000: 1000 }} />
+                    <Slider min={200} max={1000} step={200} marks={{ 200: 200, 600: 600, 1000: 1000 }}/>
                 </Form.Item>
-                <Form.Item name='initialTransferEpochs' label='Transfer Epochs' >
-                    <Slider min={50} max={150} step={50} marks={{ 50: 50, 100: 100, 150: 150 }} />
+                <Form.Item name='initialTransferEpochs' label='Transfer Epochs'>
+                    <Slider min={50} max={150} step={50} marks={{ 50: 50, 100: 100, 150: 150 }}/>
                 </Form.Item>
-                <Form.Item name='fineTuningEpochs' label='Tuning Epochs' >
-                    <Slider min={50} max={150} step={50} marks={{ 50: 50, 100: 100, 150: 150 }} />
+                <Form.Item name='fineTuningEpochs' label='Tuning Epochs'>
+                    <Slider min={50} max={150} step={50} marks={{ 50: 50, 100: 100, 150: 150 }}/>
                 </Form.Item>
                 <Form.Item name='batchSize' label='Batch Size'>
-                    <Slider min={32} max={64} step={16} marks={{ 32: 32, 48: 48, 64: 64 }} />
+                    <Slider min={32} max={64} step={16} marks={{ 32: 32, 48: 48, 64: 64 }}/>
                 </Form.Item>
                 <Form.Item name='validationSplit' label='Validation Split'>
-                    <Slider min={0.1} max={0.2} step={0.05} marks={{ 0.1: 0.1, 0.15: 0.15, 0.2: 0.2 }} />
+                    <Slider min={0.1} max={0.2} step={0.05} marks={{ 0.1: 0.1, 0.15: 0.15, 0.2: 0.2 }}/>
                 </Form.Item>
                 <Form.Item {...tailLayout}>
                     <Button type='primary' htmlType='submit' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                    <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
                     {/* <Button onClick={handleGenDataTrain} style={{ width: '30%', margin: '0 10%' }}> Generate </Button> */}
                 </Form.Item>
                 <Form.Item {...tailLayout}>
@@ -451,6 +458,9 @@ const MobilenetObjDetector = (): JSX.Element => {
                         Weights </Button>
                     <Button onClick={handleLoadModelWeight} style={{ width: '30%', margin: '0 10%' }}> Load
                         Weights </Button>
+                </Form.Item>
+                <Form.Item {...tailLayout}>
+                    <Button onClick={handlePredict} style={{ width: '30%', margin: '0 10%' }}> Predict </Button>
                 </Form.Item>
                 <Form.Item {...tailLayout}>
                     <div>status: {sStatus}</div>
@@ -463,8 +473,9 @@ const MobilenetObjDetector = (): JSX.Element => {
     return (
         <>
             <canvas ref={canvasRef} style={{ border: '2px dashed lightgray', margin: '8px auto' }}
-                height={MOBILENET_IMAGE_SIZE} width={MOBILENET_IMAGE_SIZE} hidden />
-            <AIProcessTabs title={'Simple Object Detector based Mobilenet'} current={sTabCurrent} onChange={handleTabChange} >
+                height={MOBILENET_IMAGE_SIZE} width={MOBILENET_IMAGE_SIZE} hidden/>
+            <AIProcessTabs title={'Simple Object Detector based Mobilenet'} current={sTabCurrent}
+                onChange={handleTabChange}>
                 <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                     <MarkdownWidget url={'/docs/ai/mobilenet-obj-detector.md'}/>
                 </TabPane>
@@ -474,10 +485,12 @@ const MobilenetObjDetector = (): JSX.Element => {
                             {dataAdjustCard()}
                         </Col>
                         <Col span={12}>
-                            <Card title={`Test Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
+                            <Card title={`Test Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }}
+                                size='small'>
                                 <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
-                                <ObjDetectorSampleVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
-                                    xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
+                                <ObjDetectorSampleVis xDataset={sTestSet?.xs as tf.Tensor}
+                                    yDataset={sTestSet?.ys as tf.Tensor}
+                                    xIsImage pageSize={5} sampleCount={SHOW_SAMPLE}/>
                             </Card>
                         </Col>
                     </Row>
@@ -503,7 +516,7 @@ const MobilenetObjDetector = (): JSX.Element => {
                                         layer: SEQUENTIAL_LAYER
                                     }}>
                                         <Form.Item name='layer' label='Show Layer'>
-                                            <Select onChange={handleLayerChange} >
+                                            <Select onChange={handleLayerChange}>
                                                 {sLayersOption?.map((name, index) => {
                                                     return <Option key={index} value={name}>{name}</Option>
                                                 })}
@@ -525,15 +538,18 @@ const MobilenetObjDetector = (): JSX.Element => {
                             {dataAdjustCard()}
                         </Col>
                         <Col span={10}>
-                            <Card title={`Test Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
+                            <Card title={`Test Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }}
+                                size='small'>
                                 <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
-                                <ObjDetectorSampleVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
-                                    xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
+                                <ObjDetectorSampleVis xDataset={sTestSet?.xs as tf.Tensor}
+                                    yDataset={sTestSet?.ys as tf.Tensor}
+                                    pDataset={sPredictResult} xIsImage pageSize={5}
+                                    sampleCount={SHOW_SAMPLE}/>
                             </Card>
                         </Col>
                         <Col span={6}>
                             <Card title='Training History' style={{ margin: '8px' }} size='small'>
-                                <div ref={historyRef} />
+                                <div ref={historyRef}/>
                             </Card>
                         </Col>
                     </Row>
@@ -541,11 +557,22 @@ const MobilenetObjDetector = (): JSX.Element => {
                 <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
                     <Col span={12}>
                         <Card title='Predict' style={{ margin: '8px' }} size='small'>
-                            <Button onClick={handlePredict} style={{ width: '30%', margin: '0 10%' }}> Predict </Button>
-
-                            <p>True: {sTrueObjectClass} VS. Predict: {sPredictedObjectClass}</p>
-                            <p>True: {JSON.stringify(sTrueTarget)}</p>
-                            <p>Predict {JSON.stringify(sPredictResult)}</p>
+                            <Row className='centerContainer'>
+                                <canvas ref={canvasPredictRef} style={{ border: '2px dashed lightgray', margin: '8px' }}
+                                    height={MOBILENET_IMAGE_SIZE} width={MOBILENET_IMAGE_SIZE}/>
+                            </Row>
+                            <Row className='centerContainer'>
+                                <div style={{ width: 500, padding: '8px' }}>
+                                    <Button onClick={handleGenSample} style={{ width: '30%', margin: '0 10%' }}> Generate
+                                        Sample </Button>
+                                    <Button onClick={handlePredictSample}
+                                        style={{ width: '30%', margin: '0 10%' }}> Predict </Button>
+                                </div>
+                            </Row>
+                            {sSampleTrueTarget &&
+                            <p>Target {formatTensorToStringArray(sSampleTrueTarget, 2).join(', ')}</p>}
+                            {sSamplePredictResult &&
+                            <p>Predict {formatTensorToStringArray(sSamplePredictResult, 2).join(', ')}</p>}
                         </Card>
                     </Col>
                 </TabPane>

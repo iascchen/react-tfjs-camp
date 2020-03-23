@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs'
 import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
 
-const LABEL_MULTIPLIER = [MOBILENET_IMAGE_SIZE, 1, 1, 1, 1]
+// const LABEL_MULTIPLIER = [MOBILENET_IMAGE_SIZE, 1, 1, 1, 1]
 
 // Name prefixes of layers that will be unfrozen during fine-tuning.
 const topLayerGroupNames = ['conv_pw_9', 'conv_pw_10', 'conv_pw_11']
@@ -64,6 +64,7 @@ export const customLossFunction = (yTrue: tf.Tensor, yPred: tf.Tensor): tf.Tenso
         // Scale the the first column (0-1 shape indicator) of `yTrue` in order
         // to ensure balanced contributions to the final loss value
         // from shape and bounding-box predictions.
-        return tf.metrics.meanSquaredError(yTrue.mul(LABEL_MULTIPLIER), yPred)
+        // return tf.metrics.meanSquaredError(yTrue.mul(LABEL_MULTIPLIER), yPred)
+        return tf.metrics.meanSquaredError(yTrue, yPred)
     })
 }

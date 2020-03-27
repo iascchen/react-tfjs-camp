@@ -51,8 +51,6 @@ export const TIME_SPAN_MAX: IKeyMap = {
 const BATCH_SIZES = [64, 128, 256, 512]
 const STEP = 6 // 1-hour steps.
 
-const MODEL_URL_NAME = 'mobilenet-simple-obj-detector'
-
 const mdInfo = '**注意** \n' +
     '\n' +
     '* 如果您要在本地环境运行这个例子，最好预先下载数据文件。并将数据文件放在此项目的 `./public/data` 目录下。\n' +
@@ -264,6 +262,7 @@ const RnnJena = (): JSX.Element => {
         }
 
         setStatus(STATUS.WAITING)
+        stopRef.current = false
         logger('train...')
 
         console.log('Starting model training...')
@@ -274,6 +273,8 @@ const RnnJena = (): JSX.Element => {
 
         await trainModel(sModel, sDataHandler, sNormalize, sIncludeTime, sLookBack, STEP, sDelay, sBatchSize,
             sEpochs, callbacks)
+
+        handleSaveModelWeight()
         setStatus(STATUS.TRAINED)
     }
 
@@ -455,7 +456,8 @@ const RnnJena = (): JSX.Element => {
 
     const handleLoadModelWeight = (): void => {
         setStatus(STATUS.WAITING)
-        tf.loadLayersModel(`/model/${MODEL_URL_NAME}.json`).then(
+        const fileName = `jena_${sModelName}`
+        tf.loadLayersModel(`/model/${fileName}.json`).then(
             (model) => {
                 model.summary()
                 setModel(model)
@@ -470,7 +472,8 @@ const RnnJena = (): JSX.Element => {
             return
         }
 
-        const downloadUrl = `downloads://${MODEL_URL_NAME}`
+        const fileName = `jena_${sModelName}`
+        const downloadUrl = `downloads://${fileName}`
         sModel.save(downloadUrl).then((saveResults) => {
             logger(saveResults)
         }, loggerError)
@@ -640,7 +643,7 @@ const RnnJena = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Row>
-                    <Col span={8}>
+                    <Col span={12}>
                         <Card title={'Data'} style={{ margin: 8 }}>
                             <MarkdownWidget source={mdInfo}/>
                             <Button style={{ width: '30%', margin: '0 35%' }} type='primary'
@@ -649,7 +652,7 @@ const RnnJena = (): JSX.Element => {
                             <p>{statusInfo()}</p>
                         </Card>
                     </Col>
-                    <Col span={16}>
+                    <Col span={12}>
                         {dataDisplayCard()}
                     </Col>
                 </Row>
@@ -684,14 +687,11 @@ const RnnJena = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={8}>
+                    <Col span={12}>
                         {trainAdjustCard()}
                         {modelAdjustCard()}
                     </Col>
-                    <Col span={8}>
-                        Hello
-                    </Col>
-                    <Col span={8}>
+                    <Col span={12}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
                             <div ref={elementRef} />
                         </Card>

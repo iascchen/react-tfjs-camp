@@ -63,7 +63,7 @@ const MnistCore = (): JSX.Element => {
         tf.backend()
         setTfBackend(tf.getBackend())
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         let mnistDataset: MnistGzDataset | MnistCoreDataset
         if (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') {
@@ -124,8 +124,7 @@ const MnistCore = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.TRAINING)
-
+        setStatus(STATUS.WAITING)
         const beginMs = performance.now()
         modelCore.train(_dataset, pushTrainingLog, steps, batchSize, learningRate).then(
             () => {

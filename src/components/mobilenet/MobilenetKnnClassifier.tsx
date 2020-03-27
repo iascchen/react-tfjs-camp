@@ -64,7 +64,7 @@ const MobilenetKnnClassifier = (): JSX.Element => {
         tf.backend()
         setTfBackend(tf.getBackend())
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         const knn = knnClassifier.create()
         setKnn(knn)
@@ -152,7 +152,7 @@ const MobilenetKnnClassifier = (): JSX.Element => {
 
     const handleTrain = (): void => {
         if (sLabeledImgs) {
-            setStatus(STATUS.TRAINING)
+            setStatus(STATUS.WAITING)
             train(sLabeledImgs).then(
                 () => {
                     setStatus(STATUS.TRAINED)

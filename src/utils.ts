@@ -15,12 +15,12 @@ export type IArray = any[]
 
 export enum STATUS {
     INIT = 'Init',
-    LOADING = 'Loading',
+    READY = 'Ready',
+    WAITING = 'Waiting',
     LOADED = 'Loaded',
-    TRAINING = 'Training',
     TRAINED = 'Trained',
-    PREDICTING = 'Predicting',
     PREDICTED = 'Predicted',
+    CALCULATED = 'Calculated',
     STOPPED = 'Stopped',
 }
 

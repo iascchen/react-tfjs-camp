@@ -127,7 +127,7 @@ const MnistKeras = (): JSX.Element => {
     useEffect(() => {
         logger('init data set ...')
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         let mnistDataset: IMnistDataSet
         if (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') {
@@ -191,7 +191,7 @@ const MnistKeras = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
         stopRef.current = false
 
         const beginMs = performance.now()

@@ -182,7 +182,7 @@ const Iris = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
         stopRef.current = false
         resetTrainInfo()
 

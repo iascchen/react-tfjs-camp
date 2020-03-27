@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Card, Col, Form, Row, Select, Tabs } from 'antd'
+import { Card, Col, Form, Row, Select, Tabs, Tag, Tooltip } from 'antd'
 
 import { ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
 import { layout, tailLayout } from '../../constant'
@@ -11,7 +11,7 @@ import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 
-import { MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH, formatImageForMobilenet } from './mobilenetUtils'
+import { formatImageForMobilenet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
 import { ImagenetClasses } from './ImagenetClasses'
 
 const { Option } = Select
@@ -44,7 +44,7 @@ const MobilenetClassifier = (): JSX.Element => {
         tf.backend()
         setTfBackend(tf.getBackend())
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         let model: tf.LayersModel
         tf.loadLayersModel(MOBILENET_MODEL_PATH).then(
@@ -117,7 +117,22 @@ const MobilenetClassifier = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <h2> 1000 Classes of ImageNet </h2>
-                {Object.keys(ImagenetClasses).map((key, index) => `[ ${key} : ${ImagenetClasses[index]} ], `)}
+                {Object.keys(ImagenetClasses).map((key, index) => {
+                    const tag = ImagenetClasses[index]
+                    const isLongTag = tag.length > 20
+                    const tagElem = (
+                        <Tag key={tag}>
+                            {isLongTag ? `${tag.slice(0, 20)}...` : tag}
+                        </Tag>
+                    )
+                    return isLongTag ? (
+                        <Tooltip title={tag} key={tag}>
+                            {tagElem}
+                        </Tooltip>
+                    ) : (
+                        tagElem
+                    )
+                })}
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>

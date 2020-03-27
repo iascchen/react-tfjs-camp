@@ -1,15 +1,17 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, message, Row, Select, Tabs } from 'antd'
+import { Button, Card, Col, Form, message, Row, Select, Slider, Switch, Tabs } from 'antd'
 
+import { layout, tailLayout } from '../../constant'
 import { ILayerSelectOption, logger, STATUS } from '../../utils'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 
-import { buildGRUModel, buildLinearRegressionModel, buildMLPModel, buildSimpleRNNModel, trainModel } from './modelJena'
-import { JenaWeatherData } from './dataJena'
+import { buildGRUModel, buildLinearRegressionModel, buildMLPModel, buildSimpleRNNModel } from './modelJena'
+import { JenaWeatherData, TRAIN_MAX_ROW, TRAIN_MIN_ROW, VAL_MAX_ROW, VAL_MIN_ROW } from './dataJena'
+import SampleDataVis from '../common/tensor/SampleDataVis'
 
 // cannot use import
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -20,6 +22,17 @@ const { Option } = Select
 
 const MODEL_OPTIONS = ['linear-regression', 'mlp', 'mlp-l2', 'mlp-dropout', 'simpleRnn', 'gru']
 const NUM_FEATURES = 14
+
+const BATCH_SIZES = [64, 128, 256, 512]
+const SHOW_SAMPLE = 50
+const VALID_SPLIT = 0.15
+
+// const lookBack = 10 * 24 * 6 // Look back 10 days.
+const STEP = 6 // 1-hour steps.
+// const delay = 24 * 6 // Predict the weather 1 day later.
+// const batchSize = 128
+// const normalize = true
+// const includeDateTime = false
 
 const mdInfo = '**注意** \n' +
     '\n' +
@@ -53,39 +66,107 @@ interface IKeyMap {
     [index: string]: number
 }
 
+export const getBaselineMeanAbsoluteError = async (jenaWeatherData: JenaWeatherData, normalize: boolean,
+    includeDateTime: boolean, lookBack: number, step: number, delay: number): Promise<number> => {
+    const batchSize = 128
+    const dataset = tf.data.generator(
+        () => jenaWeatherData.getNextBatchFunction(false, lookBack, delay, batchSize, step,
+            VAL_MIN_ROW, VAL_MAX_ROW, normalize, includeDateTime))
+
+    const batchMeanAbsoluteErrors: tf.Tensor[] = []
+    const batchSizes: number[] = []
+
+    // for (let dataItem of dataset) {
+    await dataset.forEachAsync(dataItem => {
+        const features = dataItem.xs as tf.Tensor
+        const targets = dataItem.ys as tf.Tensor
+        const timeSteps = features.shape[1] as number
+        batchSizes.push(features.shape[0])
+        batchMeanAbsoluteErrors.push(tf.tidy(() => tf.losses.absoluteDifference(targets,
+            features.gather([timeSteps - 1], 1).gather([1], 2).squeeze([2]))))
+    })
+
+    const meanAbsoluteError = tf.tidy(() => {
+        const batchSizesTensor = tf.tensor1d(batchSizes)
+        const batchMeanAbsoluteErrorsTensor = tf.stack(batchMeanAbsoluteErrors)
+        return batchMeanAbsoluteErrorsTensor.mul(batchSizesTensor)
+            .sum()
+            .div(batchSizesTensor.sum())
+    })
+    tf.dispose(batchMeanAbsoluteErrors)
+    return meanAbsoluteError.dataSync()[0]
+}
+
+export const trainModel =
+    async (model: tf.LayersModel, jenaWeatherData: JenaWeatherData, normalize: boolean, includeDateTime: boolean,
+        lookBack: number, step: number, delay: number, batchSize: number, epochs: number,
+        callbacks: tf.Callback[]): Promise<void> => {
+        const trainShuffle = true
+        const trainDataset = tf.data.generator(
+            () => jenaWeatherData.getNextBatchFunction(
+                trainShuffle, lookBack, delay, batchSize, step, TRAIN_MIN_ROW,
+                TRAIN_MAX_ROW, normalize, includeDateTime)).prefetch(8)
+
+        const evalShuffle = false
+        const valDataset = tf.data.generator(
+            () => jenaWeatherData.getNextBatchFunction(
+                evalShuffle, lookBack, delay, batchSize, step, VAL_MIN_ROW,
+                VAL_MAX_ROW, normalize, includeDateTime))
+
+        await model.fitDataset(trainDataset, {
+            batchesPerEpoch: 500,
+            epochs,
+            callbacks,
+            validationData: valDataset
+        })
+    }
+
 const RnnJena = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
-    const [sTabCurrent, setTabCurrent] = useState<number>(1)
+    const [sTabCurrent, setTabCurrent] = useState<number>(4)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
 
-    // const [sNumFeatures, setNumFeatures] = useState(10)
+    // Data
+    const [sDataLoaded, setDataLoaded] = useState(false)
     const [sDataHandler, setDataHandler] = useState<JenaWeatherData>()
-    const [sLoadSpendSec, setLoadSpendSec] = useState<number>(0)
+    const [sLoadSpendSec, setLoadSpendSec] = useState(0)
+    const [sNormalize, setNormalize] = useState(false)
+    const [sIncludeDateTime, setIncludeDateTime] = useState(false)
+    const [sLookBack, setLookBack] = useState(10 * 24 * STEP)
+    const [sDelay, setDelay] = useState(1 * 24 * STEP)
+    const [sBaseLine, setBaseLine] = useState<number>()
 
+    // Model
     const [sModelName, setModelName] = useState('simpleRnn')
     const [sModel, setModel] = useState<tf.LayersModel>()
     const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
-    const [curLayer, setCurLayer] = useState<tf.layers.Layer>()
+    const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
+
+    // Train
+    const [sEpochs, setEpochs] = useState<number>(3)
+    const [sBatchSize, setBatchSize] = useState<number>(256)
+    const stopRef = useRef(false)
 
     const [sCurrBeginIndex, setCurrBeginIndex] = useState<number>(0)
     const [ignore, forceUpdate] = useReducer((x: number) => x + 1, 0)
 
-    const [sEpochs, setEpochs] = useState<number>(5)
-
     const elementRef = useRef<HTMLDivElement>(null)
     const dataChartRef = useRef<HTMLDivElement>(null)
     const chartRef = useRef<HTMLDivElement>(null)
+
+    const [formTrain] = Form.useForm()
+    const [formData] = Form.useForm()
 
     /***********************
      * useEffect
      ***********************/
 
     useEffect(() => {
-        logger('init data ...')
+        logger('init data handler...')
         const dataHandler = new JenaWeatherData()
 
         if (dataHandler.csvLines.length === 0) {
@@ -105,36 +186,8 @@ const RnnJena = (): JSX.Element => {
 
         return () => {
             logger('Data Dispose')
-            dataHandler.dispose()
         }
     }, [])
-
-    useEffect(() => {
-        logger('Draw 1')
-        if (!sDataHandler || !dataChartRef.current || !chartRef.current) {
-            return
-        }
-        logger('Draw 2')
-
-        const series1 = 'T (degC)'
-        const series2 = 'p (mbar)'
-        makeTimeSeriesChart(series1, series2, 'week', true, chartRef.current).then(
-            () => {
-                logger('Draw 3')
-            },
-            (e) => {
-                logger(e.msg)
-            }
-        )
-        makeTimeSeriesScatterPlot(series1, series2, 'week', true).then(
-            () => {
-                logger('Draw 4')
-            },
-            (e) => {
-                logger(e.msg)
-            }
-        )
-    }, [ignore])
 
     useEffect(() => {
         logger('init model ...')
@@ -170,6 +223,7 @@ const RnnJena = (): JSX.Element => {
                 _model = buildSimpleRNNModel(inputShape)
                 break
         }
+
         _model.compile({ loss: 'meanAbsoluteError', optimizer: 'rmsprop' })
         // _model.summary()
         setModel(_model)
@@ -189,6 +243,20 @@ const RnnJena = (): JSX.Element => {
      * Functions
      ***********************/
 
+    const myCallback = {
+        onBatchBegin: async (batch: number) => {
+            if (!sModel) {
+                return
+            }
+            if (sModel && stopRef.current) {
+                logger('Checked stop', stopRef.current)
+                setStatus(STATUS.STOPPED)
+                sModel.stopTraining = stopRef.current
+            }
+            await tf.nextFrame()
+        }
+    }
+
     const train = async (): Promise<void> => {
         if (!sModel || !sDataHandler) {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -196,29 +264,18 @@ const RnnJena = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
         logger('train...')
 
-        const lookBack = 10 * 24 * 6 // Look back 10 days.
-        const step = 6 // 1-hour steps.
-        const delay = 24 * 6 // Predict the weather 1 day later.
-        const batchSize = 128
-        const normalize = true
-        const includeDateTime = false
-
         console.log('Starting model training...')
-        const epochs = sEpochs
-        await trainModel(sModel, sDataHandler, normalize, includeDateTime,
-            lookBack, step, delay, batchSize, epochs,
-            tfvis.show.fitCallbacks(elementRef.current, ['loss', 'val_loss'], {
-                callbacks: ['onBatchEnd', 'onEpochEnd']
-            }))
-        setStatus(STATUS.TRAINED)
-    }
+        const callbacks = [
+            tfvis.show.fitCallbacks(elementRef.current, ['loss', 'val_loss'], { callbacks: ['onBatchEnd', 'onEpochEnd'] }),
+            myCallback
+        ]
 
-    const handleTrain = (): void => {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        train().then()
+        await trainModel(sModel, sDataHandler, sNormalize, sIncludeDateTime, sLookBack, STEP, sDelay, sBatchSize,
+            sEpochs, callbacks)
+        setStatus(STATUS.TRAINED)
     }
 
     const makeTimeSeriesChart = async (series1: string, series2: string, timeSpan: string, normalize: boolean,
@@ -283,20 +340,82 @@ const RnnJena = (): JSX.Element => {
         })
     }
 
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
+    }
+
+    const handleDataParamsChange = (): void => {
+        const values = formData.getFieldsValue()
+        logger('handleDataParamsChange', values)
+        const { normalize, includeDateTime, lookBackDays, delayDays } = values
+        setNormalize(normalize)
+        setIncludeDateTime(includeDateTime)
+        setLookBack(lookBackDays * 24 * 6)
+        setDelay(delayDays * 24 * 6)
+
+        forceUpdate()
+    }
+
     const handleDataLoad = (): void => {
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         const beginMs = performance.now()
         sDataHandler?.load().then(() => {
             setLoadSpendSec((performance.now() - beginMs) / 1000)
             setStatus(STATUS.LOADED)
-
+            setDataLoaded(true)
             forceUpdate()
         }, (e) => {
             logger(e)
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             message.error(e.message)
         })
+    }
+
+    const handleCalc = (): void => {
+        if (!sDataHandler || !sDataLoaded) {
+            return
+        }
+
+        const beginMs = performance.now()
+        getBaselineMeanAbsoluteError(sDataHandler, sNormalize, sIncludeDateTime, sLookBack, STEP, sDelay).then(
+            (value) => {
+                logger('getBaselineMeanAbsoluteError', value)
+                setLoadSpendSec((performance.now() - beginMs) / 1000)
+                setBaseLine(value)
+            },
+            (e) => {
+                logger(e.msg)
+            }
+        )
+    }
+
+    const handleShowPlots = (): void => {
+        if (!sDataHandler || !sDataLoaded || !dataChartRef.current || !chartRef.current) {
+            return
+        }
+
+        logger('Draw Samples')
+
+        const series1 = 'T (degC)'
+        const series2 = 'p (mbar)'
+
+        makeTimeSeriesChart(series1, series2, 'week', sNormalize, chartRef.current).then(
+            () => {
+                logger('Draw TimeSeriesChart')
+            },
+            (e) => {
+                logger(e.msg)
+            }
+        )
+        makeTimeSeriesScatterPlot(series1, series2, 'week', sNormalize).then(
+            () => {
+                logger('Draw TimeSeriesScatterPlot')
+            },
+            (e) => {
+                logger(e.msg)
+            }
+        )
     }
 
     const handleModelChange = (value: string): void => {
@@ -309,44 +428,117 @@ const RnnJena = (): JSX.Element => {
         setCurLayer(_layer)
     }
 
-    const handleTabChange = (current: number): void => {
-        setTabCurrent(current)
+    const handleTrainParamsChange = (): void => {
+        const values = formTrain.getFieldsValue()
+        // logger('handleTrainParamsChange', values)
+        const { epochs, batchSize } = values
+        setEpochs(epochs)
+        setBatchSize(batchSize)
+    }
+
+    const handleTrain = (): void => {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        train().then()
+    }
+    const handleTrainStop = (): void => {
+        logger('handleTrainStop')
+        stopRef.current = true
     }
 
     /***********************
      * Render
      ***********************/
 
-    const modelTitle = (
-        <>
-            Model
-            <Select onChange={handleModelChange} defaultValue={'simpleRnn'} style={{ marginLeft: 16 }}>
-                {MODEL_OPTIONS.map((v) => {
-                    return <Option key={v} value={v}>{v}</Option>
-                })}
-            </Select>
-        </>
-    )
-
-    const layerTitle = (
-        <>
-            {sModelName} Layers
-            <Select onChange={handleLayerChange} defaultValue={0} style={{ marginLeft: 16 }}>
-                {sLayersOption?.map((v) => {
-                    return <Option key={v.index} value={v.index}>{v.name}</Option>
-                })}
-            </Select>
-        </>
-    )
-
     const statusInfo = (): string => {
-        if (sStatus === STATUS.LOADING) {
+        if (sStatus === STATUS.WAITING) {
             return 'Please waiting...'
         } else if (sStatus === STATUS.LOADED) {
-            return `${sDataHandler?.getDataLength()} items with ${sLoadSpendSec.toFixed(3)} s`
+            const baseline = sBaseLine ? `Mean absolute error of baseline is : ${sBaseLine}` : ''
+            return `${sDataHandler?.getDataLength()} items with ${sLoadSpendSec.toFixed(3)} s. ${baseline}`
         } else {
             return 'No data load'
         }
+    }
+
+    const dataAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Adjust Data' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} form={formData} onFieldsChange={handleDataParamsChange}
+                    initialValues={{
+                        normalize: false,
+                        includeDateTime: false,
+                        lookBackDays: 10,
+                        delayDays: 1
+                    }}>
+                    <Form.Item name='normalize' label='Normalize Data'>
+                        <Switch />
+                    </Form.Item>
+                    <Form.Item name='includeDateTime' label='Include DateTime'>
+                        <Switch />
+                    </Form.Item>
+                    <Form.Item name='lookBackDays' label='Look Back Days'>
+                        <Slider min={8} max={12} marks={{ 8: 8, 10: 10, 12: 12 }} />
+                    </Form.Item>
+                    <Form.Item name='delayDays' label='Delay Days'>
+                        <Slider min={1} max={3} marks={{ 1: 1, 2: 2, 3: 3 }} />
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <Button style={{ width: '20%', margin: '0 10%' }}
+                            disabled={!sDataLoaded} onClick={handleShowPlots}> Show Plots </Button>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
+
+    const modelAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} initialValues={{
+                    modelName: 'simpleRnn'
+                }}>
+                    <Form.Item name='modelName' label='Select Model'>
+                        <Select onChange={handleModelChange}>
+                            {MODEL_OPTIONS.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
+
+    const trainAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Train' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
+                    initialValues={{
+                        epochs: 3,
+                        batchSize: 256
+                    }}>
+                    <Form.Item name='epochs' label='Epochs'>
+                        <Slider min={1} max={10} marks={{ 1: 1, 5: 5, 9: 9 }} />
+                    </Form.Item>
+                    <Form.Item name='batchSize' label='Batch Size'>
+                        <Select>
+                            {BATCH_SIZES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <Button type='primary' htmlType={'submit'} style={{ width: '30%', margin: '0 10%' }}
+                            disabled={!sDataLoaded}> Train </Button>
+                        <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <div>Status: {sStatus}</div>
+                        <div>Backend: {sTfBackend}</div>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
     }
 
     return (
@@ -360,17 +552,16 @@ const RnnJena = (): JSX.Element => {
                     <Col span={12}>
                         <Card title={'Data'} style={{ margin: 8 }}>
                             <MarkdownWidget source={mdInfo}/>
-                            <Button style={{ width: '30%', margin: '0 auto' }} type='primary'
-                                disabled={sStatus === STATUS.LOADING} onClick={handleDataLoad}> Load </Button>
-                            {/* {JSON.stringify(sSampleData)} */}
-                            {/* {sSampleData && (<SampleDataVis xFloatFixed={4} xDataset={sSampleData.data as tf.Tensor} */}
-                            {/*    yDataset={sSampleData.normalizedTimeOfDay as tf.Tensor} ></SampleDataVis>)} */}
-
+                            <Button style={{ width: '30%', margin: '0 10%' }} type='primary'
+                                    disabled={sStatus === STATUS.WAITING} onClick={handleDataLoad}> Load </Button>
+                            <Button style={{ width: '30%', margin: '0 0%' }}
+                                disabled={!sDataLoaded} onClick={handleCalc}> Calc Baseline </Button>
                             <p>Status: {sStatus}</p>
                             <p>{statusInfo()}</p>
                         </Card>
                     </Col>
                     <Col span={12}>
+                        {dataAdjustCard()}
                         <Card title={'Loaded Data'} style={{ margin: 8 }}>
                             <div ref={dataChartRef}/>
                             <div ref={chartRef} />
@@ -380,30 +571,43 @@ const RnnJena = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>
-                    <Col span={12} >
-                        <Card title={modelTitle} style={{ margin: 8 }}>
-                            { sModel && <TfvisModelWidget model={sModel}/>}
+                    <Col span={8}>
+                        {modelAdjustCard()}
+                        <Card title={`Show Layers of ${sModelName}`} style={{ margin: '8px' }} size='small'>
+                            <Form {...layout} initialValues={{
+                                layer: 0
+                            }}>
+                                <Form.Item name='layer' label='Show Layer'>
+                                    <Select onChange={handleLayerChange} >
+                                        {sLayersOption?.map((v) => {
+                                            return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                        })}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
                         </Card>
                     </Col>
-                    <Col span={12}>
-                        <Card title={layerTitle} style={{ margin: 8 }}>
-                            <TfvisLayerWidget layer={curLayer}/>
+                    <Col span={16}>
+                        <Card title='Model Info' style={{ margin: '8px' }} size='small'>
+                            <TfvisModelWidget model={sModel}/>
+                        </Card>
+                        <Card title='Layer Info' style={{ margin: '8px' }} size='small'>
+                            <TfvisLayerWidget layer={sCurLayer}/>
                         </Card>
                     </Col>
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={12}>
-                        <Card title='Jena Weather' style={{ margin: '8px' }} size='small'>
-                            <div>
-                                <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                                <div>status: {sStatus}</div>
-                            </div>
-                            <p>backend: {sTfBackend}</p>
-                        </Card>
+                    <Col span={8}>
+                        {trainAdjustCard()}
+                        {dataAdjustCard()}
+                        {modelAdjustCard()}
                     </Col>
-                    <Col span={12}>
+                    <Col span={8}>
+                        Hello
+                    </Col>
+                    <Col span={8}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
                             <div ref={elementRef} />
                         </Card>

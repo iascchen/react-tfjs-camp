@@ -97,7 +97,7 @@ const SentimentWidget = (): JSX.Element => {
         tf.backend()
         setTfBackend(tf.getBackend())
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         let predictor: SentimentPredictor
         let _model: tf.LayersModel
@@ -201,7 +201,7 @@ const SentimentWidget = (): JSX.Element => {
             return
         }
         logger('handlePredict', values)
-        setStatus(STATUS.PREDICTING)
+        setStatus(STATUS.WAITING)
         const result = sPredictor.predict(sSampleText)
         logger('handlePredict', result)
         setStatus(STATUS.PREDICTED)
@@ -214,7 +214,7 @@ const SentimentWidget = (): JSX.Element => {
         }
 
         logger('handleTrain', values)
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
 
         const { epochs, batchSize, validationSplit } = values
         sModel.compile({ loss: 'binaryCrossentropy', optimizer: 'adam', metrics: ['acc'] })

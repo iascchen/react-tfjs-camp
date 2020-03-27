@@ -35,7 +35,7 @@ const MobilenetObjDetector = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
-    const [sTabCurrent, setTabCurrent] = useState<number>(5)
+    const [sTabCurrent, setTabCurrent] = useState<number>(4)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -53,7 +53,6 @@ const MobilenetObjDetector = (): JSX.Element => {
     const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
 
     // Train
-    const [sNumExamples, setNumExamples] = useState<number>(200)
     const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
     const stopRef = useRef(false)
 
@@ -76,7 +75,7 @@ const MobilenetObjDetector = (): JSX.Element => {
     useEffect(() => {
         logger('init model ...')
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         tf.backend()
         setTfBackend(tf.getBackend())
@@ -118,7 +117,6 @@ const MobilenetObjDetector = (): JSX.Element => {
 
         return () => {
             logger('Data Synthesizer Dispose')
-            synth?.dispose()
         }
     }, [canvasRef])
 
@@ -151,28 +149,32 @@ const MobilenetObjDetector = (): JSX.Element => {
         }
     }
 
-    const train = async (initialTransferEpochs: number, fineTuningEpochs: number, batchSize: number, validationSplit: number): Promise<void> => {
+    const train = async (initialTransferEpochs: number, fineTuningEpochs: number, batchSize: number, batchesPerEpoch: number,
+        validationSplit: number): Promise<void> => {
         if (!sModel || !sFineTuningLayers || !sDataSynth) {
             return
         }
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
         stopRef.current = false
 
         const tBegin = tf.util.now()
-        console.log(`Generating ${sNumExamples} training examples...`)
-        const { xs, ys } = await sDataSynth.generateExampleBatch(sNumExamples, sNumCircles, sNumLines)
-
-        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(5e-3) })
         const callbacks = [tfvis.show.fitCallbacks(historyRef?.current, ['loss', 'acc', 'val_loss', 'val_acc']),
             myCallback]
 
+        const trainDataset = tf.data.generator(
+            () => sDataSynth.getNextBatchFunction(batchSize, batchesPerEpoch, sNumCircles, sNumLines))
+        const valDataset = tf.data.generator(
+            () => sDataSynth.getNextBatchFunction(Math.round(batchSize * validationSplit), batchesPerEpoch,
+                sNumCircles, sNumLines))
+
         // Initial phase of transfer learning.
         console.log('Phase 1 of 2: initial transfer learning')
-        await sModel.fit(xs as tf.Tensor, ys as tf.Tensor, {
+        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(5e-3) })
+
+        await sModel.fitDataset(await trainDataset, {
             epochs: initialTransferEpochs,
-            batchSize,
-            validationSplit,
-            callbacks
+            callbacks,
+            validationData: await valDataset
         })
 
         // Fine-tuning phase of transfer learning.
@@ -180,18 +182,18 @@ const MobilenetObjDetector = (): JSX.Element => {
         for (const layer of sFineTuningLayers) {
             layer.trainable = true
         }
-        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(2e-3) })
 
         // Do fine-tuning.
         // The batch size is reduced to avoid CPU/GPU OOM. This has
         // to do with the unfreezing of the fine-tuning layers above,
         // which leads to higher memory consumption during backpropagation.
         console.log('Phase 2 of 2: fine-tuning phase')
-        await sModel.fit(xs as tf.Tensor, ys as tf.Tensor, {
+        sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(2e-3) })
+        await sModel.fitDataset(trainDataset, {
+            // batchesPerEpoch,
             epochs: fineTuningEpochs,
-            batchSize: batchSize / 2,
-            validationSplit,
-            callbacks
+            callbacks,
+            validationData: valDataset
         })
 
         // After Fine-tuning phase of transfer learning.
@@ -278,7 +280,7 @@ const MobilenetObjDetector = (): JSX.Element => {
         const { numTestExamples, numCircles, numLines } = values
 
         logger(`Generating ${numTestExamples} testing examples...`)
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
         sDataSynth.generateExampleBatch(numTestExamples, numCircles, numLines).then(
             (dataSet) => {
                 // const { images, targets } = dataSet
@@ -297,20 +299,13 @@ const MobilenetObjDetector = (): JSX.Element => {
         setCurLayer(_layer)
     }
 
-    const handleTrainParamsChange = (): void => {
-        const values = formTrain.getFieldsValue()
-        // logger('handleTrainParamsChange', values)
-        // const { initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit } = values
-        const { numExamples } = values
-        setNumExamples(numExamples)
-    }
-
     const handleTrain = (values: any): void => {
         logger('handleTrain', values)
-        const { initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit } = values
-        train(initialTransferEpochs, fineTuningEpochs, batchSize, validationSplit).then(
+        const { batchSize, batchesPerEpoch, initialTransferEpochs, fineTuningEpochs, validationSplit } = values
+        train(initialTransferEpochs, fineTuningEpochs, batchSize, batchesPerEpoch, validationSplit).then(
             () => {
                 setStatus(STATUS.TRAINED)
+                handleSaveModelWeight()
             },
             loggerError
         )
@@ -326,14 +321,14 @@ const MobilenetObjDetector = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.PREDICTING)
+        setStatus(STATUS.WAITING)
         const result = sModel.predict(sTestSet.xs as tf.Tensor) as tf.Tensor
         logger('sModel.predict', result)
         setPredictResult(result)
     }
 
     const handleLoadModelWeight = (): void => {
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
         tf.loadLayersModel(`/model/${MODEL_URL_NAME}.json`).then(
             (model) => {
                 model.summary()
@@ -379,7 +374,7 @@ const MobilenetObjDetector = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.PREDICTING)
+        setStatus(STATUS.WAITING)
         const result = sModel.predict(sSample.xs as tf.Tensor) as tf.Tensor
         logger('sModel.predict', result)
         setSamplePredictResult(result)
@@ -425,25 +420,25 @@ const MobilenetObjDetector = (): JSX.Element => {
 
     const trainAdjustCard = (): JSX.Element => {
         return <Card title='Train' style={{ margin: '8px' }} size='small'>
-            <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
+            <Form {...layout} form={formTrain} onFinish={handleTrain}
                 initialValues={{
-                    numExamples: 400,
+                    batchSize: 48,
+                    batchesPerEpoch: 20,
                     initialTransferEpochs: 50,
                     fineTuningEpochs: 100,
-                    batchSize: 64,
                     validationSplit: 0.15
                 }}>
-                <Form.Item name='numExamples' label='Sample counts'>
-                    <Slider min={200} max={1000} step={200} marks={{ 200: 200, 600: 600, 1000: 1000 }}/>
+                <Form.Item name='batchSize' label='Batch Size'>
+                    <Slider min={32} max={64} step={16} marks={{ 32: 32, 48: 48, 64: 64 }}/>
+                </Form.Item>
+                <Form.Item name='batchesPerEpoch' label='Batches per epoch'>
+                    <Slider min={10} max={50} step={10} marks={{ 10: 10, 30: 30, 50: 50 }}/>
                 </Form.Item>
                 <Form.Item name='initialTransferEpochs' label='Transfer Epochs'>
                     <Slider min={50} max={150} step={50} marks={{ 50: 50, 100: 100, 150: 150 }}/>
                 </Form.Item>
                 <Form.Item name='fineTuningEpochs' label='Tuning Epochs'>
                     <Slider min={50} max={150} step={50} marks={{ 50: 50, 100: 100, 150: 150 }}/>
-                </Form.Item>
-                <Form.Item name='batchSize' label='Batch Size'>
-                    <Slider min={32} max={64} step={16} marks={{ 32: 32, 48: 48, 64: 64 }}/>
                 </Form.Item>
                 <Form.Item name='validationSplit' label='Validation Split'>
                     <Slider min={0.1} max={0.2} step={0.05} marks={{ 0.1: 0.1, 0.15: 0.15, 0.2: 0.2 }}/>

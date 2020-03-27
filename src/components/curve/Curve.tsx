@@ -161,7 +161,7 @@ const Curve = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
         stopRef.current = false
 
         model.fit(trainSet.xs as tf.Tensor, trainSet.ys as tf.Tensor, {

@@ -34,6 +34,12 @@ const LOCAL_JENA_WEATHER_CSV_PATH = '/preload/data/jena_climate_2009_2016.csv'
 // const REMOTE_JENA_WEATHER_CSV_PATH =
 //     'https://storage.googleapis.com/learnjs-data/jena_climate/jena_climate_2009_2016.csv'
 
+// Row ranges of the training and validation data subsets.
+export const TRAIN_MIN_ROW = 0
+export const TRAIN_MAX_ROW = 200000
+export const VAL_MIN_ROW = 200001
+export const VAL_MAX_ROW = 300000
+
 interface IParsedDate {
     date: Date
     normalizedDayOfYear: number // normalizedDayOfYear: Day of the year, normalized between 0 and 1.
@@ -251,12 +257,12 @@ export class JenaWeatherData {
         return out
     }
 
-    getNextBatchFunction = (shuffle: boolean, lookBack: number, delay: number, batchSize: number, step: number, minIndex: number, maxIndex: number, normalize: boolean,
-        includeDateTime: boolean): any => {
+    getNextBatchFunction = (shuffle: boolean, lookBack: number, delay: number, batchSize: number, step: number,
+        minIndex: number, maxIndex: number, normalize: boolean, includeDateTime: boolean): Iterator<tf.TensorContainerObject> => {
         let startIndex = minIndex + lookBack
         const lookBackSlices = Math.floor(lookBack / step)
 
-        return {
+        const iterator = {
             next: () => {
                 const rowIndices = []
                 let done = false // Indicates whether the dataset has ended.
@@ -320,9 +326,7 @@ export class JenaWeatherData {
                 }
             }
         }
-    }
 
-    dispose = (): void => {
-        // todo
+        return iterator
     }
 }

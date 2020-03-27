@@ -25,6 +25,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
+import { logger } from '../../utils'
 
 /**
  * Generate a random color style for canvas strokes and fills.
@@ -295,8 +296,25 @@ class ObjectDetectionImageSynthesizer {
         return { xs: images, ys: targets }
     }
 
-    dispose = (): void => {
-        // TODO
+    getNextBatchFunction = (batchSize: number, batchesPerEpoch: number, numCircles: number, numLines: number,
+        triangleProbability?: number): any => {
+        // const numElements = 10
+        let index = 0
+
+        const iterator = {
+            next: async () => {
+                let batched
+                if (index < batchesPerEpoch) {
+                    batched = await this.generateExampleBatch(batchSize, numCircles, numLines, triangleProbability)
+                    logger('getNextBatchFunction', index)
+
+                    index++
+                    return { value: batched, done: false }
+                }
+                return { value: batched, done: true }
+            }
+        }
+        return iterator
     }
 }
 

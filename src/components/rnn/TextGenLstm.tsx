@@ -71,7 +71,7 @@ const TextGenLstm = (): JSX.Element => {
         const url = TEXT_DATA_URLS[sDataIdentifier].url
         logger('url', url)
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
         fetchResource(url).then(
             (buffer) => {
                 const textString = buffer.toString()
@@ -96,7 +96,7 @@ const TextGenLstm = (): JSX.Element => {
         }
 
         logger('init model ...')
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         const generator = new SaveableLSTMTextGenerator(sTextData)
         setGenerator(generator)
@@ -160,7 +160,7 @@ const TextGenLstm = (): JSX.Element => {
             return
         }
         logger('handlePredict', values)
-        setStatus(STATUS.PREDICTING)
+        setStatus(STATUS.WAITING)
 
         const { seedText, genTextLen, temperature } = values
 
@@ -196,7 +196,7 @@ const TextGenLstm = (): JSX.Element => {
             return
         }
         logger('handleTrain', values)
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
 
         const { epochs, examplesPerEpoch, batchSize, validationSplit, learningRate } = values
         sGenerator.compileModel(learningRate)

@@ -10,7 +10,7 @@ const FetchWidget = (): JSX.Element => {
     const [buffer2, setBuffer2] = useState<ArrayBuffer>()
 
     useEffect(() => {
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
         fetchResource(resultURL).then(
             (result) => {
                 logger(result)
@@ -24,7 +24,7 @@ const FetchWidget = (): JSX.Element => {
     }, [])
 
     useEffect(() => {
-        setStatus2(STATUS.LOADING)
+        setStatus2(STATUS.WAITING)
         fetchResource(resultURL, true).then(
             (result) => {
                 logger(result)

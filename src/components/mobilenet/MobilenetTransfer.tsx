@@ -102,7 +102,7 @@ const MobilenetTransfer = (): JSX.Element => {
     useEffect(() => {
         logger('init truncatedModel model ...')
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         tf.backend()
         setTfBackend(tf.getBackend())
@@ -183,7 +183,7 @@ const MobilenetTransfer = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
 
         const _model = createModel(sTruncatedModel, sOutputClasses, sDenseUnits)
         setModel(_model)
@@ -231,7 +231,7 @@ const MobilenetTransfer = (): JSX.Element => {
             return
         }
 
-        setStatus(STATUS.TRAINING)
+        setStatus(STATUS.WAITING)
 
         // Train the model! Model.fit() will shuffle xs & ys so we don't have to.
         sModel.fit(_trainSet.xs as tf.Tensor, _trainSet.ys as tf.Tensor, {
@@ -254,7 +254,7 @@ const MobilenetTransfer = (): JSX.Element => {
         if (!imgTensor) {
             return
         }
-        setStatus(STATUS.PREDICTING)
+        setStatus(STATUS.WAITING)
         // console.log('handlePredict', imgTensor)
         const [imgPred] = tf.tidy(() => {
             const batched = formatImageForMobilenet(imgTensor)
@@ -346,7 +346,7 @@ const MobilenetTransfer = (): JSX.Element => {
     }
 
     const handleUpload = async (file: RcFile): Promise<string> => {
-        setStatus(STATUS.LOADING)
+        setStatus(STATUS.WAITING)
         // logger(file)
         return getUploadFileBase64(file)
     }

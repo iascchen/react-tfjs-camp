@@ -20,6 +20,7 @@ const { Option } = Select
 
 const MODEL_OPTIONS = ['linear-regression', 'mlp', 'mlp-l2', 'mlp-dropout', 'simpleRnn', 'gru']
 const NUM_FEATURES = 14
+const DAY_RECORDS = 6 * 24
 
 export const TIME_SPAN_RANGE_MAP: IKeyMap = {
     hour: 6,
@@ -48,7 +49,7 @@ export const TIME_SPAN_MAX: IKeyMap = {
     year: 6
 }
 
-const BATCH_SIZES = [64, 128, 256, 512]
+const BATCH_SIZES = [256, 512, 1024]
 const STEP = 6 // 1-hour steps.
 
 const mdInfo = '**注意** \n' +
@@ -94,30 +95,6 @@ export const getBaselineMeanAbsoluteError = async (jenaWeatherData: JenaWeatherD
     return meanAbsoluteError.dataSync()[0]
 }
 
-export const trainModel =
-    async (model: tf.LayersModel, jenaWeatherData: JenaWeatherData, normalize: boolean, includeDateTime: boolean,
-        lookBack: number, step: number, delay: number, batchSize: number, epochs: number,
-        callbacks: tf.Callback[]): Promise<void> => {
-        const trainShuffle = true
-        const trainDataset = tf.data.generator(
-            () => jenaWeatherData.getNextBatchFunction(
-                trainShuffle, lookBack, delay, batchSize, step, TRAIN_MIN_ROW,
-                TRAIN_MAX_ROW, normalize, includeDateTime)).prefetch(8)
-
-        const evalShuffle = false
-        const valDataset = tf.data.generator(
-            () => jenaWeatherData.getNextBatchFunction(
-                evalShuffle, lookBack, delay, batchSize, step, VAL_MIN_ROW,
-                VAL_MAX_ROW, normalize, includeDateTime))
-
-        await model.fitDataset(trainDataset, {
-            batchesPerEpoch: 500,
-            epochs,
-            callbacks,
-            validationData: valDataset
-        })
-    }
-
 const RnnJena = (): JSX.Element => {
     /***********************
      * useState
@@ -133,9 +110,11 @@ const RnnJena = (): JSX.Element => {
     const [sLoadSpendSec, setLoadSpendSec] = useState(0)
     const [sSeriesOptions, setSeriesOptions] = useState<string[]>([])
     const [sTimeSpan, setTimeSpan] = useState<string>('tenDays')
+    const [sTimeRange, setTimeRange] = useState<string>('')
 
     // Model
     const [sModelName, setModelName] = useState('simpleRnn')
+    const [sIncludeTime, setIncludeTime] = useState(false)
     const [sModel, setModel] = useState<tf.LayersModel>()
     const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
     const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
@@ -145,16 +124,18 @@ const RnnJena = (): JSX.Element => {
     const [sEpochs, setEpochs] = useState<number>(3)
     const [sBatchSize, setBatchSize] = useState<number>(256)
     const [sNormalize, setNormalize] = useState(false)
-    const [sIncludeTime, setIncludeTime] = useState(false)
-    const [sLookBack, setLookBack] = useState(10 * 24 * STEP)
-    const [sDelay, setDelay] = useState(1 * 24 * STEP)
+    const [sLookBack, setLookBack] = useState(10)
+    const [sDelay, setDelay] = useState(1)
     const [sBaseLine, setBaseLine] = useState<number>()
 
     const elementRef = useRef<HTMLDivElement>(null)
     const dataChartRef = useRef<HTMLDivElement>(null)
     const chartRef = useRef<HTMLDivElement>(null)
 
+    const predictRef = useRef<HTMLDivElement>(null)
+
     const [formDataShow] = Form.useForm()
+    const [formModel] = Form.useForm()
     const [formTrain] = Form.useForm()
 
     /***********************
@@ -195,7 +176,7 @@ const RnnJena = (): JSX.Element => {
         const lookBack = 10 * 24 * 6 // Look back 10 days.
         const step = 6 // 1-hour steps.
         const numTimeSteps = Math.floor(lookBack / step)
-        const numFeatures = NUM_FEATURES
+        const numFeatures = sIncludeTime ? NUM_FEATURES + 2 : NUM_FEATURES
         const inputShape: tf.Shape = [numTimeSteps, numFeatures]
 
         let _model: tf.LayersModel
@@ -220,8 +201,6 @@ const RnnJena = (): JSX.Element => {
                 _model = buildSimpleRNNModel(inputShape)
                 break
         }
-
-        _model.compile({ loss: 'meanAbsoluteError', optimizer: 'rmsprop' })
         // _model.summary()
         setModel(_model)
 
@@ -234,11 +213,136 @@ const RnnJena = (): JSX.Element => {
             logger('Model Dispose')
             _model?.dispose()
         }
-    }, [sModelName])
+    }, [sModelName, sIncludeTime])
+
+    useEffect(() => {
+        if (!sModel) {
+            return
+        }
+        logger('compile model ...')
+
+        sModel.compile({ loss: 'meanAbsoluteError', optimizer: 'rmsprop' })
+    }, [sModel])
 
     /***********************
      * Functions
      ***********************/
+    const makeTimeSeriesChart = async (series1: string, series2: string, timeSpan: string, currBeginIndex: number,
+        normalize: boolean, chartConatiner: HTMLDivElement): Promise<void> => {
+        if (!sDataHandler || !chartConatiner) {
+            return
+        }
+
+        const values = []
+        const series = []
+        const includeTime = true
+        if (series1 !== 'None') {
+            values.push(sDataHandler.getColumnData(series1, includeTime, normalize, currBeginIndex,
+                TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan]))
+            series.push(normalize ? `${series1} (normalized)` : series1)
+        }
+        if (series2 !== 'None') {
+            values.push(sDataHandler.getColumnData(series2, includeTime, normalize, currBeginIndex,
+                TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan]))
+            series.push(normalize ? `${series2} (normalized)` : series2)
+        }
+        // NOTE(cais): On a Linux workstation running latest Chrome, the length
+        // limit seems to be around 120k.
+        await tfvis.render.linechart(chartConatiner, { values, series: series }, {
+            width: chartConatiner.offsetWidth,
+            height: chartConatiner.offsetWidth * 0.5,
+            xLabel: 'Time',
+            yLabel: series.length === 1 ? series[0] : ''
+        })
+    }
+
+    const makeTimeSeriesScatterPlot = async (series1: string, series2: string, timeSpan: string,
+        currBeginIndex: number, normalize: boolean): Promise<void> => {
+        if (!sDataHandler || !dataChartRef.current) {
+            return
+        }
+
+        const includeTime = false
+        const xs = sDataHandler.getColumnData(series1, includeTime, normalize, currBeginIndex,
+            TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan])
+        const ys = sDataHandler.getColumnData(series2, includeTime, normalize, currBeginIndex,
+            TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan])
+        const values = [xs.map((x, i) => {
+            return { x, y: ys[i] }
+        })]
+        let seriesLabel1 = series1
+        let seriesLabel2 = series2
+        if (normalize) {
+            seriesLabel1 += ' (normalized)'
+            seriesLabel2 += ' (normalized)'
+        }
+        const series = [`${seriesLabel1} - ${seriesLabel2}`]
+
+        await tfvis.render.scatterplot(dataChartRef.current, { values, series }, {
+            width: dataChartRef.current.offsetWidth,
+            height: dataChartRef.current.offsetWidth * 0.5,
+            xLabel: seriesLabel1,
+            yLabel: seriesLabel2
+        })
+    }
+
+    const updateDateTimeRangeSpan = (currBeginIndex: number): string => {
+        if (!sDataHandler) {
+            return ''
+        }
+
+        const currEndIndex = currBeginIndex + TIME_SPAN_RANGE_MAP[sTimeSpan]
+        const begin = new Date(sDataHandler.getTime(currBeginIndex)).toLocaleDateString()
+        const end =
+            new Date(sDataHandler.getTime(currEndIndex)).toLocaleDateString()
+        return `${begin} - ${end}`
+    }
+
+    const makeTimeSeriesPredictChart = async (target: any[], pred: any[], chartConatiner: HTMLDivElement): Promise<void> => {
+        if (!sDataHandler || !chartConatiner) {
+            return
+        }
+
+        const values = [target, pred]
+        const series = ['Real', 'Predict']
+
+        const yLabel = sNormalize ? 'T (normalized)' : 'T'
+
+        // NOTE(cais): On a Linux workstation running latest Chrome, the length
+        // limit seems to be around 120k.
+        await tfvis.render.linechart(chartConatiner, { values, series }, {
+            width: chartConatiner.offsetWidth,
+            height: chartConatiner.offsetWidth * 0.5,
+            xLabel: 'Time',
+            yLabel
+        })
+    }
+
+    const showPredict = async (): Promise<void> => {
+        if (!sDataHandler || !sModel || !sDataLoaded || !predictRef.current) {
+            return
+        }
+        const evalShuffle = false
+        const valDataset = tf.data.generator(() => sDataHandler.getNextBatchFunction(evalShuffle,
+            sLookBack * DAY_RECORDS, sDelay * DAY_RECORDS, sBatchSize, STEP, VAL_MIN_ROW,
+            VAL_MIN_ROW + STEP * sBatchSize, sNormalize, sIncludeTime))
+
+        logger('Draw Predict Samples')
+        const data = await valDataset.toArray()
+        console.log(data.length)
+
+        const source = data[0].xs as tf.Tensor
+        const target = data[0].ys as tf.Tensor
+        const pred = await sModel.predict(source) as tf.Tensor
+
+        const targetArray = Array.from(target.dataSync()).map((v, i) => { return { x: i, y: v } })
+        const predArray = Array.from(pred.dataSync()).map((v, i) => { return { x: i, y: v } })
+
+        // logger('targetArray', targetArray)
+        // logger('predArray', predArray)
+
+        await makeTimeSeriesPredictChart(targetArray, predArray, predictRef.current)
+    }
 
     const myCallback = {
         onBatchBegin: async (batch: number) => {
@@ -251,7 +355,34 @@ const RnnJena = (): JSX.Element => {
                 sModel.stopTraining = stopRef.current
             }
             await tf.nextFrame()
+        },
+        onBatchEnd: async (batch: number) => {
+            await showPredict()
+            await tf.nextFrame()
         }
+    }
+
+    const trainModel = async (model: tf.LayersModel, jenaWeatherData: JenaWeatherData, normalize: boolean,
+        includeDateTime: boolean, lookBack: number, step: number, delay: number, batchSize: number, epochs: number,
+        callbacks: tf.Callback[]): Promise<void> => {
+        const trainShuffle = true
+        const trainDataset = tf.data.generator(
+            () => jenaWeatherData.getNextBatchFunction(
+                trainShuffle, lookBack, delay, batchSize, step, TRAIN_MIN_ROW,
+                TRAIN_MAX_ROW, normalize, includeDateTime)).prefetch(8)
+
+        const evalShuffle = false
+        const valDataset = tf.data.generator(
+            () => jenaWeatherData.getNextBatchFunction(
+                evalShuffle, lookBack, delay, batchSize, step, VAL_MIN_ROW,
+                VAL_MAX_ROW, normalize, includeDateTime))
+
+        await model.fitDataset(trainDataset, {
+            batchesPerEpoch: 500,
+            epochs,
+            callbacks,
+            validationData: valDataset
+        })
     }
 
     const train = async (): Promise<void> => {
@@ -271,73 +402,11 @@ const RnnJena = (): JSX.Element => {
             myCallback
         ]
 
-        await trainModel(sModel, sDataHandler, sNormalize, sIncludeTime, sLookBack, STEP, sDelay, sBatchSize,
-            sEpochs, callbacks)
+        await trainModel(sModel, sDataHandler, sNormalize, sIncludeTime, sLookBack * DAY_RECORDS, STEP,
+            sDelay * DAY_RECORDS, sBatchSize, sEpochs, callbacks)
 
         handleSaveModelWeight()
         setStatus(STATUS.TRAINED)
-    }
-
-    const makeTimeSeriesChart = async (series1: string, series2: string, timeSpan: string, currBeginIndex: number, normalize: boolean,
-        chartConatiner: HTMLDivElement): Promise<void> => {
-        if (!sDataHandler || !chartConatiner) {
-            return
-        }
-
-        const values = []
-        const series = []
-        const includeTime = true
-        if (series1 !== 'None') {
-            values.push(sDataHandler.getColumnData(
-                series1, includeTime, normalize, currBeginIndex * TIME_SPAN_RANGE_MAP[timeSpan],
-                TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan]))
-            series.push(normalize ? `${series1} (normalized)` : series1)
-        }
-        if (series2 !== 'None') {
-            values.push(sDataHandler.getColumnData(
-                series2, includeTime, normalize, currBeginIndex * TIME_SPAN_RANGE_MAP[timeSpan],
-                TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan]))
-            series.push(normalize ? `${series2} (normalized)` : series2)
-        }
-        // NOTE(cais): On a Linux workstation running latest Chrome, the length
-        // limit seems to be around 120k.
-        await tfvis.render.linechart(chartConatiner, { values, series: series }, {
-            width: chartConatiner.offsetWidth * 0.95,
-            height: chartConatiner.offsetWidth * 0.3,
-            xLabel: 'Time',
-            yLabel: series.length === 1 ? series[0] : ''
-        })
-    }
-
-    const makeTimeSeriesScatterPlot = async (series1: string, series2: string, timeSpan: string, currBeginIndex: number, normalize: boolean): Promise<void> => {
-        if (!sDataHandler || !dataChartRef.current) {
-            return
-        }
-
-        const includeTime = false
-        const xs = sDataHandler.getColumnData(
-            series1, includeTime, normalize, currBeginIndex * TIME_SPAN_RANGE_MAP[timeSpan],
-            TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan])
-        const ys = sDataHandler.getColumnData(
-            series2, includeTime, normalize, currBeginIndex * TIME_SPAN_RANGE_MAP[timeSpan],
-            TIME_SPAN_RANGE_MAP[timeSpan], TIME_SPAN_STRIDE_MAP[timeSpan])
-        const values = [xs.map((x, i) => {
-            return { x, y: ys[i] }
-        })]
-        let seriesLabel1 = series1
-        let seriesLabel2 = series2
-        if (normalize) {
-            seriesLabel1 += ' (normalized)'
-            seriesLabel2 += ' (normalized)'
-        }
-        const series = [`${seriesLabel1} - ${seriesLabel2}`]
-
-        await tfvis.render.scatterplot(dataChartRef.current, { values, series }, {
-            width: dataChartRef.current.offsetWidth * 0.7,
-            height: dataChartRef.current.offsetWidth * 0.5,
-            xLabel: seriesLabel1,
-            yLabel: seriesLabel2
-        })
     }
 
     const handleTabChange = (current: number): void => {
@@ -364,7 +433,8 @@ const RnnJena = (): JSX.Element => {
         }
         setStatus(STATUS.WAITING)
         const beginMs = performance.now()
-        getBaselineMeanAbsoluteError(sDataHandler, sNormalize, sIncludeTime, sLookBack, STEP, sDelay).then(
+        getBaselineMeanAbsoluteError(sDataHandler, sNormalize, sIncludeTime, sLookBack * DAY_RECORDS,
+            STEP, sDelay * DAY_RECORDS).then(
             (value) => {
                 logger('getBaselineMeanAbsoluteError', value)
                 setLoadSpendSec((performance.now() - beginMs) / 1000)
@@ -389,7 +459,8 @@ const RnnJena = (): JSX.Element => {
 
         logger('Draw Samples')
 
-        makeTimeSeriesChart(series1, series2, timeSpan, currBeginIndex, normalize, chartRef.current).then(
+        makeTimeSeriesChart(series1, series2, timeSpan, currBeginIndex * TIME_SPAN_RANGE_MAP[timeSpan],
+            normalize, chartRef.current).then(
             () => {
                 logger('Draw TimeSeriesChart')
             },
@@ -397,7 +468,8 @@ const RnnJena = (): JSX.Element => {
                 logger(e.msg)
             }
         )
-        makeTimeSeriesScatterPlot(series1, series2, timeSpan, currBeginIndex, normalize).then(
+        makeTimeSeriesScatterPlot(series1, series2, timeSpan, currBeginIndex * TIME_SPAN_RANGE_MAP[timeSpan],
+            normalize).then(
             () => {
                 logger('Draw TimeSeriesScatterPlot')
             },
@@ -405,6 +477,9 @@ const RnnJena = (): JSX.Element => {
                 logger(e.msg)
             }
         )
+
+        const timeRange = updateDateTimeRangeSpan(currBeginIndex * TIME_SPAN_RANGE_MAP[timeSpan])
+        setTimeRange(timeRange)
     }
 
     const handleBeginIndexInc = (): void => {
@@ -421,8 +496,11 @@ const RnnJena = (): JSX.Element => {
         handleShowPlots()
     }
 
-    const handleModelChange = (value: string): void => {
-        setModelName(value)
+    const handleModelParamsChange = (): void => {
+        const values = formModel.getFieldsValue()
+        const { modelName, includeTime } = values
+        setModelName(modelName)
+        setIncludeTime(includeTime)
     }
 
     const handleLayerChange = (value: number): void => {
@@ -434,14 +512,13 @@ const RnnJena = (): JSX.Element => {
     const handleTrainParamsChange = (): void => {
         const values = formTrain.getFieldsValue()
         // logger('handleTrainParamsChange', values)
-        const { epochs, batchSize, lookBackDays, delayDays, normalize, includeTime } = values
+        const { epochs, batchSize, lookBackDays, delayDays, normalize } = values
         setEpochs(epochs)
         setBatchSize(batchSize)
 
-        setLookBack(lookBackDays * 24 * 6)
-        setDelay(delayDays * 24 * 6)
+        setLookBack(lookBackDays)
+        setDelay(delayDays)
         setNormalize(normalize)
-        setIncludeTime(includeTime)
     }
 
     const handleTrain = (): void => {
@@ -510,13 +587,6 @@ const RnnJena = (): JSX.Element => {
                     <Form.Item name='normalize' label='Normalize Data'>
                         <Switch/>
                     </Form.Item>
-                    <Form.Item name='timeSpan' label='Time Span'>
-                        <Select >
-                            {Object.keys(TIME_SPAN_RANGE_MAP).map((v) => {
-                                return <Option key={v} value={v}>{v}</Option>
-                            })}
-                        </Select>
-                    </Form.Item>
                     <Form.Item name='series1' label='Data Serial 1'>
                         <Select>
                             {sSeriesOptions.map((v) => {
@@ -525,32 +595,37 @@ const RnnJena = (): JSX.Element => {
                         </Select>
                     </Form.Item>
                     <Form.Item name='series2' label='Data Serial 2'>
-                        <Select >
+                        <Select>
                             {sSeriesOptions.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
                     </Form.Item>
-                    <Form.Item name='currBeginIndex' label='Begin Index'>
-                        <InputNumber />
+                    <Form.Item name='timeSpan' label='Time Span'>
+                        <Select>
+                            {Object.keys(TIME_SPAN_RANGE_MAP).map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
                     </Form.Item>
-                    <Form.Item {...tailLayout}>
-                        <Button style={{ width: '30%', margin: '0 35%' }} htmlType={'submit'}
-                            disabled={!sDataLoaded} > Show Plots </Button>
+                    <Form.Item name='currBeginIndex' label='Begin Index of timeSpan'>
+                        <InputNumber/>
                     </Form.Item>
+                    <Button style={{ width: '30%', margin: '0 35%' }} htmlType={'submit'}
+                        disabled={!sDataLoaded}> Show Plots </Button>
                 </Form>
                 <Row>
                     <Col span={1}></Col>
                     <Col span={22}>
                         <div ref={dataChartRef}/>
-                        <div ref={chartRef} />
+                        <div ref={chartRef}/>
                     </Col>
                     <Col span={1}></Col>
                 </Row>
                 <Row>
-                    <Col span={1}>
-                        <Button disabled={!sDataLoaded} onClick={handleBeginIndexMinus}> &lt; </Button></Col>
+                    <Col span={1}><Button disabled={!sDataLoaded} onClick={handleBeginIndexMinus}> &lt; </Button></Col>
                     <Col span={22}>
+                        <div className='centerContainer'>{sTimeRange}</div>
                     </Col>
                     <Col span={1}><Button disabled={!sDataLoaded} onClick={handleBeginIndexInc}> &gt; </Button></Col>
                 </Row>
@@ -561,15 +636,19 @@ const RnnJena = (): JSX.Element => {
     const modelAdjustCard = (): JSX.Element => {
         return (
             <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} initialValues={{
-                    modelName: 'simpleRnn'
+                <Form {...layout} form={formModel} onFieldsChange={handleModelParamsChange} initialValues={{
+                    modelName: 'simpleRnn',
+                    includeTime: false
                 }}>
                     <Form.Item name='modelName' label='Select Model'>
-                        <Select onChange={handleModelChange}>
+                        <Select>
                             {MODEL_OPTIONS.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
+                    </Form.Item>
+                    <Form.Item name='includeTime' label='Include Time'>
+                        <Switch />
                     </Form.Item>
                 </Form>
             </Card>
@@ -581,15 +660,14 @@ const RnnJena = (): JSX.Element => {
             <Card title='Train' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
                     initialValues={{
-                        epochs: 3,
-                        batchSize: 256,
+                        epochs: 5,
+                        batchSize: 1024,
                         lookBackDays: 10,
                         delayDays: 1,
-                        normalize: true,
-                        includeTime: false
+                        normalize: false
                     }}>
                     <Form.Item name='epochs' label='Epochs'>
-                        <Slider min={1} max={10} marks={{ 1: 1, 5: 5, 9: 9 }} />
+                        <Slider min={1} max={10} marks={{ 1: 1, 5: 5, 9: 9 }}/>
                     </Form.Item>
                     <Form.Item name='batchSize' label='Batch Size'>
                         <Select>
@@ -599,15 +677,12 @@ const RnnJena = (): JSX.Element => {
                         </Select>
                     </Form.Item>
                     <Form.Item name='lookBackDays' label='Look Back Days'>
-                        <Slider min={8} max={12} marks={{ 8: 8, 10: 10, 12: 12 }} />
+                        <Slider min={8} max={12} marks={{ 8: 8, 10: 10, 12: 12 }}/>
                     </Form.Item>
                     <Form.Item name='delayDays' label='Delay Days'>
-                        <Slider min={1} max={3} marks={{ 1: 1, 2: 2, 3: 3 }} />
+                        <Slider min={1} max={3} marks={{ 1: 1, 2: 2, 3: 3 }}/>
                     </Form.Item>
                     <Form.Item name='normalize' label='Normalize Data'>
-                        <Switch/>
-                    </Form.Item>
-                    <Form.Item name='includeTime' label='Include Time'>
                         <Switch/>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
@@ -666,7 +741,7 @@ const RnnJena = (): JSX.Element => {
                                 layer: 0
                             }}>
                                 <Form.Item name='layer' label='Show Layer'>
-                                    <Select onChange={handleLayerChange} >
+                                    <Select onChange={handleLayerChange}>
                                         {sLayersOption?.map((v) => {
                                             return <Option key={v.index} value={v.index}>{v.name}</Option>
                                         })}
@@ -687,13 +762,18 @@ const RnnJena = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={12}>
+                    <Col span={8}>
                         {trainAdjustCard()}
                         {modelAdjustCard()}
                     </Col>
-                    <Col span={12}>
+                    <Col span={10}>
+                        <Card title='Validate Sample' style={{ margin: '8px' }} size='small'>
+                            <div ref={predictRef}/>
+                        </Card>
+                    </Col>
+                    <Col span={6}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
-                            <div ref={elementRef} />
+                            <div ref={elementRef}/>
                         </Card>
                     </Col>
                 </Row>

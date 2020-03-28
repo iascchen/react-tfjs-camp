@@ -14,8 +14,8 @@ import MobilenetKnnClassifier from './components/mobilenet/MobilenetKnnClassifie
 import MobilenetTransfer from './components/mobilenet/MobilenetTransfer'
 import MobilenetObjDetector from './components/mobilenet/MobilenetObjDetector'
 
-import RnnJena from './components/rnn/RnnJena'
-import SentimentWidget from './components/rnn/SentimentWidget'
+import JenaWeather from './components/rnn/JenaWeather'
+import ImdbSentiment from './components/rnn/ImdbSentiment'
 import TextGenLstm from './components/rnn/TextGenLstm'
 
 import FetchWidget from './components/sandbox/FetchWidget'
@@ -36,8 +36,8 @@ const routes: RouteConfig[] = [
     { path: '/mobilenet/transfer', component: MobilenetTransfer },
     { path: '/mobilenet/objdetector', component: MobilenetObjDetector },
 
-    { path: '/rnn/jena', component: RnnJena },
-    { path: '/rnn/sentiment', component: SentimentWidget },
+    { path: '/rnn/jena', component: JenaWeather },
+    { path: '/rnn/sentiment', component: ImdbSentiment },
     { path: '/rnn/lstm', component: TextGenLstm },
 
     { path: '/sandbox/fetch', component: FetchWidget },

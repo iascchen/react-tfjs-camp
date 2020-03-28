@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Form, Input, message, Row, Select, Tabs } from 'antd'
+import {Button, Card, Col, Form, Input, message, Row, Select, Switch, Tabs} from 'antd'
 
 import { layout, tailLayout } from '../../constant'
 import { ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
@@ -32,12 +32,12 @@ const exampleReviews: IKeyMap = {
         'the mother in this movie is reckless with her children to the point of neglect i wish i wasn\'t so angry about her and her actions because i would have otherwise enjoyed the flick what a number she was take my advise and fast forward through everything you see her do until the end also is anyone else getting sick of watching movies that are filmed so dark anymore one can hardly see what is being filmed as an audience we are impossibly involved with the actions on the screen so then why the hell can\'t we have night vision'
 }
 
-const SentimentWidget = (): JSX.Element => {
+const ImdbSentiment = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(1)
+    const [sTabCurrent, setTabCurrent] = useState<number>(3)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
@@ -238,13 +238,6 @@ const SentimentWidget = (): JSX.Element => {
         setCurLayer(_layer)
     }
 
-    const handleLoadModel = (): void => {
-        // TODO
-    }
-
-    const handleSaveModel = (): void => {
-        // TODO
-    }
 
     const handleSampleTypeChange = (key: string): void => {
         logger('handleSampleTypeChange', key)
@@ -256,9 +249,53 @@ const SentimentWidget = (): JSX.Element => {
         setTabCurrent(current)
     }
 
+    const handleLoadModelWeight = (): void => {
+        setStatus(STATUS.WAITING)
+        const fileName = `jena_${sModelName}`
+        tf.loadLayersModel(`/model/${fileName}.json`).then(
+            (model) => {
+                model.summary()
+                setModel(model)
+                setStatus(STATUS.LOADED)
+            },
+            loggerError
+        )
+    }
+
+    const handleSaveModelWeight = (): void => {
+        if (!sModel) {
+            return
+        }
+
+        const fileName = `jena_${sModelName}`
+        const downloadUrl = `downloads://${fileName}`
+        sModel.save(downloadUrl).then((saveResults) => {
+            logger(saveResults)
+        }, loggerError)
+        logger()
+    }
+
     /***********************
      * Render
      ***********************/
+
+    const modelAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} initialValues={{
+                    modelName: 'simpleRNN'
+                }}>
+                    <Form.Item name='modelName' label='Select Model'>
+                        <Select onChange={handleModelChange}>
+                            {MODEL_OPTIONS.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
 
     return (
         <AIProcessTabs title={'RNN Sentiment'} current={sTabCurrent} onChange={handleTabChange} >
@@ -267,12 +304,12 @@ const SentimentWidget = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Row>
-                    <Col span={24}>
+                    <Col span={12}>
                         <Card title='Train Set' style={{ margin: '8px' }} size='small'>
                             <div>{sTrainSet && <TfvisDatasetInfoWidget value={sTrainSet}/>}</div>
                         </Card>
                     </Col>
-                    <Col span={24}>
+                    <Col span={12}>
                         <Card title='Test Set' style={{ margin: '8px' }} size='small'>
                             <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
                         </Card>
@@ -281,33 +318,29 @@ const SentimentWidget = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>
-                    <Col span={24}>
-                        <Card title='Sentiment & RNN' style={{ margin: '8px' }} size='small'>
-                            Select Model : <Select onChange={handleModelChange} defaultValue={'multihot'}>
-                                {MODEL_OPTIONS?.map((v, index) => {
-                                    return <Option key={index} value={v}>{v}</Option>
-                                })}
-                            </Select>
+                    <Col span={8}>
+                        {modelAdjustCard()}
+                        <Card title={`Show Layers of ${sModelName}`} style={{ margin: '8px' }} size='small'>
+                            <Form {...layout} initialValues={{
+                                layer: 0
+                            }}>
+                                <Form.Item name='layer' label='Show Layer'>
+                                    <Select onChange={handleLayerChange}>
+                                        {sLayersOption?.map((v) => {
+                                            return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                        })}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
                         </Card>
                     </Col>
-                    <Col span={12}>
+                    <Col span={16}>
                         <Card title='Model Details' style={{ margin: '8px' }} size='small'>
                             <TfvisModelWidget model={sModel}/>
+                            <TfvisLayerWidget layer={sCurLayer}/>
                             <p>status: {sStatus}</p>
                             <p>backend: {sTfBackend}</p>
                         </Card>
-                    </Col>
-                    <Col span={12}>
-                        <Card title='Layers Details' style={{ margin: '8px' }} size='small'>
-                            Select Layer : <Select onChange={handleLayerChange} defaultValue={0}>
-                                {sLayersOption?.map((v) => {
-                                    return <Option key={v.index} value={v.index}>{v.name}</Option>
-                                })}
-                            </Select>
-                            <TfvisLayerWidget layer={sCurLayer}/>
-                        </Card>
-                    </Col>
-                    <Col span={12}>
                         <Card title='Predictor Info' size='small'>
                             <div> maxLen : {sPredictor?.maxLen} </div>
                             <div> indexFrom : {sPredictor?.indexFrom} </div>
@@ -344,8 +377,8 @@ const SentimentWidget = (): JSX.Element => {
                     </Col>
                     <Col span={12}>
                         <Card title='Save and Load Model Weights' style={{ margin: '8px' }} size='small'>
-                            <Button onClick={handleSaveModel} style={{ width: '30%', margin: '0 10%' }}> Save Model </Button>
-                            <Button onClick={handleLoadModel} style={{ width: '30%', margin: '0 10%' }}> Load Model </Button>
+                            <Button onClick={handleSaveModelWeight} style={{ width: '30%', margin: '0 10%' }}> Save Model </Button>
+                            <Button onClick={handleLoadModelWeight} style={{ width: '30%', margin: '0 10%' }}> Load Model </Button>
                             <div>status: {sStatus}</div>
                             <div>backend: {sTfBackend}</div>
                         </Card>
@@ -384,4 +417,4 @@ const SentimentWidget = (): JSX.Element => {
     )
 }
 
-export default SentimentWidget
+export default ImdbSentiment

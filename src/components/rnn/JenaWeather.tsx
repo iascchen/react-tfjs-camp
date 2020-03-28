@@ -95,7 +95,7 @@ export const getBaselineMeanAbsoluteError = async (jenaWeatherData: JenaWeatherD
     return meanAbsoluteError.dataSync()[0]
 }
 
-const RnnJena = (): JSX.Element => {
+const JenaWeather = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -103,6 +103,7 @@ const RnnJena = (): JSX.Element => {
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
+    const elementRef = useRef<HTMLDivElement>(null)
 
     // Data
     const [sDataLoaded, setDataLoaded] = useState(false)
@@ -111,6 +112,9 @@ const RnnJena = (): JSX.Element => {
     const [sSeriesOptions, setSeriesOptions] = useState<string[]>([])
     const [sTimeSpan, setTimeSpan] = useState<string>('tenDays')
     const [sTimeRange, setTimeRange] = useState<string>('')
+
+    const dataChartRef = useRef<HTMLDivElement>(null)
+    const chartRef = useRef<HTMLDivElement>(null)
 
     // Model
     const [sModelName, setModelName] = useState('simpleRnn')
@@ -127,10 +131,6 @@ const RnnJena = (): JSX.Element => {
     const [sLookBack, setLookBack] = useState(10)
     const [sDelay, setDelay] = useState(1)
     const [sBaseLine, setBaseLine] = useState<number>()
-
-    const elementRef = useRef<HTMLDivElement>(null)
-    const dataChartRef = useRef<HTMLDivElement>(null)
-    const chartRef = useRef<HTMLDivElement>(null)
 
     const predictRef = useRef<HTMLDivElement>(null)
 
@@ -173,9 +173,7 @@ const RnnJena = (): JSX.Element => {
         tf.backend()
         setTfBackend(tf.getBackend())
 
-        const lookBack = 10 * 24 * 6 // Look back 10 days.
-        const step = 6 // 1-hour steps.
-        const numTimeSteps = Math.floor(lookBack / step)
+        const numTimeSteps = Math.floor(sLookBack * DAY_RECORDS / STEP)
         const numFeatures = sIncludeTime ? NUM_FEATURES + 2 : NUM_FEATURES
         const inputShape: tf.Shape = [numTimeSteps, numFeatures]
 
@@ -213,7 +211,7 @@ const RnnJena = (): JSX.Element => {
             logger('Model Dispose')
             _model?.dispose()
         }
-    }, [sModelName, sIncludeTime])
+    }, [sModelName, sLookBack, sIncludeTime])
 
     useEffect(() => {
         if (!sModel) {
@@ -270,6 +268,7 @@ const RnnJena = (): JSX.Element => {
         const values = [xs.map((x, i) => {
             return { x, y: ys[i] }
         })]
+
         let seriesLabel1 = series1
         let seriesLabel2 = series2
         if (normalize) {
@@ -293,16 +292,14 @@ const RnnJena = (): JSX.Element => {
 
         const currEndIndex = currBeginIndex + TIME_SPAN_RANGE_MAP[sTimeSpan]
         const begin = new Date(sDataHandler.getTime(currBeginIndex)).toLocaleDateString()
-        const end =
-            new Date(sDataHandler.getTime(currEndIndex)).toLocaleDateString()
+        const end = new Date(sDataHandler.getTime(currEndIndex)).toLocaleDateString()
         return `${begin} - ${end}`
     }
 
-    const makeTimeSeriesPredictChart = async (target: any[], pred: any[], chartConatiner: HTMLDivElement): Promise<void> => {
-        if (!sDataHandler || !chartConatiner) {
+    const makeTimeSeriesPredictChart = async (target: any[], pred: any[], chartContainer: HTMLDivElement): Promise<void> => {
+        if (!chartContainer) {
             return
         }
-
         const values = [target, pred]
         const series = ['Real', 'Predict']
 
@@ -310,38 +307,36 @@ const RnnJena = (): JSX.Element => {
 
         // NOTE(cais): On a Linux workstation running latest Chrome, the length
         // limit seems to be around 120k.
-        await tfvis.render.linechart(chartConatiner, { values, series }, {
-            width: chartConatiner.offsetWidth,
-            height: chartConatiner.offsetWidth * 0.5,
+        await tfvis.render.linechart(chartContainer, { values, series }, {
+            width: chartContainer.offsetWidth,
+            height: chartContainer.offsetWidth * 0.5,
             xLabel: 'Time',
             yLabel
         })
     }
 
-    const showPredict = async (): Promise<void> => {
+    const showPredictChart = async (): Promise<void> => {
         if (!sDataHandler || !sModel || !sDataLoaded || !predictRef.current) {
             return
         }
+
         const evalShuffle = false
-        const valDataset = tf.data.generator(() => sDataHandler.getNextBatchFunction(evalShuffle,
+        const testDataset = tf.data.generator(() => sDataHandler.getNextBatchFunction(evalShuffle,
             sLookBack * DAY_RECORDS, sDelay * DAY_RECORDS, sBatchSize, STEP, VAL_MIN_ROW,
             VAL_MIN_ROW + STEP * sBatchSize, sNormalize, sIncludeTime))
+        const testData = await testDataset.toArray()
 
-        logger('Draw Predict Samples')
-        const data = await valDataset.toArray()
-        console.log(data.length)
-
-        const source = data[0].xs as tf.Tensor
-        const target = data[0].ys as tf.Tensor
-        const pred = await sModel.predict(source) as tf.Tensor
+        const source = testData[0].xs as tf.Tensor
+        const target = testData[0].ys as tf.Tensor
+        const pred = tf.tidy(() => sModel.predict(source)) as tf.Tensor
 
         const targetArray = Array.from(target.dataSync()).map((v, i) => { return { x: i, y: v } })
         const predArray = Array.from(pred.dataSync()).map((v, i) => { return { x: i, y: v } })
 
-        // logger('targetArray', targetArray)
-        // logger('predArray', predArray)
-
         await makeTimeSeriesPredictChart(targetArray, predArray, predictRef.current)
+        source.dispose()
+        target.dispose()
+        pred.dispose()
     }
 
     const myCallback = {
@@ -357,7 +352,7 @@ const RnnJena = (): JSX.Element => {
             await tf.nextFrame()
         },
         onBatchEnd: async (batch: number) => {
-            await showPredict()
+            await showPredictChart()
             await tf.nextFrame()
         }
     }
@@ -498,9 +493,10 @@ const RnnJena = (): JSX.Element => {
 
     const handleModelParamsChange = (): void => {
         const values = formModel.getFieldsValue()
-        const { modelName, includeTime } = values
-        setModelName(modelName)
+        const { modelName, includeTime, lookBackDays } = values
+        setLookBack(lookBackDays)
         setIncludeTime(includeTime)
+        setModelName(modelName)
     }
 
     const handleLayerChange = (value: number): void => {
@@ -512,11 +508,9 @@ const RnnJena = (): JSX.Element => {
     const handleTrainParamsChange = (): void => {
         const values = formTrain.getFieldsValue()
         // logger('handleTrainParamsChange', values)
-        const { epochs, batchSize, lookBackDays, delayDays, normalize } = values
+        const { epochs, batchSize, delayDays, normalize } = values
         setEpochs(epochs)
         setBatchSize(batchSize)
-
-        setLookBack(lookBackDays)
         setDelay(delayDays)
         setNormalize(normalize)
     }
@@ -638,17 +632,21 @@ const RnnJena = (): JSX.Element => {
             <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formModel} onFieldsChange={handleModelParamsChange} initialValues={{
                     modelName: 'simpleRnn',
+                    lookBackDays: 10,
                     includeTime: false
                 }}>
+                    <Form.Item name='includeTime' label='Include Time'>
+                        <Switch />
+                    </Form.Item>
+                    <Form.Item name='lookBackDays' label='Look Back Days'>
+                        <Slider min={8} max={12} marks={{ 8: 8, 10: 10, 12: 12 }}/>
+                    </Form.Item>
                     <Form.Item name='modelName' label='Select Model'>
                         <Select>
                             {MODEL_OPTIONS.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
-                    </Form.Item>
-                    <Form.Item name='includeTime' label='Include Time'>
-                        <Switch />
                     </Form.Item>
                 </Form>
             </Card>
@@ -662,7 +660,6 @@ const RnnJena = (): JSX.Element => {
                     initialValues={{
                         epochs: 5,
                         batchSize: 1024,
-                        lookBackDays: 10,
                         delayDays: 1,
                         normalize: false
                     }}>
@@ -675,9 +672,6 @@ const RnnJena = (): JSX.Element => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
-                    </Form.Item>
-                    <Form.Item name='lookBackDays' label='Look Back Days'>
-                        <Slider min={8} max={12} marks={{ 8: 8, 10: 10, 12: 12 }}/>
                     </Form.Item>
                     <Form.Item name='delayDays' label='Delay Days'>
                         <Slider min={1} max={3} marks={{ 1: 1, 2: 2, 3: 3 }}/>
@@ -711,7 +705,7 @@ const RnnJena = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'RNN'} current={sTabCurrent} onChange={handleTabChange}
+        <AIProcessTabs title={'Jena Weather'} current={sTabCurrent} onChange={handleTabChange}
             invisiblePanes={[AIProcessTabPanes.PREDICT]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/rnnJena.md'}/>
@@ -782,4 +776,4 @@ const RnnJena = (): JSX.Element => {
     )
 }
 
-export default RnnJena
+export default JenaWeather

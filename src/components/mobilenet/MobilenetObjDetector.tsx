@@ -168,7 +168,7 @@ const MobilenetObjDetector = (): JSX.Element => {
                 sNumCircles, sNumLines))
 
         // Initial phase of transfer learning.
-        console.log('Phase 1 of 2: initial transfer learning')
+        logger('Phase 1 of 2: initial transfer learning')
         sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(5e-3) })
 
         await sModel.fitDataset(await trainDataset, {
@@ -187,7 +187,7 @@ const MobilenetObjDetector = (): JSX.Element => {
         // The batch size is reduced to avoid CPU/GPU OOM. This has
         // to do with the unfreezing of the fine-tuning layers above,
         // which leads to higher memory consumption during backpropagation.
-        console.log('Phase 2 of 2: fine-tuning phase')
+        logger('Phase 2 of 2: fine-tuning phase')
         sModel.compile({ loss: customLossFunction, optimizer: tf.train.rmsprop(2e-3) })
         await sModel.fitDataset(trainDataset, {
             // batchesPerEpoch,

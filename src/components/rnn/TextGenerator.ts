@@ -31,6 +31,7 @@ import * as tf from '@tensorflow/tfjs'
 import { TextData } from './dataTextGen'
 import * as model from './modelTextGen'
 import { ModelArtifactsInfo } from '@tensorflow/tfjs-core/src/io/types'
+import {logger} from '../../utils'
 
 // import {onTextGenerationBegin, onTextGenerationChar, onTrainBatchEnd, onTrainBegin, onTrainEpochEnd, setUpUI} from './ui';
 
@@ -167,9 +168,9 @@ export class SaveableLSTMTextGenerator extends LSTMTextGenerator {
     loadModel = async (lstmLayerSizes: number): Promise<void> => {
         const modelsInfo = await tf.io.listModels()
         if (this.modelSavePath_ in modelsInfo) {
-            console.log('Loading existing model...')
+            logger('Loading existing model...')
             this.model = await tf.loadLayersModel(this.modelSavePath_)
-            console.log(`Loaded model from ${this.modelSavePath_}`)
+            logger(`Loaded model from ${this.modelSavePath_}`)
         } else {
             throw new Error(
                 `Cannot find model at ${this.modelSavePath_}. ` +

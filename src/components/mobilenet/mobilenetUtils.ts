@@ -26,9 +26,9 @@ export const encodeImageTensor = (labeledImgs: ILabeledImageSet[]): any[] => {
         labeled.imageList?.forEach((imgItem: ILabeledImage) => {
             if (imgItem.tensor && !imgItem.img) {
                 const f32Buf = new Float32Array(imgItem.tensor.dataSync())
-                // console.log(f32Buf.length)
+                // logger(f32Buf.length)
                 const ui8Buf = new Uint8Array(f32Buf.buffer)
-                // console.log(ui8Buf.length)
+                // logger(ui8Buf.length)
                 imgItem.img = Buffer.from(ui8Buf).toString('base64')
             }
         })
@@ -47,9 +47,9 @@ export const decodeImageTensor = (labeledImgs: ILabeledImageSet[]): any[] => {
             if (imgItem.tensor && imgItem.img) {
                 const buf = Buffer.from(imgItem.img, 'base64')
                 const ui8Buf = new Uint8Array(buf)
-                // console.log(ui8Buf.length)
+                // logger(ui8Buf.length)
                 const f32Buf = new Float32Array(ui8Buf.buffer)
-                // console.log(f32Buf.length)
+                // logger(f32Buf.length)
                 imgItem.tensor = tf.tensor3d(f32Buf, imgItem.tensor.shape, imgItem.tensor.dtype)
                 delete imgItem.img
             }

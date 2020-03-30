@@ -185,8 +185,8 @@ export class JenaWeatherData {
                 this.means.push(moments.mean.dataSync()[0])
                 this.stddevs.push(Math.sqrt(moments.variance.dataSync()[0]))
             }
-            // console.log('means:', this.means)
-            // console.log('stddevs:', this.stddevs)
+            // logger('means:', this.means)
+            // logger('stddevs:', this.stddevs)
         })
 
         // Cache normalized values.

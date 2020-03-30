@@ -17,7 +17,7 @@
 
 import * as tf from '@tensorflow/tfjs'
 import { OOV_INDEX, padSequences } from './sequenceUtils'
-import {logger} from '../../utils'
+import { logger } from '../../utils'
 
 const BASE_URL = '/preload/model'
 
@@ -70,12 +70,12 @@ export class SentimentPredictor {
             // ui.showMetadata(sentimentMetadata)
             this.indexFrom = sentimentMetadata.index_from
             this.maxLen = sentimentMetadata.max_len
-            console.log('indexFrom = ' + this.indexFrom)
-            console.log('maxLen = ' + this.maxLen)
+            logger('indexFrom = ' + this.indexFrom)
+            logger('maxLen = ' + this.maxLen)
 
             this.wordIndex = sentimentMetadata.word_index
             this.vocabularySize = sentimentMetadata.vocabulary_size
-            console.log('vocabularySize = ', this.vocabularySize)
+            logger('vocabularySize = ', this.vocabularySize)
         } catch (err) {
             console.error(err)
             // ui.status('Loading metadata failed.')

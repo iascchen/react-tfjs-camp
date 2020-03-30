@@ -158,7 +158,7 @@ const SentimentSampleDataVis = (props: IProps): JSX.Element => {
      ***********************/
 
     const formatX = (sampleInfo: tf.Tensor): string => {
-        logger(sampleInfo.shape)
+        // logger(sampleInfo.shape)
 
         const _array = formatTensorToStringArray(sampleInfo)
         if (_array.length > MAX_ARRAY_ITEM_DISPLAY) {
@@ -168,11 +168,7 @@ const SentimentSampleDataVis = (props: IProps): JSX.Element => {
         }
     }
 
-    return (
-        <div>
-            <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize ?? MAX_SAMPLES_COUNT }}/>
-        </div>
-    )
+    return <Table columns={columns} dataSource={data} pagination={{ pageSize: props.pageSize ?? MAX_SAMPLES_COUNT }}/>
 }
 
 export default SentimentSampleDataVis

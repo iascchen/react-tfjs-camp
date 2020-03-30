@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import * as tf from '@tensorflow/tfjs'
-import { ILabeledImageSet } from '../../utils'
+import { ILabeledImageSet, logger } from '../../utils'
 import { formatImageForMobilenet } from './mobilenetUtils'
 
 /**
@@ -83,7 +83,7 @@ export class TransferDataset {
     }
 
     getData (): tf.TensorContainerObject {
-        console.log(this.xs?.shape)
+        logger(this.xs?.shape)
         return { xs: this.xs, ys: this.ys }
     }
 

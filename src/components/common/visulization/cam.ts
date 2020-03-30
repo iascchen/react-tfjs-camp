@@ -25,8 +25,8 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-// const utils = require('./utils');
-import * as utils from './utils'
+import * as utils from './camUtils'
+import { logger } from '../../../utils'
 
 /**
  * Calculate class activation map (CAM) and overlay it on input image.
@@ -61,7 +61,7 @@ export const gradClassActivationMap = (model: tf.LayersModel, classIndex: number
         layerIndex >= 0, () => 'Failed to find a convolutional layer in model')
 
     const lastConvLayer = model.layers[layerIndex]
-    console.log(
+    logger(
         'Located last convolutional layer of the model at ' +
       `index ${layerIndex}: layer type = ${lastConvLayer.getClassName()}; ` +
       `layer name = ${lastConvLayer.name}`)

@@ -14,7 +14,8 @@ import {
     ILabeledImageSet,
     ILabelMap,
     ILayerSelectOption,
-    logger, loggerError,
+    logger,
+    loggerError,
     STATUS
 } from '../../utils'
 import { layout, tailLayout } from '../../constant'
@@ -255,7 +256,7 @@ const MobilenetTransfer = (): JSX.Element => {
             return
         }
         setStatus(STATUS.WAITING)
-        // console.log('handlePredict', imgTensor)
+        // logger('handlePredict', imgTensor)
         const [imgPred] = tf.tidy(() => {
             const batched = formatImageForMobilenet(imgTensor)
             const embeddings = sTruncatedModel?.predict(batched)
@@ -384,7 +385,8 @@ const MobilenetTransfer = (): JSX.Element => {
                     {
                         labeled.imageList?.map((imgItem: ILabeledImage) => {
                             if (imgItem.tensor) {
-                                return <TensorImageThumbWidget key={imgItem.uid} data={imgItem.tensor} height={IMAGE_HEIGHT}/>
+                                return <TensorImageThumbWidget key={imgItem.uid} data={imgItem.tensor}
+                                    height={IMAGE_HEIGHT}/>
                             } else if (imgItem.img) {
                                 return <img key={imgItem.uid} src={imgItem.img} alt={imgItem.name}
                                     height={IMAGE_HEIGHT} style={{ margin: 4 }}/>
@@ -430,7 +432,7 @@ const MobilenetTransfer = (): JSX.Element => {
                         epochs: 30
                     }}>
                     <Form.Item name='epochs' label='Epochs'>
-                        <Slider min={10} max={50} step={10} marks={{ 10: 10, 30: 30, 50: 50 }} />
+                        <Slider min={10} max={50} step={10} marks={{ 10: 10, 30: 30, 50: 50 }}/>
                     </Form.Item>
                     <Form.Item name='batchSize' label='Batch Size'>
                         <Select>
@@ -447,7 +449,8 @@ const MobilenetTransfer = (): JSX.Element => {
                         </Select>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
-                        <Button type='primary' htmlType={'submit'} style={{ width: '60%', margin: '0 20%' }}> Train </Button>
+                        <Button type='primary' htmlType={'submit'}
+                            style={{ width: '60%', margin: '0 20%' }}> Train </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <div>Status: {sStatus}</div>
@@ -459,7 +462,7 @@ const MobilenetTransfer = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'Mobilenet Transfer Learning'} current={sTabCurrent} onChange={handleTabChange} >
+        <AIProcessTabs title={'Mobilenet Transfer Learning'} current={sTabCurrent} onChange={handleTabChange}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/mobilenet.md'}/>
             </TabPane>
@@ -468,7 +471,8 @@ const MobilenetTransfer = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Captures Label Panel' size='small' style={{ margin: '8px' }}>
                             <WebCamera ref={webcamRef} config={MOBLILENET_CONFIG}/>
-                            <LabeledCaptureInputSet onSave={handleLabeledImagesSubmit} onCapture={handleLabeledCapture}/>
+                            <LabeledCaptureInputSet onSave={handleLabeledImagesSubmit}
+                                onCapture={handleLabeledCapture}/>
                             <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
                         </Card>
                     </Col>
@@ -503,7 +507,7 @@ const MobilenetTransfer = (): JSX.Element => {
                                     layer: 0
                                 }}>
                                     <Form.Item name='layer' label='Show Layer'>
-                                        <Select onChange={handleLayerChange} >
+                                        <Select onChange={handleLayerChange}>
                                             {sLayersOption?.map((v) => {
                                                 return <Option key={v.index} value={v.index}>{v.name}</Option>
                                             })}
@@ -529,7 +533,7 @@ const MobilenetTransfer = (): JSX.Element => {
                     </Col>
                     <Col span={8}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
-                            <div ref={historyRef} />
+                            <div ref={historyRef}/>
                         </Card>
                     </Col>
                 </Row>
@@ -539,7 +543,7 @@ const MobilenetTransfer = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Prediction with picture' style={{ margin: '8px' }} size='small'>
                             <ImageUploadWidget onSubmit={handlePredict} prediction={sPredictResult}
-                                labelsMap={sLabelsMap} />
+                                labelsMap={sLabelsMap}/>
                         </Card>
                     </Col>
                     <Col span={12}>

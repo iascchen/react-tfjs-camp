@@ -17,6 +17,7 @@
 
 import * as tf from '@tensorflow/tfjs'
 import { TextData } from './dataTextGen'
+import {logger} from '../../utils'
 
 /**
  * Create a model for next-character prediction.
@@ -51,7 +52,7 @@ export const createModel = (sampleLen: number, charSetSize: number, lstmLayerSiz
 export const compileModel = (model: tf.LayersModel, learningRate: number): void => {
     const optimizer = tf.train.rmsprop(learningRate)
     model.compile({ optimizer: optimizer, loss: 'categoricalCrossentropy' })
-    console.log(`Compiled model with learning rate ${learningRate}`)
+    logger(`Compiled model with learning rate ${learningRate}`)
     // model.summary()
 }
 

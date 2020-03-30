@@ -19,7 +19,7 @@ import * as tf from '@tensorflow/tfjs'
 import * as path from 'path'
 
 import { OOV_INDEX, padSequences } from './sequenceUtils'
-import { fetchResource } from '../../utils'
+import { fetchResource, logger } from '../../utils'
 
 const BASE_URL = '/preload/data/imdb'
 
@@ -82,7 +82,7 @@ const loadFeatures = async (filePath: string, numWords: number, maxLen: number,
             maxLength = length
         }
     })
-    console.log(`Sequence length: min = ${minLength}; max = ${maxLength}`)
+    logger(`Sequence length: min = ${minLength}; max = ${maxLength}`)
 
     if (multihot) {
     // If requested by the arg, encode the sequences as multi-hot
@@ -99,8 +99,7 @@ const loadFeatures = async (filePath: string, numWords: number, maxLen: number,
     } else {
         const paddedSequences =
         padSequences(sequences, maxLen, 'pre', 'pre')
-        return tf.tensor2d(
-            paddedSequences, [paddedSequences.length, maxLen], 'int32')
+        return tf.tensor2d(paddedSequences, [paddedSequences.length, maxLen], 'int32')
     }
 }
 
@@ -129,7 +128,7 @@ const loadTargets = async (filePath: string): Promise<tf.Tensor2D> => {
         ys.push(y)
     }
 
-    console.log(`Loaded ${numPositive} positive examples and ${numNegative} negative examples.`)
+    logger(`Loaded ${numPositive} positive examples and ${numNegative} negative examples.`)
     return tf.tensor2d(ys, [ys.length, 1], 'float32')
 }
 
@@ -167,4 +166,9 @@ export const loadData = async (numWords: number, len: number, multihot = false):
         xTest.shape[0] === yTest.shape[0],
         () => 'Mismatch in number of examples between xTest and yTest')
     return { xTrain, yTrain, xTest, yTest }
+}
+
+export const loadMetadataTemplate = async (): Promise<void> => {
+    const buffer = await fetchResource(METADATA_TEMPLATE_URL, false)
+    return JSON.parse(buffer.toString())
 }

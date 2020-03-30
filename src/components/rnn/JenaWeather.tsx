@@ -380,30 +380,6 @@ const JenaWeather = (): JSX.Element => {
         })
     }
 
-    const train = async (): Promise<void> => {
-        if (!sModel || !sDataHandler) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            message.warn('Data and model are not ready')
-            return
-        }
-
-        setStatus(STATUS.WAITING)
-        stopRef.current = false
-        logger('train...')
-
-        console.log('Starting model training...')
-        const callbacks = [
-            tfvis.show.fitCallbacks(elementRef.current, ['loss', 'val_loss'], { callbacks: ['onBatchEnd', 'onEpochEnd'] }),
-            myCallback
-        ]
-
-        await trainModel(sModel, sDataHandler, sNormalize, sIncludeTime, sLookBack * DAY_RECORDS, STEP,
-            sDelay * DAY_RECORDS, sBatchSize, sEpochs, callbacks)
-
-        handleSaveModelWeight()
-        setStatus(STATUS.TRAINED)
-    }
-
     const handleTabChange = (current: number): void => {
         setTabCurrent(current)
     }
@@ -516,8 +492,29 @@ const JenaWeather = (): JSX.Element => {
     }
 
     const handleTrain = (): void => {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        train().then()
+        if (!sModel || !sDataHandler) {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            message.warn('Data and model are not ready')
+            return
+        }
+
+        setStatus(STATUS.WAITING)
+        stopRef.current = false
+
+        logger('Starting model training...')
+        const callbacks = [
+            tfvis.show.fitCallbacks(elementRef.current, ['loss', 'val_loss'], { callbacks: ['onBatchEnd', 'onEpochEnd'] }),
+            myCallback
+        ]
+
+        trainModel(sModel, sDataHandler, sNormalize, sIncludeTime, sLookBack * DAY_RECORDS, STEP,
+            sDelay * DAY_RECORDS, sBatchSize, sEpochs, callbacks).then(
+            () => {
+                setStatus(STATUS.TRAINED)
+                handleSaveModelWeight()
+            },
+            loggerError
+        )
     }
 
     const handleTrainStop = (): void => {

@@ -19,7 +19,6 @@
  * Utilites for extracting the embedding matrix and output them as files.
  */
 
-import { writeFileSync } from 'fs'
 import * as tf from '@tensorflow/tfjs'
 
 /**

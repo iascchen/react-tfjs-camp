@@ -81,12 +81,12 @@ const SideBar = (props: IProps): JSX.Element => {
                 <SubMenu title={<span><ReadOutlined /><span>循环神经网络 RNN</span></span>}>
                     <Item key='5.1'>
                         <Link to='/rnn/jena'>
-                            <span> 时序数据预测 Jena Weather</span>
+                            <span> 时序数据 Jena Weather</span>
                         </Link>
                     </Item>
                     <Item key='5.2'>
                         <Link to='/rnn/sentiment'>
-                            <span> 词嵌入 </span>
+                            <span> 文本理解 IMDB Sentiment </span>
                         </Link>
                     </Item>
                     <Item key='5.3'>

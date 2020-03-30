@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import {Button, Card, Col, Form, Input, message, Row, Select, Switch, Tabs} from 'antd'
+import { Button, Card, Col, Form, Input, message, Row, Select, Slider, Tabs } from 'antd'
 
 import { layout, tailLayout } from '../../constant'
 import { ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
@@ -11,7 +11,9 @@ import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 
 import { SentimentPredictor } from './modelSentiment'
-import { loadData } from './dataSentiment'
+import { loadData, loadMetadataTemplate } from './dataSentiment'
+import SentimentSampleDataVis from './SentimentSampleDataVis'
+import { writeEmbeddingMatrixAndLabels } from './embedding'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
@@ -20,7 +22,14 @@ const { Option } = Select
 const { TabPane } = Tabs
 const { TextArea } = Input
 
+const NUM_TRAIN_ELEMENTS = 1000
+const NUM_TEST_ELEMENTS = 5
+
 const MODEL_OPTIONS = ['pretrained-cnn', 'multihot', 'flatten', 'cnn', 'simpleRNN', 'lstm', 'bidirectionalLSTM']
+const DEFAULT_MODEL = 'simpleRNN'
+const BATCH_SIZES = [128, 256, 512, 1024]
+const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03]
+const SHOW_SAMPLE = NUM_TEST_ELEMENTS
 
 interface IKeyMap {
     [index: string]: string
@@ -32,63 +41,101 @@ const exampleReviews: IKeyMap = {
         'the mother in this movie is reckless with her children to the point of neglect i wish i wasn\'t so angry about her and her actions because i would have otherwise enjoyed the flick what a number she was take my advise and fast forward through everything you see her do until the end also is anyone else getting sick of watching movies that are filmed so dark anymore one can hardly see what is being filmed as an audience we are impossibly involved with the actions on the screen so then why the hell can\'t we have night vision'
 }
 
+const saveToDownload = (anchorElm: HTMLAnchorElement, filename: string, body: Buffer, options?: {
+    type: string
+}): void => {
+    const blob = options ? new Blob([body], options) : new Blob([body])
+    const blobUrl = window.URL.createObjectURL(blob)
+    logger(blobUrl)
+
+    // logger(a)
+    anchorElm.href = blobUrl
+    anchorElm.download = filename
+    anchorElm.click()
+    window.URL.revokeObjectURL(blobUrl)
+}
+
 const ImdbSentiment = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
 
-    const [sTabCurrent, setTabCurrent] = useState<number>(3)
+    const [sTabCurrent, setTabCurrent] = useState<number>(4)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
 
+    // Data
     const [sNumWords] = useState<number>(10000)
     const [sMaxLen] = useState<number>(100)
     const [sEmbeddingSize] = useState<number>(128)
 
-    const [sPredictor, setPredictor] = useState<SentimentPredictor>()
-
-    const [sModelName, setModelName] = useState('multihot')
-    const [sModel, setModel] = useState<tf.LayersModel>()
-    const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
-    const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
-
-    const [sEpochs] = useState<number>(10)
-    const [sBatchSize] = useState<number>(128)
-    const [sValidationSplit] = useState<number>(0.2)
-    const [sLearningRate] = useState<number>(1e-2)
+    const [sMetadata, setMetadata] = useState<any>()
 
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
-    const [sSampleType] = useState<string>('positive')
-    const [sSampleText, setSampleText] = useState<string>(exampleReviews[sSampleType])
-    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
+    // Model
+    const [sModelName, setModelName] = useState(DEFAULT_MODEL)
+    const [sModel, setModel] = useState<tf.LayersModel>()
+    const [sPredictor, setPredictor] = useState<SentimentPredictor>()
+
+    const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
+    const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
+
+    // Train
+    const stopRef = useRef(false)
+    const [sEpochs, setEpochs] = useState<number>(10)
+    const [sBatchSize, setBatchSize] = useState<number>(128)
+    const [sLearningRate, setLearningRate] = useState<number>(1e-2)
+    const [sValidationSplit, setValidationSplit] = useState<number>(0.2)
 
     const historyRef = useRef<HTMLDivElement>(null)
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
-    const [form] = Form.useForm()
+    // predict
+    const [sSampleType] = useState<string>('positive')
+    const [sSampleText, setSampleText] = useState<string>(exampleReviews[sSampleType])
+    const [sPredictSet, setPredictSet] = useState<tf.Tensor>()
+    const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
+
+    const [formTrain] = Form.useForm()
     const [formPredict] = Form.useForm()
 
     /***********************
      * useEffect
      ***********************/
     useEffect(() => {
-        logger('init data set ...')
+        logger('init model metadata ...')
 
-        loadData(sNumWords, sMaxLen, (sModelName === 'multihot')).then(
-            (result) => {
-                const { xTrain, yTrain, xTest, yTest } = result
-                setTrainSet({ xs: xTrain, ys: yTrain })
-                setTestSet({ xs: xTest, ys: yTest })
+        loadMetadataTemplate().then(
+            (metadata) => {
+                setMetadata(metadata)
+                setStatus(STATUS.LOADED)
             },
             loggerError
         )
+    }, [])
 
-        return () => {
-            logger('Data Dispose')
-            // dataHandler.dispose()
-        }
+    useEffect(() => {
+        logger('init data set ...')
+
+        setStatus(STATUS.WAITING)
+        loadData(sNumWords, sMaxLen, (sModelName === 'multihot')).then(
+            (result) => {
+                const { xTrain, yTrain, xTest, yTest } = result
+                const xData = (xTrain as tf.Tensor).slice(0, NUM_TRAIN_ELEMENTS)
+                const yData = (yTrain as tf.Tensor).slice(0, NUM_TRAIN_ELEMENTS)
+                setTrainSet({ xs: xData, ys: yData })
+
+                const xTData = (xTest as tf.Tensor).slice(0, NUM_TEST_ELEMENTS)
+                const yTData = (yTest as tf.Tensor).slice(0, NUM_TEST_ELEMENTS)
+                setTestSet({ xs: xTData, ys: yTData })
+
+                setStatus(STATUS.LOADED)
+            },
+            loggerError
+        )
     }, [sModelName])
 
     useEffect(() => {
@@ -166,11 +213,15 @@ const ImdbSentiment = (): JSX.Element => {
                 }
             }
             model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }))
-
-            model.compile({ loss: 'binaryCrossentropy', optimizer: 'adam', metrics: ['acc'] })
             // model.summary()
+
             _model = model
             setModel(_model)
+
+            const _layerOptions: ILayerSelectOption[] = _model.layers.map((l, index) => {
+                return { name: l.name, index }
+            })
+            setLayersOption(_layerOptions)
 
             setStatus(STATUS.LOADED)
         }
@@ -185,47 +236,49 @@ const ImdbSentiment = (): JSX.Element => {
         if (!sModel) {
             return
         }
-
-        const _layerOptions: ILayerSelectOption[] = sModel.layers.map((l, index) => {
-            return { name: l.name, index }
-        })
-        setLayersOption(_layerOptions)
-    }, [sModel])
+        const optimizer = tf.train.adam(sLearningRate)
+        sModel.compile({ loss: 'binaryCrossentropy', optimizer, metrics: ['acc'] })
+    }, [sModel, sLearningRate])
 
     /***********************
      * Functions
      ***********************/
 
-    const handlePredict = (values: any): void => {
-        if (!sPredictor) {
+    const predictModel = (_model: tf.LayersModel, _xs: tf.TensorContainer): void => {
+        if (!_model || !_xs) {
             return
         }
-        logger('handlePredict', values)
-        setStatus(STATUS.WAITING)
-        const result = sPredictor.predict(sSampleText)
-        logger('handlePredict', result)
-        setStatus(STATUS.PREDICTED)
-        setPredictResult(result)
+        const [preds] = tf.tidy(() => {
+            const preds = _model.predict(_xs as tf.Tensor) as tf.Tensor
+            return [preds]
+        })
+        setPredictSet(preds)
     }
 
-    const handleTrain = (values: any): void => {
-        if (!sModel || !sTrainSet) {
-            return
+    const myCallback = {
+        onBatchBegin: async (batch: number) => {
+            logger('onBatchBegin')
+            if (!sModel) {
+                return
+            }
+            if (sModel && stopRef.current) {
+                logger('Checked stop', stopRef.current)
+                setStatus(STATUS.STOPPED)
+                sModel.stopTraining = stopRef.current
+            }
+            await tf.nextFrame()
+        },
+        onBatchEnd: async (batch: number) => {
+            if (!sModel || !sTestSet) {
+                return
+            }
+            predictModel(sModel, sTestSet?.xs)
+            await tf.nextFrame()
         }
+    }
 
-        logger('handleTrain', values)
-        setStatus(STATUS.WAITING)
-
-        const { epochs, batchSize, validationSplit } = values
-        sModel.compile({ loss: 'binaryCrossentropy', optimizer: 'adam', metrics: ['acc'] })
-
-        const callbacks = tfvis.show.fitCallbacks(historyRef?.current, ['loss', 'acc', 'val_loss', 'val_acc'])
-        sModel.fit(sTrainSet.xs as tf.Tensor, sTrainSet.ys as tf.Tensor, { epochs, batchSize, validationSplit, callbacks }).then(
-            () => {
-                setStatus(STATUS.TRAINED)
-            },
-            loggerError
-        )
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
     }
 
     const handleModelChange = (value: string): void => {
@@ -238,20 +291,52 @@ const ImdbSentiment = (): JSX.Element => {
         setCurLayer(_layer)
     }
 
-
-    const handleSampleTypeChange = (key: string): void => {
-        logger('handleSampleTypeChange', key)
-        setSampleText(exampleReviews[key])
-        formPredict?.setFieldsValue({ sampleText: exampleReviews[key] })
+    const handleTrainParamsChange = (): void => {
+        const values = formTrain.getFieldsValue()
+        // logger('handleTrainParamsChange', values)
+        const { epochs, batchSize, learningRate, validationSplit } = values
+        setEpochs(epochs)
+        setBatchSize(batchSize)
+        setLearningRate(learningRate)
+        setValidationSplit(validationSplit)
     }
 
-    const handleTabChange = (current: number): void => {
-        setTabCurrent(current)
+    const handleTrain = (): void => {
+        if (!sModel || !sTrainSet || !sMetadata) {
+            return
+        }
+
+        setStatus(STATUS.WAITING)
+        stopRef.current = false
+
+        const callbacks = [
+            tfvis.show.fitCallbacks(historyRef.current, ['loss', 'acc', 'val_loss', 'val_acc'], { callbacks: ['onBatchEnd', 'onEpochEnd'] }),
+            myCallback
+        ]
+
+        logger('Train Begin')
+        sModel.fit(sTrainSet.xs as tf.Tensor, sTrainSet.ys as tf.Tensor, {
+            epochs: sEpochs,
+            batchSize: sBatchSize,
+            validationSplit: sValidationSplit,
+            callbacks
+        }).then(
+            () => {
+                setStatus(STATUS.TRAINED)
+                handleSaveModelWeight()
+            },
+            loggerError
+        )
+    }
+
+    const handleTrainStop = (): void => {
+        logger('handleTrainStop')
+        stopRef.current = true
     }
 
     const handleLoadModelWeight = (): void => {
         setStatus(STATUS.WAITING)
-        const fileName = `jena_${sModelName}`
+        const fileName = `imdb_${sModelName}`
         tf.loadLayersModel(`/model/${fileName}.json`).then(
             (model) => {
                 model.summary()
@@ -263,16 +348,62 @@ const ImdbSentiment = (): JSX.Element => {
     }
 
     const handleSaveModelWeight = (): void => {
-        if (!sModel) {
+        if (!sModel || !sMetadata) {
             return
         }
 
-        const fileName = `jena_${sModelName}`
+        // Save Model
+        const fileName = `imdb_${sModelName}`
         const downloadUrl = `downloads://${fileName}`
         sModel.save(downloadUrl).then((saveResults) => {
             logger(saveResults)
         }, loggerError)
-        logger()
+
+        // Save metadata.
+        sMetadata.epochs = sEpochs
+        sMetadata.batch_size = sBatchSize
+        sMetadata.model_type = sModelName
+        sMetadata.embedding_size = sEmbeddingSize
+        sMetadata.max_len = sMaxLen
+        sMetadata.vocabulary_size = sNumWords
+
+        const a = downloadRef.current
+        if (a) {
+            saveToDownload(a, `${fileName}.metadata.json`, Buffer.from(JSON.stringify(sMetadata)),
+                { type: 'application/json' })
+        }
+
+        // writeEmbeddingMatrixAndLabels
+        writeEmbeddingMatrixAndLabels(sModel, fileName, sMetadata.word_index, sMetadata.index_from).then(
+            (result) => {
+                const { vectorsFilePath, vectorsStr, labelsFilePath, labelsStr } = result
+                if (a && vectorsStr) {
+                    saveToDownload(a, vectorsFilePath, Buffer.from(vectorsStr, 'utf-8'))
+                }
+                if (a && labelsStr) {
+                    saveToDownload(a, labelsFilePath, Buffer.from(labelsStr, 'utf-8'))
+                }
+            },
+            loggerError
+        )
+    }
+
+    const handleSampleTypeChange = (key: string): void => {
+        logger('handleSampleTypeChange', key)
+        setSampleText(exampleReviews[key])
+        formPredict?.setFieldsValue({ sampleText: exampleReviews[key] })
+    }
+
+    const handlePredict = (values: any): void => {
+        if (!sPredictor) {
+            return
+        }
+        // logger('handlePredict', values)
+        setStatus(STATUS.WAITING)
+        const result = sPredictor.predict(sSampleText)
+        logger('handlePredict', result)
+        setStatus(STATUS.PREDICTED)
+        setPredictResult(result)
     }
 
     /***********************
@@ -283,7 +414,7 @@ const ImdbSentiment = (): JSX.Element => {
         return (
             <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} initialValues={{
-                    modelName: 'simpleRNN'
+                    modelName: DEFAULT_MODEL
                 }}>
                     <Form.Item name='modelName' label='Select Model'>
                         <Select onChange={handleModelChange}>
@@ -297,8 +428,53 @@ const ImdbSentiment = (): JSX.Element => {
         )
     }
 
+    const trainAdjustCard = (): JSX.Element => {
+        return (
+            <Card title='Train' style={{ margin: '8px' }} size='small'>
+                <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange} initialValues={{
+                    epochs: sEpochs,
+                    batchSize: sBatchSize,
+                    validationSplit: sValidationSplit,
+                    learningRate: sLearningRate
+                }}>
+                    <Form.Item name='epochs' label='Epochs'>
+                        <Slider min={2} max={10} marks={{ 2: 2, 6: 6, 10: 10 }}/>
+                    </Form.Item>
+                    <Form.Item name='batchSize' label='Batch Size'>
+                        <Select>
+                            {BATCH_SIZES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item name='validationSplit' label='Validation Split'>
+                        <Slider min={0.1} max={0.2} step={0.05} marks={{ 0.1: 0.1, 0.15: 0.15, 0.2: 0.2 }}/>
+                    </Form.Item>
+                    <Form.Item name='learningRate' label='Learning Rate'>
+                        <Select>
+                            {LEARNING_RATES.map((v) => {
+                                return <Option key={v} value={v}>{v}</Option>
+                            })}
+                        </Select>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <Button type='primary' htmlType={'submit'} style={{ width: '30%', margin: '0 10%' }}
+                            disabled={ sModelName === 'pretrained-cnn' }> Train </Button>
+                        <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
+                    </Form.Item>
+                    <Form.Item {...tailLayout}>
+                        <Button onClick={handleSaveModelWeight} style={{ width: '30%', margin: '0 10%' }}> Save
+                            Weights </Button>
+                        <Button onClick={handleLoadModelWeight} style={{ width: '30%', margin: '0 10%' }}> Load
+                            Weights </Button>
+                    </Form.Item>
+                </Form>
+            </Card>
+        )
+    }
+
     return (
-        <AIProcessTabs title={'RNN Sentiment'} current={sTabCurrent} onChange={handleTabChange} >
+        <AIProcessTabs title={'IMDB Sentiment'} current={sTabCurrent} onChange={handleTabChange} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/sentiment.md'}/>
             </TabPane>
@@ -307,11 +483,15 @@ const ImdbSentiment = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Train Set' style={{ margin: '8px' }} size='small'>
                             <div>{sTrainSet && <TfvisDatasetInfoWidget value={sTrainSet}/>}</div>
+                            <SentimentSampleDataVis sampleCount={SHOW_SAMPLE} pageSize={5}
+                                xDataset={sTrainSet?.xs as tf.Tensor} yDataset={sTrainSet?.ys as tf.Tensor}/>
                         </Card>
                     </Col>
                     <Col span={12}>
                         <Card title='Test Set' style={{ margin: '8px' }} size='small'>
                             <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
+                            <SentimentSampleDataVis sampleCount={SHOW_SAMPLE} pageSize={5}
+                                xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}/>
                         </Card>
                     </Col>
                 </Row>
@@ -341,7 +521,7 @@ const ImdbSentiment = (): JSX.Element => {
                             <p>status: {sStatus}</p>
                             <p>backend: {sTfBackend}</p>
                         </Card>
-                        <Card title='Predictor Info' size='small'>
+                        <Card title='Predictor Info' style={{ margin: '8px' }} size='small'>
                             <div> maxLen : {sPredictor?.maxLen} </div>
                             <div> indexFrom : {sPredictor?.indexFrom} </div>
                             <div> vocabularySize: {sPredictor?.vocabularySize} </div>
@@ -351,37 +531,19 @@ const ImdbSentiment = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.TRAIN}>
                 <Row>
-                    <Col span={12}>
-                        <Card title='Train' style={{ margin: '8px' }} size='small'>
-                            <Form {...layout} form={form} onFinish={handleTrain} initialValues={{
-                                epochs: sEpochs,
-                                batchSize: sBatchSize,
-                                validationSplit: sValidationSplit,
-                                learningRate: sLearningRate
-                            }}>
-                                <Form.Item name='epochs' label='Epoches' >
-                                    <Input />
-                                </Form.Item>
-                                <Form.Item name='batchSize' label='Batch Size'>
-                                    <Input />
-                                </Form.Item>
-                                <Form.Item name='validationSplit' label='Validation Split'>
-                                    <Input />
-                                </Form.Item>
-                                <Form.Item {...tailLayout}>
-                                    <Button type='primary' htmlType='submit' disabled={ sModelName === 'pretrained-cnn' }
-                                        style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                                </Form.Item>
-                            </Form>
+                    <Col span={8}>
+                        {trainAdjustCard()}
+                        {modelAdjustCard()}
+                        <a ref={downloadRef}/>
+                    </Col>
+                    <Col span={10}>
+                        <Card title='Evaluate' style={{ margin: '8px' }} size='small'>
+                            <SentimentSampleDataVis pageSize={5}
+                                xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
+                                pDataset={sPredictSet} />
                         </Card>
                     </Col>
-                    <Col span={12}>
-                        <Card title='Save and Load Model Weights' style={{ margin: '8px' }} size='small'>
-                            <Button onClick={handleSaveModelWeight} style={{ width: '30%', margin: '0 10%' }}> Save Model </Button>
-                            <Button onClick={handleLoadModelWeight} style={{ width: '30%', margin: '0 10%' }}> Load Model </Button>
-                            <div>status: {sStatus}</div>
-                            <div>backend: {sTfBackend}</div>
-                        </Card>
+                    <Col span={6}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
                             <div ref={historyRef}/>
                         </Card>

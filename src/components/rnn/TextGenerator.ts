@@ -30,10 +30,8 @@ import * as tf from '@tensorflow/tfjs'
 
 import { TextData } from './dataTextGen'
 import * as model from './modelTextGen'
-import { ModelArtifactsInfo } from '@tensorflow/tfjs-core/src/io/types'
-import {logger} from '../../utils'
 
-// import {onTextGenerationBegin, onTextGenerationChar, onTrainBatchEnd, onTrainBegin, onTrainEpochEnd, setUpUI} from './ui';
+import { logger } from '../../utils'
 
 /**
  * Class that manages LSTM-based text generation.
@@ -97,7 +95,7 @@ export class LSTMTextGenerator {
      *   training epochs.
      */
     fitModel = async (numEpochs: number, examplesPerEpoch: number, batchSize: number, validationSplit: number,
-        callbacks: tf.CustomCallbackArgs): Promise<void> => {
+        callbacks: any[]): Promise<void> => {
         if (!this.model || !this.textData_) {
             return
         }
@@ -194,7 +192,7 @@ export class SaveableLSTMTextGenerator extends LSTMTextGenerator {
     /**
      * Remove the locally saved model from IndexedDB.
      */
-    removeModel = async (): Promise<ModelArtifactsInfo> => {
+    removeModel = async (): Promise<any> => {
         if (await this.checkStoredModelStatus() == null) {
             throw new Error(
                 'Cannot remove locally saved model because it does not exist.')
@@ -208,7 +206,7 @@ export class SaveableLSTMTextGenerator extends LSTMTextGenerator {
      * @returns If the locally saved model exists, the model info as a JSON
      *   object. Else, `undefined`.
      */
-    checkStoredModelStatus = async (): Promise<ModelArtifactsInfo> => {
+    checkStoredModelStatus = async (): Promise<any> => {
         const modelsInfo = await tf.io.listModels()
         return modelsInfo[this.modelSavePath_]
     }
@@ -233,5 +231,3 @@ export class SaveableLSTMTextGenerator extends LSTMTextGenerator {
         return layerSizes.length === 1 ? layerSizes[0] : layerSizes
     }
 }
-
-// setUpUI();

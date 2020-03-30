@@ -16,8 +16,9 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
+
+import { logger } from '../../utils'
 import { TextData } from './dataTextGen'
-import {logger} from '../../utils'
 
 /**
  * Create a model for next-character prediction.
@@ -71,7 +72,7 @@ export const compileModel = (model: tf.LayersModel, learningRate: number): void 
  *   `model.fit()` calls.
  */
 export const fitModel = async (model: tf.LayersModel, textData: TextData, numEpochs: number, examplesPerEpoch: number,
-    batchSize: number, validationSplit: number, callbacks: tf.CustomCallbackArgs): Promise<void> => {
+    batchSize: number, validationSplit: number, callbacks: any[]): Promise<void> => {
     for (let i = 0; i < numEpochs; ++i) {
         const [xs, ys] = textData.nextDataEpoch(examplesPerEpoch)
         await model.fit(xs, ys, {
@@ -110,7 +111,7 @@ export const generateText = async (
 
     let generated = ''
     while (generated.length < length) {
-    // Encode the current input sequence as a one-hot Tensor.
+        // Encode the current input sequence as a one-hot Tensor.
         const inputBuffer = new tf.TensorBuffer([1, sampleLen, charSetSize], 'float32')
 
         // Make the one-hot encoding of the seeding sentence.
@@ -154,10 +155,10 @@ export const generateText = async (
  */
 export const sample = (probs: tf.Tensor, temperature: number): number => {
     return tf.tidy(() => {
-        const logits = tf.div(tf.log(probs), Math.max(temperature, 1e-6)) as tf.Tensor1D
+        const logits = tf.div(tf.log(probs), Math.max(temperature, 1e-6))
         const isNormalized = false
         // `logits` is for a multinomial distribution, scaled by the temperature.
         // We randomly draw a sample from the distribution.
-        return tf.multinomial(logits, 1, undefined, isNormalized).dataSync()[0]
+        return tf.multinomial(logits as tf.Tensor1D, 1, undefined, isNormalized).dataSync()[0]
     })
 }

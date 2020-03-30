@@ -5,7 +5,7 @@
     "dependencies": {
         "@matejmazur/react-mathjax": "^0.1.10",
         "@tensorflow-models/knn-classifier": "^1.2.1",
-        "@tensorflow/tfjs": "^1.7.0",
+        "@tensorflow/tfjs": "^1.7.1",
         "@tensorflow/tfjs-vis": "^1.4.0",
         "@testing-library/jest-dom": "^4.2.4",
         "@testing-library/react": "^9.3.2",

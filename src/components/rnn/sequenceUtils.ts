@@ -37,7 +37,7 @@ export const padSequences = (sequences: number[][], maxLen: number, padding = 'p
     value = PAD_INDEX): number[][] => {
     // TODO(cais): This perhaps should be refined and moved into tfjs-preproc.
     return sequences.map(seq => {
-    // Perform truncation.
+        // Perform truncation.
         if (seq.length > maxLen) {
             if (truncating === 'pre') {
                 seq.splice(0, seq.length - maxLen)

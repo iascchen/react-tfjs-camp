@@ -15,6 +15,7 @@ import { loadData, loadMetadataTemplate } from './dataSentiment'
 import SentimentSampleDataVis from './SentimentSampleDataVis'
 import { writeEmbeddingMatrixAndLabels } from './embedding'
 
+// cannot use import
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
 
@@ -22,10 +23,12 @@ const { Option } = Select
 const { TabPane } = Tabs
 const { TextArea } = Input
 
-const NUM_TRAIN_ELEMENTS = 1000
-const NUM_TEST_ELEMENTS = 5
+const NUM_TRAIN_ELEMENTS = 25000
+const NUM_TEST_ELEMENTS = 20
 
+// Can not run Word Embed Model
 const MODEL_OPTIONS = ['pretrained-cnn', 'multihot', 'flatten', 'cnn', 'simpleRNN', 'lstm', 'bidirectionalLSTM']
+// const MODEL_OPTIONS = ['pretrained-cnn', 'multihot']
 const DEFAULT_MODEL = 'simpleRNN'
 const BATCH_SIZES = [128, 256, 512, 1024]
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03]
@@ -177,9 +180,7 @@ const ImdbSentiment = (): JSX.Element => {
             } else {
                 // All other model types use word embedding.
                 model.add(tf.layers.embedding({
-                    inputDim: sNumWords,
-                    outputDim: sEmbeddingSize,
-                    inputLength: sMaxLen
+                    inputDim: sNumWords, outputDim: sEmbeddingSize, inputLength: sMaxLen
                 }))
 
                 switch (sModelName) {
@@ -236,7 +237,8 @@ const ImdbSentiment = (): JSX.Element => {
         if (!sModel) {
             return
         }
-        const optimizer = tf.train.adam(sLearningRate)
+        // const optimizer = tf.train.adam(sLearningRate)
+        const optimizer = 'adam'
         sModel.compile({ loss: 'binaryCrossentropy', optimizer, metrics: ['acc'] })
     }, [sModel, sLearningRate])
 
@@ -257,7 +259,7 @@ const ImdbSentiment = (): JSX.Element => {
 
     const myCallback = {
         onBatchBegin: async (batch: number) => {
-            logger('onBatchBegin')
+            logger('onBatchBegin', sModelName)
             if (!sModel) {
                 return
             }
@@ -310,7 +312,7 @@ const ImdbSentiment = (): JSX.Element => {
         stopRef.current = false
 
         const callbacks = [
-            tfvis.show.fitCallbacks(historyRef.current, ['loss', 'acc', 'val_loss', 'val_acc'], { callbacks: ['onBatchEnd', 'onEpochEnd'] }),
+            tfvis.show.fitCallbacks(historyRef.current, ['loss', 'acc', 'val_loss', 'val_acc']),
             myCallback
         ]
 
@@ -373,19 +375,21 @@ const ImdbSentiment = (): JSX.Element => {
                 { type: 'application/json' })
         }
 
-        // writeEmbeddingMatrixAndLabels
-        writeEmbeddingMatrixAndLabels(sModel, fileName, sMetadata.word_index, sMetadata.index_from).then(
-            (result) => {
-                const { vectorsFilePath, vectorsStr, labelsFilePath, labelsStr } = result
-                if (a && vectorsStr) {
-                    saveToDownload(a, vectorsFilePath, Buffer.from(vectorsStr, 'utf-8'))
-                }
-                if (a && labelsStr) {
-                    saveToDownload(a, labelsFilePath, Buffer.from(labelsStr, 'utf-8'))
-                }
-            },
-            loggerError
-        )
+        if (sModelName !== 'multihot') {
+            // writeEmbeddingMatrixAndLabels
+            writeEmbeddingMatrixAndLabels(sModel, fileName, sMetadata.word_index, sMetadata.index_from).then(
+                (result) => {
+                    const { vectorsFilePath, vectorsStr, labelsFilePath, labelsStr } = result
+                    if (a && vectorsStr) {
+                        saveToDownload(a, vectorsFilePath, Buffer.from(vectorsStr, 'utf-8'))
+                    }
+                    if (a && labelsStr) {
+                        saveToDownload(a, labelsFilePath, Buffer.from(labelsStr, 'utf-8'))
+                    }
+                },
+                loggerError
+            )
+        }
     }
 
     const handleSampleTypeChange = (key: string): void => {
@@ -431,12 +435,13 @@ const ImdbSentiment = (): JSX.Element => {
     const trainAdjustCard = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange} initialValues={{
-                    epochs: sEpochs,
-                    batchSize: sBatchSize,
-                    validationSplit: sValidationSplit,
-                    learningRate: sLearningRate
-                }}>
+                <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
+                    initialValues={{
+                        epochs: sEpochs,
+                        batchSize: sBatchSize,
+                        validationSplit: sValidationSplit,
+                        learningRate: sLearningRate
+                    }}>
                     <Form.Item name='epochs' label='Epochs'>
                         <Slider min={2} max={10} marks={{ 2: 2, 6: 6, 10: 10 }}/>
                     </Form.Item>

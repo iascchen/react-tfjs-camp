@@ -20,6 +20,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
+import { logger } from '../../utils'
 
 /**
  * Extract the first embedding matrix from a TensorFlow.js model.
@@ -68,48 +69,52 @@ interface IIndexToWord {
     [index: number]: string
 }
 export const writeEmbeddingMatrixAndLabels = async (model: tf.LayersModel, prefix: string,
-    wordIndex: IWordIndex, indexFrom: number): Promise<any> => {
+                                                    wordIndex: IWordIndex, indexFrom: number): Promise<any> => {
     tf.util.assert(
         prefix != null && prefix.length > 0,
         () => 'Null, undefined or empty path prefix')
 
-    const embed = extractEmbeddingMatrix(model)
+    try {
+        const embed = extractEmbeddingMatrix(model)
 
-    const numWords = embed.shape[0] ?? 0
-    const embedDims = embed.shape[1] ?? 0
-    const embedData = await embed.data()
+        const numWords = embed.shape[0] ?? 0
+        const embedDims = embed.shape[1] ?? 0
+        const embedData = await embed.data()
 
-    // Write the ebmedding matrix to file.
-    let vectorsStr = ''
-    let index = 0
-    for (let i = 0; i < numWords; ++i) {
-        for (let j = 0; j < embedDims; ++j) {
-            vectorsStr += embedData[index++].toFixed(5)
-            if (j < embedDims - 1) {
-                vectorsStr += '\t'
-            } else {
-                vectorsStr += '\n'
+        // Write the ebmedding matrix to file.
+        let vectorsStr = ''
+        let index = 0
+        for (let i = 0; i < numWords; ++i) {
+            for (let j = 0; j < embedDims; ++j) {
+                vectorsStr += embedData[index++].toFixed(5)
+                if (j < embedDims - 1) {
+                    vectorsStr += '\t'
+                } else {
+                    vectorsStr += '\n'
+                }
             }
         }
-    }
-    const vectorsFilePath = `${prefix}_vectors.tsv`
+        const vectorsFilePath = `${prefix}_vectors.tsv`
 
-    // Collect and write the word labels.
-    const indexToWord: IIndexToWord = {}
-    for (const word in wordIndex) {
-        indexToWord[wordIndex[word]] = word
-    }
-
-    let labelsStr = ''
-    for (let i = 0; i < numWords; ++i) {
-        if (i >= indexFrom) {
-            labelsStr += indexToWord[i - indexFrom]
-        } else {
-            labelsStr += 'not-a-word'
+        // Collect and write the word labels.
+        const indexToWord: IIndexToWord = {}
+        for (const word in wordIndex) {
+            indexToWord[wordIndex[word]] = word
         }
-        labelsStr += '\n'
-    }
-    const labelsFilePath = `${prefix}_labels.tsv`
 
-    return { vectorsFilePath, vectorsStr, labelsFilePath, labelsStr }
+        let labelsStr = ''
+        for (let i = 0; i < numWords; ++i) {
+            if (i >= indexFrom) {
+                labelsStr += indexToWord[i - indexFrom]
+            } else {
+                labelsStr += 'not-a-word'
+            }
+            labelsStr += '\n'
+        }
+        const labelsFilePath = `${prefix}_labels.tsv`
+
+        return { vectorsFilePath, vectorsStr, labelsFilePath, labelsStr }
+    } catch (e) {
+        logger(e)
+    }
 }

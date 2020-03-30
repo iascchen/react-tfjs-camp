@@ -10,7 +10,7 @@ BTW，这是个平民 AI 教程，可以不使用 GPU 完成。
 
 * TypeScript (v3.7.2)
 * React (v16.12) : react-scripts, react-hooks, react-router
-* Tensorflow.js (v1.5.2) 才一个多月的功夫，已经升级到 v1.7.0 了
+* Tensorflow.js (v1.5.2) 才一个多月的功夫，已经升级到 v1.7.1 了
 * AntD(v4.0.0) & AntV/bizcharts
 
 ### 快速开始

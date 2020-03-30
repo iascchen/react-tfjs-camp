@@ -30,7 +30,7 @@
 import * as tf from '@tensorflow/tfjs-node'
 import { fetchLocal, logger } from '../utils'
 
-const BASE_URL = './public/preload/data'
+const BASE_URL = '../public/preload/data'
 const LOCAL_JENA_WEATHER_CSV_PATH = `${BASE_URL}/jena_climate_2009_2016.csv`
 // const REMOTE_JENA_WEATHER_CSV_PATH =
 //     'https://storage.googleapis.com/learnjs-data/jena_climate/jena_climate_2009_2016.csv'

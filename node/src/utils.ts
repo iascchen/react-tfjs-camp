@@ -57,6 +57,7 @@ const readFile = util.promisify(fs.readFile)
 
 // Downloads a test file only once and returns the buffer for the file.
 export const fetchLocal = async (filename: string, isUnzip?: boolean): Promise<Buffer | undefined> => {
+    logger('fetchLocal dirname : ', __dirname)
     const buf = await readFile(filename)
     // const buf = await response.arrayBuffer()
     // const buf = Buffer.from(response)
@@ -68,21 +69,21 @@ export const fetchLocal = async (filename: string, isUnzip?: boolean): Promise<B
     }
 }
 
-export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buffer | undefined> => {
-    try {
-        const response = await fetch(url)
-        // const buf = await response.arrayBuffer()
-        const buf = await Buffer.from(response.text())
-        if (isUnzip) {
-            logger('unzip...', url)
-            return zlib.unzipSync(Buffer.from(buf))
-        } else {
-            return Buffer.from(buf)
-        }
-    } catch (e) {
-        logger(e)
-    }
-}
+// export const fetchResource = async (url: string, isUnzip?: boolean): Promise<Buffer> => {
+//     try {
+//         const response = await fetch(url)
+//         // const buf = await response.arrayBuffer()
+//         const buf = await Buffer.from(response.text())
+//         if (isUnzip) {
+//             logger('unzip...', url)
+//             return zlib.unzipSync(Buffer.from(buf))
+//         } else {
+//             return Buffer.from(buf)
+//         }
+//     } catch (e) {
+//         logger(e)
+//     }
+// }
 
 export const getUploadFileBase64 = async (blob: File | Blob | undefined): Promise<string> => {
     if (!blob) {

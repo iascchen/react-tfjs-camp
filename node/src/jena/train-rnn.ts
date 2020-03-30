@@ -117,14 +117,15 @@ const main = async (): Promise<void> => {
     jenaWeatherData.loadDataColumnNames()
     await jenaWeatherData.load()
 
+    logger('modelType', args.modelType)
+
     if (args.modelType === 'baseline') {
         console.log('Calculating commonsense baseline mean absolute error...')
         const baselineError = await getBaselineMeanAbsoluteError(
             jenaWeatherData, args.normalize, args.includeDateTime, args.lookBack,
             args.step, args.delay)
         console.log(
-            'Commonsense baseline mean absolute error: ' +
-        `${baselineError.toFixed(6)}`)
+            'Commonsense baseline mean absolute error: ' + `${baselineError.toFixed(6)}`)
     } else {
         const numFeatures = jenaWeatherData.getDataColumnNames().length
         const model = buildModel(

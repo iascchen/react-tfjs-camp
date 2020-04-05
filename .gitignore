@@ -28,3 +28,4 @@ yarn-error.log*
 public/preload
 public/model/*.json
 public/model/*.bin
+public/model/*.tsv

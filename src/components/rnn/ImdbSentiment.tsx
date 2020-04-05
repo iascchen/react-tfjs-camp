@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Form, Input, message, Row, Select, Slider, Tabs } from 'antd'
+import { Button, Card, Col, Form, Input, Row, Select, Slider, Tabs } from 'antd'
 
 import { layout, tailLayout } from '../../constant'
 import { ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
@@ -10,8 +10,8 @@ import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 
-import { SentimentPredictor } from './modelSentiment'
-import { loadData, loadMetadataTemplate } from './dataSentiment'
+import { PRETRAINED_HOSTED_URLS, SentimentPredictor } from './modelSentiment'
+import { loadData } from './dataSentiment'
 import SentimentSampleDataVis from './SentimentSampleDataVis'
 import { writeEmbeddingMatrixAndLabels } from './embedding'
 
@@ -28,7 +28,6 @@ const NUM_TEST_ELEMENTS = 20
 
 // Can not run Word Embed Model
 const MODEL_OPTIONS = ['pretrained-cnn', 'multihot', 'flatten', 'cnn', 'simpleRNN', 'lstm', 'bidirectionalLSTM']
-// const MODEL_OPTIONS = ['pretrained-cnn', 'multihot']
 const DEFAULT_MODEL = 'simpleRNN'
 const BATCH_SIZES = [128, 256, 512, 1024]
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03]
@@ -73,8 +72,6 @@ const ImdbSentiment = (): JSX.Element => {
     const [sMaxLen] = useState<number>(100)
     const [sEmbeddingSize] = useState<number>(128)
 
-    const [sMetadata, setMetadata] = useState<any>()
-
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
@@ -102,6 +99,7 @@ const ImdbSentiment = (): JSX.Element => {
     const [sPredictSet, setPredictSet] = useState<tf.Tensor>()
     const [sPredictResult, setPredictResult] = useState<tf.Tensor>()
 
+    const [formModel] = Form.useForm()
     const [formTrain] = Form.useForm()
     const [formPredict] = Form.useForm()
 
@@ -109,37 +107,74 @@ const ImdbSentiment = (): JSX.Element => {
      * useEffect
      ***********************/
     useEffect(() => {
-        logger('init model metadata ...')
-
-        loadMetadataTemplate().then(
-            (metadata) => {
-                setMetadata(metadata)
-                setStatus(STATUS.LOADED)
-            },
-            loggerError
-        )
-    }, [])
-
-    useEffect(() => {
         logger('init data set ...')
 
         setStatus(STATUS.WAITING)
+
+        let xTrain: tf.Tensor
+        let yTrain: tf.Tensor
+        let xTest: tf.Tensor
+        let yTest: tf.Tensor
         loadData(sNumWords, sMaxLen, (sModelName === 'multihot')).then(
             (result) => {
-                const { xTrain, yTrain, xTest, yTest } = result
-                const xData = (xTrain as tf.Tensor).slice(0, NUM_TRAIN_ELEMENTS)
-                const yData = (yTrain as tf.Tensor).slice(0, NUM_TRAIN_ELEMENTS)
+                xTrain = result.xTrain as tf.Tensor
+                yTrain = result.yTrain as tf.Tensor
+                xTest = result.xTest as tf.Tensor
+                yTest = result.yTest as tf.Tensor
+
+                // TODO use multihot will return error
+                const xData = xTrain.slice(0, NUM_TRAIN_ELEMENTS)
+                const yData = yTrain.slice(0, NUM_TRAIN_ELEMENTS)
                 setTrainSet({ xs: xData, ys: yData })
 
-                const xTData = (xTest as tf.Tensor).slice(0, NUM_TEST_ELEMENTS)
-                const yTData = (yTest as tf.Tensor).slice(0, NUM_TEST_ELEMENTS)
+                const xTData = xTest.slice(0, NUM_TEST_ELEMENTS)
+                const yTData = yTest.slice(0, NUM_TEST_ELEMENTS)
                 setTestSet({ xs: xTData, ys: yTData })
 
                 setStatus(STATUS.LOADED)
             },
             loggerError
         )
+
+        return () => {
+            xTrain?.dispose()
+            yTrain?.dispose()
+            xTest?.dispose()
+            yTest?.dispose()
+        }
     }, [sModelName])
+
+    useEffect(() => {
+        if (!sPredictor) {
+            return
+        }
+        logger('init predictor ...')
+
+        setStatus(STATUS.WAITING)
+
+        let _model: tf.LayersModel
+        sPredictor.init().then(
+            (model) => {
+                if (model) {
+                    model.summary()
+                    _model = model
+                    setModel(_model)
+
+                    setStatus(STATUS.LOADED)
+                }
+
+                sPredictor.updateMetadata({
+                    epochs: sEpochs,
+                    batch_size: sBatchSize,
+                    model_type: sModelName,
+                    embedding_size: sEmbeddingSize,
+                    max_len: sMaxLen,
+                    vocabulary_size: sNumWords
+                })
+            },
+            loggerError
+        )
+    }, [sPredictor])
 
     useEffect(() => {
         logger('init model ...')
@@ -152,23 +187,8 @@ const ImdbSentiment = (): JSX.Element => {
         let predictor: SentimentPredictor
         let _model: tf.LayersModel
         if (sModelName === 'pretrained-cnn') {
-            predictor = new SentimentPredictor()
-            predictor.init().then(
-                (model) => {
-                    if (!model) {
-                        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                        message.error('Can not load model')
-                        return
-                    }
-
-                    _model = model
-                    setModel(_model)
-                    setPredictor(predictor)
-
-                    setStatus(STATUS.LOADED)
-                },
-                loggerError
-            )
+            predictor = new SentimentPredictor(PRETRAINED_HOSTED_URLS)
+            setPredictor(predictor)
         } else {
             const model = tf.sequential()
             if (sModelName === 'multihot') {
@@ -217,6 +237,10 @@ const ImdbSentiment = (): JSX.Element => {
             // model.summary()
 
             _model = model
+
+            predictor = new SentimentPredictor()
+            predictor.setModel(_model)
+            setPredictor(predictor)
             setModel(_model)
 
             const _layerOptions: ILayerSelectOption[] = _model.layers.map((l, index) => {
@@ -232,6 +256,20 @@ const ImdbSentiment = (): JSX.Element => {
             _model?.dispose()
         }
     }, [sModelName, sNumWords])
+
+    useEffect(() => {
+        if (!sPredictor) {
+            return
+        }
+        sPredictor.updateMetadata({
+            epochs: sEpochs,
+            batch_size: sBatchSize,
+            model_type: sModelName,
+            embedding_size: sEmbeddingSize,
+            max_len: sMaxLen,
+            vocabulary_size: sNumWords
+        }, true)
+    }, [sEpochs, sBatchSize, sModelName, sEmbeddingSize, sMaxLen, sNumWords])
 
     useEffect(() => {
         if (!sModel) {
@@ -304,7 +342,7 @@ const ImdbSentiment = (): JSX.Element => {
     }
 
     const handleTrain = (): void => {
-        if (!sModel || !sTrainSet || !sMetadata) {
+        if (!sModel || !sTrainSet) {
             return
         }
 
@@ -312,7 +350,7 @@ const ImdbSentiment = (): JSX.Element => {
         stopRef.current = false
 
         const callbacks = [
-            tfvis.show.fitCallbacks(historyRef.current, ['loss', 'acc', 'val_loss', 'val_acc']),
+            tfvis.show.fitCallbacks(historyRef.current, ['loss', 'acc']),
             myCallback
         ]
 
@@ -339,18 +377,16 @@ const ImdbSentiment = (): JSX.Element => {
     const handleLoadModelWeight = (): void => {
         setStatus(STATUS.WAITING)
         const fileName = `imdb_${sModelName}`
-        tf.loadLayersModel(`/model/${fileName}.json`).then(
-            (model) => {
-                model.summary()
-                setModel(model)
-                setStatus(STATUS.LOADED)
-            },
-            loggerError
-        )
+        const urls = {
+            model: `/model/${fileName}.json`,
+            metadata: `/model/${fileName}.metadata.json`
+        }
+        const predictor = new SentimentPredictor(urls)
+        setPredictor(predictor)
     }
 
     const handleSaveModelWeight = (): void => {
-        if (!sModel || !sMetadata) {
+        if (!sModel || !sPredictor) {
             return
         }
 
@@ -361,23 +397,15 @@ const ImdbSentiment = (): JSX.Element => {
             logger(saveResults)
         }, loggerError)
 
-        // Save metadata.
-        sMetadata.epochs = sEpochs
-        sMetadata.batch_size = sBatchSize
-        sMetadata.model_type = sModelName
-        sMetadata.embedding_size = sEmbeddingSize
-        sMetadata.max_len = sMaxLen
-        sMetadata.vocabulary_size = sNumWords
-
         const a = downloadRef.current
         if (a) {
-            saveToDownload(a, `${fileName}.metadata.json`, Buffer.from(JSON.stringify(sMetadata)),
+            saveToDownload(a, `${fileName}.metadata.json`, Buffer.from(JSON.stringify(sPredictor.metadata)),
                 { type: 'application/json' })
         }
 
         if (sModelName !== 'multihot') {
             // writeEmbeddingMatrixAndLabels
-            writeEmbeddingMatrixAndLabels(sModel, fileName, sMetadata.word_index, sMetadata.index_from).then(
+            writeEmbeddingMatrixAndLabels(sModel, fileName, sPredictor.metadata.word_index, sPredictor.metadata.index_from).then(
                 (result) => {
                     const { vectorsFilePath, vectorsStr, labelsFilePath, labelsStr } = result
                     if (a && vectorsStr) {
@@ -398,11 +426,10 @@ const ImdbSentiment = (): JSX.Element => {
         formPredict?.setFieldsValue({ sampleText: exampleReviews[key] })
     }
 
-    const handlePredict = (values: any): void => {
+    const handlePredict = (): void => {
         if (!sPredictor) {
             return
         }
-        // logger('handlePredict', values)
         setStatus(STATUS.WAITING)
         const result = sPredictor.predict(sSampleText)
         logger('handlePredict', result)
@@ -417,7 +444,7 @@ const ImdbSentiment = (): JSX.Element => {
     const modelAdjustCard = (): JSX.Element => {
         return (
             <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} initialValues={{
+                <Form {...layout} form={formModel} initialValues={{
                     modelName: DEFAULT_MODEL
                 }}>
                     <Form.Item name='modelName' label='Select Model'>
@@ -527,9 +554,10 @@ const ImdbSentiment = (): JSX.Element => {
                             <p>backend: {sTfBackend}</p>
                         </Card>
                         <Card title='Predictor Info' style={{ margin: '8px' }} size='small'>
-                            <div> maxLen : {sPredictor?.maxLen} </div>
-                            <div> indexFrom : {sPredictor?.indexFrom} </div>
-                            <div> vocabularySize: {sPredictor?.vocabularySize} </div>
+                            <div> maxLen : {sPredictor?.metadata.max_len} </div>
+                            <div> indexFrom : {sPredictor?.metadata.index_from} </div>
+                            <div> vocabularySize: {sPredictor?.metadata.vocabulary_size} </div>
+                            {/* {JSON.stringify(sPredictor?.metadata)} */}
                         </Card>
                     </Col>
                 </Row>

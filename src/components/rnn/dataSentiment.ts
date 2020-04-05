@@ -18,15 +18,10 @@
 import * as tf from '@tensorflow/tfjs'
 import * as path from 'path'
 
-import { OOV_INDEX, padSequences } from './sequenceUtils'
 import { fetchResource, logger } from '../../utils'
+import { OOV_INDEX, padSequences } from './sequenceUtils'
 
-const BASE_URL = '/preload/data/imdb'
-
-// const DATA_ZIP_URL = `${BASE_URL}/imdb_tfjs_data.zip`
-// 'https://storage.googleapis.com/learnjs-data/imdb/imdb_tfjs_data.zip'
-const METADATA_TEMPLATE_URL = `${BASE_URL}/metadata.json`
-// 'https://storage.googleapis.com/learnjs-data/imdb/metadata.json.zip'
+export const DATA_BASE_URL = '/preload/data/imdb'
 
 /**
  * Load IMDB data features from a local file.
@@ -85,17 +80,16 @@ const loadFeatures = async (filePath: string, numWords: number, maxLen: number,
     logger(`Sequence length: min = ${minLength}; max = ${maxLength}`)
 
     if (multihot) {
-    // If requested by the arg, encode the sequences as multi-hot
-    // vectors.
-        const buffer = tf.buffer([sequences.length, numWords])
+        // If requested by the arg, encode the sequences as multi-hot vectors.
+        const buf = tf.buffer([sequences.length, numWords])
         sequences.forEach((seq, i) => {
             seq.forEach(wordIndex => {
                 if (wordIndex !== OOV_INDEX) {
-                    buffer.set(1, i, wordIndex)
+                    buf.set(1, i, wordIndex)
                 }
             })
         })
-        return buffer.toTensor()
+        return buf.toTensor()
     } else {
         const paddedSequences =
         padSequences(sequences, maxLen, 'pre', 'pre')
@@ -147,9 +141,7 @@ const loadTargets = async (filePath: string): Promise<tf.Tensor2D> => {
  *   yTest: The same as `yTrain`, but for the test dataset.
  */
 export const loadData = async (numWords: number, len: number, multihot = false): Promise<tf.TensorContainerObject> => {
-    // const dataDir = await maybeDownloadAndExtract()
-
-    const dataDir = `${BASE_URL}/`
+    const dataDir = `${DATA_BASE_URL}/`
     const trainFeaturePath = path.join(dataDir, 'imdb_train_data.bin')
     const xTrain = await loadFeatures(trainFeaturePath, numWords, len, multihot)
     const testFeaturePath = path.join(dataDir, 'imdb_test_data.bin')
@@ -166,9 +158,4 @@ export const loadData = async (numWords: number, len: number, multihot = false):
         xTest.shape[0] === yTest.shape[0],
         () => 'Mismatch in number of examples between xTest and yTest')
     return { xTrain, yTrain, xTest, yTest }
-}
-
-export const loadMetadataTemplate = async (): Promise<void> => {
-    const buffer = await fetchResource(METADATA_TEMPLATE_URL, false)
-    return JSON.parse(buffer.toString())
 }

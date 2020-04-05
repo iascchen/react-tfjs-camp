@@ -18,38 +18,42 @@
 import * as tf from '@tensorflow/tfjs'
 import { OOV_INDEX, padSequences } from './sequenceUtils'
 import { logger } from '../../utils'
+import { DATA_BASE_URL } from './dataSentiment'
 
 const BASE_URL = '/preload/model'
-
-const HOSTED_URLS = {
+export const PRETRAINED_HOSTED_URLS = {
     model: `${BASE_URL}/sentiment_cnn_v1/model.json`,
     // 'https://storage.googleapis.com/tfjs-models/tfjs/sentiment_cnn_v1/model.json',
     metadata: `${BASE_URL}/sentiment_cnn_v1/metadata.json`
     // 'https://storage.googleapis.com/tfjs-models/tfjs/sentiment_cnn_v1/metadata.json'
 }
 
+const DEFAULT_METADATA_URLS = {
+    model: '',
+    metadata: `${DATA_BASE_URL}/metadata.json`
+    // 'https://storage.googleapis.com/learnjs-data/imdb/metadata.json.zip'
+}
+
 export class SentimentPredictor {
-    urls = HOSTED_URLS
+    urls = DEFAULT_METADATA_URLS
     model: tf.LayersModel | undefined
+    metadata: any = {}
 
-    indexFrom = 0
-    maxLen = 0
-
-    wordIndex: number[] = []
-    vocabularySize = 0
-
-    constructor () {
+    constructor (urls = DEFAULT_METADATA_URLS) {
+        this.urls = urls
     }
 
     /**
      * Initializes the Sentiment demo.
      */
     init = async (): Promise<tf.LayersModel | void> => {
-        // this.model = await loader.loadHostedPretrainedModel(urls.model)
         try {
-            this.model = await tf.loadLayersModel(this.urls.model)
-            await this.loadMetadata()
-
+            if (this.urls.model || this.urls.model.length > 0) {
+                this.model = await tf.loadLayersModel(this.urls.model)
+            }
+            if (this.urls.metadata) {
+                await this.loadMetadata(this.urls.metadata)
+            }
             return this.model
         } catch (err) {
             console.error(err)
@@ -57,28 +61,37 @@ export class SentimentPredictor {
         }
     }
 
-    loadMetadata = async (): Promise<void> => {
-        //     await loader.loadHostedMetadata(this.urls.metadata)
-
+    loadMetadata = async (metadataUrl: string): Promise<void> => {
         try {
-            const metadataJson = await fetch(this.urls.metadata)
+            const metadataJson = await fetch(metadataUrl)
             const sentimentMetadata = await metadataJson.json()
-            // return metadata
 
             logger('sentimentMetadata.model_type', sentimentMetadata.model_type)
-
-            // ui.showMetadata(sentimentMetadata)
-            this.indexFrom = sentimentMetadata.index_from
-            this.maxLen = sentimentMetadata.max_len
-            logger('indexFrom = ' + this.indexFrom)
-            logger('maxLen = ' + this.maxLen)
-
-            this.wordIndex = sentimentMetadata.word_index
-            this.vocabularySize = sentimentMetadata.vocabulary_size
-            logger('vocabularySize = ', this.vocabularySize)
+            this.metadata = { ...sentimentMetadata }
         } catch (err) {
             console.error(err)
             // ui.status('Loading metadata failed.')
+        }
+    }
+
+    setModel = (model: tf.LayersModel): void => {
+        this.model = model
+    }
+
+    updateMetadata = (options: any, force = false): void => {
+        if (!this.metadata) {
+            return
+        }
+
+        if (force) {
+            this.metadata = { ...this.metadata, ...options }
+        } else {
+            const keys = Object.keys(options)
+            keys.forEach(key => {
+                if (this.metadata[key] == null) {
+                    this.metadata[key] = options[key]
+                }
+            })
         }
     }
 
@@ -92,15 +105,15 @@ export class SentimentPredictor {
             text.trim().toLowerCase().replace(/(\.|\,|\!)/g, '').split(' ')
         // Convert the words to a sequence of word indices.
         const sequence = inputText.map((word: any) => {
-            let wordIndex = this.wordIndex[word] + this.indexFrom
-            if (wordIndex > this.vocabularySize) {
+            let wordIndex = this.metadata.word_index[word] + this.metadata.index_from
+            if (wordIndex > this.metadata.vocabulary_size) {
                 wordIndex = OOV_INDEX
             }
             return wordIndex
         })
         // Perform truncation and padding.
-        const paddedSequence = padSequences([sequence], this.maxLen)
-        const input = tf.tensor2d(paddedSequence, [1, this.maxLen])
+        const paddedSequence = padSequences([sequence], this.metadata.max_len)
+        const input = tf.tensor2d(paddedSequence, [1, this.metadata.max_len])
 
         const beginMs = performance.now()
         const predictOut = this.model.predict(input) as tf.Tensor

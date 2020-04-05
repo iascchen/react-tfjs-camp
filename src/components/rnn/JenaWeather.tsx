@@ -67,7 +67,7 @@ interface IKeyMap {
 }
 
 export const getBaselineMeanAbsoluteError = async (jenaWeatherData: JenaWeatherData, normalize: boolean,
-                                                   includeDateTime: boolean, lookBack: number, step: number, delay: number): Promise<number> => {
+    includeDateTime: boolean, lookBack: number, step: number, delay: number): Promise<number> => {
     const batchSize = 128
     const dataset = tf.data.generator(
         () => jenaWeatherData.getNextBatchFunction(false, lookBack, delay, batchSize, step,
@@ -227,7 +227,7 @@ const JenaWeather = (): JSX.Element => {
      * Functions
      ***********************/
     const makeTimeSeriesChart = async (series1: string, series2: string, timeSpan: string, currBeginIndex: number,
-                                       normalize: boolean, chartConatiner: HTMLDivElement): Promise<void> => {
+        normalize: boolean, chartConatiner: HTMLDivElement): Promise<void> => {
         if (!sDataHandler || !chartConatiner) {
             return
         }
@@ -256,7 +256,7 @@ const JenaWeather = (): JSX.Element => {
     }
 
     const makeTimeSeriesScatterPlot = async (series1: string, series2: string, timeSpan: string,
-                                             currBeginIndex: number, normalize: boolean): Promise<void> => {
+        currBeginIndex: number, normalize: boolean): Promise<void> => {
         if (!sDataHandler || !dataChartRef.current) {
             return
         }
@@ -359,8 +359,8 @@ const JenaWeather = (): JSX.Element => {
     }
 
     const trainModel = async (model: tf.LayersModel, jenaWeatherData: JenaWeatherData, normalize: boolean,
-                              includeDateTime: boolean, lookBack: number, step: number, delay: number, batchSize: number, epochs: number,
-                              callbacks: tf.Callback[]): Promise<void> => {
+        includeDateTime: boolean, lookBack: number, step: number, delay: number, batchSize: number, epochs: number,
+        callbacks: tf.Callback[]): Promise<void> => {
         const trainShuffle = true
         const trainDataset = tf.data.generator(
             () => jenaWeatherData.getNextBatchFunction(
@@ -569,13 +569,13 @@ const JenaWeather = (): JSX.Element => {
         return (
             <Card title='Show Data' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formDataShow} onFinish={handleShowPlots}
-                      initialValues={{
-                          normalize: false,
-                          timeSpan: 'tenDays',
-                          currBeginIndex: 0,
-                          series1: 'T (degC)',
-                          series2: 'p (mbar)'
-                      }}>
+                    initialValues={{
+                        normalize: false,
+                        timeSpan: 'tenDays',
+                        currBeginIndex: 0,
+                        series1: 'T (degC)',
+                        series2: 'p (mbar)'
+                    }}>
                     <Form.Item name='normalize' label='Normalize Data'>
                         <Switch/>
                     </Form.Item>
@@ -604,7 +604,7 @@ const JenaWeather = (): JSX.Element => {
                         <InputNumber/>
                     </Form.Item>
                     <Button style={{ width: '30%', margin: '0 35%' }} htmlType={'submit'}
-                            disabled={!sDataLoaded}> Show Plots </Button>
+                        disabled={!sDataLoaded}> Show Plots </Button>
                 </Form>
                 <Row>
                     <Col span={1}></Col>
@@ -655,12 +655,12 @@ const JenaWeather = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
-                      initialValues={{
-                          epochs: 5,
-                          batchSize: 1024,
-                          delayDays: 1,
-                          normalize: false
-                      }}>
+                    initialValues={{
+                        epochs: 5,
+                        batchSize: 1024,
+                        delayDays: 1,
+                        normalize: false
+                    }}>
                     <Form.Item name='epochs' label='Epochs'>
                         <Slider min={1} max={10} marks={{ 1: 1, 5: 5, 9: 9 }}/>
                     </Form.Item>
@@ -679,7 +679,7 @@ const JenaWeather = (): JSX.Element => {
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <Button type='primary' htmlType={'submit'} style={{ width: '30%', margin: '0 10%' }}
-                                disabled={!sDataLoaded}> Train </Button>
+                            disabled={!sDataLoaded}> Train </Button>
                         <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
@@ -690,7 +690,7 @@ const JenaWeather = (): JSX.Element => {
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <Button style={{ width: '30%', margin: '0 10%' }}
-                                disabled={!sDataLoaded} onClick={handleCalc}> Calc Baseline </Button>
+                            disabled={!sDataLoaded} onClick={handleCalc}> Calc Baseline </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <div>Status: {sStatus}</div>
@@ -704,7 +704,7 @@ const JenaWeather = (): JSX.Element => {
 
     return (
         <AIProcessTabs title={'Jena Weather'} current={sTabCurrent} onChange={handleTabChange}
-                       invisiblePanes={[AIProcessTabPanes.PREDICT]}>
+            invisiblePanes={[AIProcessTabPanes.PREDICT]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/rnnJena.md'}/>
             </TabPane>
@@ -714,7 +714,7 @@ const JenaWeather = (): JSX.Element => {
                         <Card title={'Data'} style={{ margin: 8 }}>
                             <MarkdownWidget source={mdInfo}/>
                             <Button style={{ width: '30%', margin: '0 35%' }} type='primary'
-                                    disabled={sStatus === STATUS.WAITING} onClick={handleDataLoad}> Load </Button>
+                                disabled={sStatus === STATUS.WAITING} onClick={handleDataLoad}> Load </Button>
                             <p>Status: {sStatus}</p>
                             <p>{statusInfo()}</p>
                         </Card>

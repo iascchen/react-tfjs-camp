@@ -66,6 +66,7 @@ const MnistKeras = (): JSX.Element => {
     const [logMsg, setLogMsg] = useState<ITrainInfo>()
     const [sDrawPred, setDrawPred] = useState<tf.Tensor>()
 
+    const [formModel] = Form.useForm()
     const [formTrain] = Form.useForm()
 
     /***********************
@@ -331,7 +332,7 @@ const MnistKeras = (): JSX.Element => {
     const modelAdjustCard = (): JSX.Element => {
         return (
             <Card title='Adjust Model' style={{ margin: '8px' }} size='small'>
-                <Form {...layout} initialValues={{
+                <Form {...layout} form={formModel} initialValues={{
                     modelName: 'cnn-dropout'
                 }}>
                     <Form.Item name='modelName' label='Select Model'>

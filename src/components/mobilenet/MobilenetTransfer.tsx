@@ -386,10 +386,10 @@ const MobilenetTransfer = (): JSX.Element => {
                         labeled.imageList?.map((imgItem: ILabeledImage) => {
                             if (imgItem.tensor) {
                                 return <TensorImageThumbWidget key={imgItem.uid} data={imgItem.tensor}
-                                                               height={IMAGE_HEIGHT}/>
+                                    height={IMAGE_HEIGHT}/>
                             } else if (imgItem.img) {
                                 return <img key={imgItem.uid} src={imgItem.img} alt={imgItem.name}
-                                            height={IMAGE_HEIGHT} style={{ margin: 4 }}/>
+                                    height={IMAGE_HEIGHT} style={{ margin: 4 }}/>
                             } else {
                                 return <></>
                             }
@@ -404,9 +404,9 @@ const MobilenetTransfer = (): JSX.Element => {
         return (
             <Card title='Adjust Dense Net' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formModel} onFinish={handleTrain} onFieldsChange={handleModelParamsChange}
-                      initialValues={{
-                          denseUnits: 100
-                      }}>
+                    initialValues={{
+                        denseUnits: 100
+                    }}>
                     <Form.Item name='denseUnits' label='Dense Units'>
                         <Select>
                             {DENSE_UNITS.map((v) => {
@@ -426,11 +426,11 @@ const MobilenetTransfer = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
-                      initialValues={{
-                          learningRate: 0.0001,
-                          batchSize: 32,
-                          epochs: 30
-                      }}>
+                    initialValues={{
+                        learningRate: 0.0001,
+                        batchSize: 32,
+                        epochs: 30
+                    }}>
                     <Form.Item name='epochs' label='Epochs'>
                         <Slider min={10} max={50} step={10} marks={{ 10: 10, 30: 30, 50: 50 }}/>
                     </Form.Item>
@@ -450,7 +450,7 @@ const MobilenetTransfer = (): JSX.Element => {
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <Button type='primary' htmlType={'submit'}
-                                style={{ width: '60%', margin: '0 20%' }}> Train </Button>
+                            style={{ width: '60%', margin: '0 20%' }}> Train </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <div>Status: {sStatus}</div>
@@ -472,7 +472,7 @@ const MobilenetTransfer = (): JSX.Element => {
                         <Card title='Captures Label Panel' size='small' style={{ margin: '8px' }}>
                             <WebCamera ref={webcamRef} config={MOBLILENET_CONFIG}/>
                             <LabeledCaptureInputSet onSave={handleLabeledImagesSubmit}
-                                                    onCapture={handleLabeledCapture}/>
+                                onCapture={handleLabeledCapture}/>
                             <div> XShape: {_tensorX?.shape.join(',')}, YShape: {_tensorY?.shape.join(',')}</div>
                         </Card>
                     </Col>
@@ -543,13 +543,13 @@ const MobilenetTransfer = (): JSX.Element => {
                     <Col span={12}>
                         <Card title='Prediction with picture' style={{ margin: '8px' }} size='small'>
                             <ImageUploadWidget onSubmit={handlePredict} prediction={sPredictResult}
-                                               labelsMap={sLabelsMap}/>
+                                labelsMap={sLabelsMap}/>
                         </Card>
                     </Col>
                     <Col span={12}>
                         <Card title='Prediction with camera' style={{ margin: '8px' }} size='small'>
                             <WebCamera ref={webcamRef2} onSubmit={handlePredict} prediction={sPredictResult}
-                                       labelsMap={sLabelsMap} isPreview/>
+                                labelsMap={sLabelsMap} isPreview/>
                         </Card>
                     </Col>
                 </Row>

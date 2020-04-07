@@ -19,7 +19,7 @@ const FaceMeshPanel = (): JSX.Element => {
 
     const webvideoRef = useRef<IWebVideoHandler>(null)
 
-    const triangulateMesh = useRef<boolean>(false)
+    const switchRef = useRef<boolean>(false)
 
     /***********************
      * useEffect
@@ -72,7 +72,7 @@ const FaceMeshPanel = (): JSX.Element => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
         const keypoints = predictions[0].scaledMesh as number[][]
 
-        if (triangulateMesh.current) {
+        if (switchRef.current) {
             for (let i = 0; i < TRIANGULATION.length / 3; i++) {
                 const points = [
                     TRIANGULATION[i * 3], TRIANGULATION[i * 3 + 1],
@@ -109,7 +109,7 @@ const FaceMeshPanel = (): JSX.Element => {
 
     const handleSwitch = (value: boolean): void => {
         // logger('handleSwitch', value)
-        triangulateMesh.current = value
+        switchRef.current = value
     }
 
     /***********************

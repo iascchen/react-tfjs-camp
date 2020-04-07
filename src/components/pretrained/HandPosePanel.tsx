@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { HandPose, load as LoadHandPose } from '@tensorflow-models/handpose'
-import { Col, Row } from 'antd'
+import { HandPose, load as handPoseLoad } from '@tensorflow-models/handpose'
+import { Col, Row, Switch } from 'antd'
 
 import { logger, loggerError, STATUS } from '../../utils'
 import WebVideo, { IWebVideoHandler } from '../common/tensor/WebVideo'
@@ -47,6 +47,8 @@ const HandPosePanel = (): JSX.Element => {
 
     const webvideoRef = useRef<IWebVideoHandler>(null)
 
+    const switchRef = useRef<boolean>(false)
+
     /***********************
      * useEffect
      ***********************/
@@ -59,7 +61,7 @@ const HandPosePanel = (): JSX.Element => {
         setStatus(STATUS.WAITING)
 
         let _model: HandPose
-        LoadHandPose().then(
+        handPoseLoad().then(
             (model) => {
                 _model = model
                 setModel(_model)
@@ -78,8 +80,8 @@ const HandPosePanel = (): JSX.Element => {
     /***********************
      * Functions
      ***********************/
-    const handlePredict = async (data: tf.Tensor3D): Promise<any[]> => {
-        if (!sModel) {
+    const handlePredict = async (data: tf.Tensor3D): Promise<any> => {
+        if (!sModel || !switchRef.current) {
             return []
         }
         return sModel.estimateHands(data)
@@ -104,15 +106,23 @@ const HandPosePanel = (): JSX.Element => {
             return
         }
 
-        const data = predictions[0].landmarks.map((point: number[]) => {
-            return point.map((v: number) => +v.toFixed(2))
-        })
-        webvideoRef.current.setPred(data)
+        // logger('predictions', predictions)
+        webvideoRef.current.setPred(predictions[0])
+
+        // const data = predictions[0].landmarks.map((point: number[]) => {
+        //     return point.map((v: number) => +v.toFixed(2))
+        // })
+        // webvideoRef.current.setPred(data)
     }
 
     const showPrediction = (predictions: any[]): void => {
         showDetectionsText(predictions)
         showDetections(predictions)
+    }
+
+    const handleSwitch = (value: boolean): void => {
+        logger('handleSwitch', value)
+        switchRef.current = value
     }
 
     /***********************
@@ -123,6 +133,13 @@ const HandPosePanel = (): JSX.Element => {
         <>
             <h1>手势识别 Hand Pose</h1>
             <Row>
+                <Col span={12}>
+                </Col>
+                <Col span={12}>
+                    <div className='centerContainer'>
+                        <Switch onChange={handleSwitch}/>
+                    </div>
+                </Col>
                 <Col span={24}>
                     <div className='centerContainer'>
                         <WebVideo ref={webvideoRef} show={showPrediction} predict={handlePredict}/>

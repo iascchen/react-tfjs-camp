@@ -10,7 +10,7 @@ import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 
 import { TEXT_DATA_URLS, TextData } from './dataTextGen'
-import { LSTMTextGenerator, SaveableLSTMTextGenerator } from './TextGenerator'
+import { LSTMTextGenerator, SavableLSTMTextGenerator } from './TextGenerator'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const tfvis = require('@tensorflow/tfjs-vis')
@@ -43,7 +43,8 @@ const TextGenLstm = (): JSX.Element => {
 
     // Model
     const [sLstmLayerSizes, setLstmLayerSizes] = useState<number[]>([256, 128])
-    const [sModel, setModel] = useState<tf.LayersModel>()
+    const [sGenerator, setGenerator] = useState<LSTMTextGenerator>()
+    // const [sModel, setModel] = useState<tf.LayersModel>()
     const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
     const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
 
@@ -54,8 +55,8 @@ const TextGenLstm = (): JSX.Element => {
     const [sBatchSize, setBatchSize] = useState<number>(128)
     const [sValidationSplit, setValidationSplit] = useState<number>(0.05)
     const [sLearningRate, setLearningRate] = useState<number>(1e-2)
+    const historyRef = useRef<HTMLDivElement>(null)
 
-    const [sGenerator, setGenerator] = useState<LSTMTextGenerator>()
     const [sGenTextLen] = useState<number>(200)
     const [sTemperature] = useState<number>(0.75)
     const [sSeedText, setSeedText] = useState<string>()
@@ -63,9 +64,6 @@ const TextGenLstm = (): JSX.Element => {
 
     const [sTextData, setTextData] = useState<TextData>()
 
-    const historyRef = useRef<HTMLDivElement>(null)
-
-    // const [form] = Form.useForm()
     const [formTrain] = Form.useForm()
     const [formPredict] = Form.useForm()
 
@@ -109,7 +107,7 @@ const TextGenLstm = (): JSX.Element => {
         logger('init model ...')
         setStatus(STATUS.WAITING)
 
-        const generator = new SaveableLSTMTextGenerator(sTextData)
+        const generator = new SavableLSTMTextGenerator(sTextData)
         setGenerator(generator)
         generator.createModel(sLstmLayerSizes)
 
@@ -117,9 +115,8 @@ const TextGenLstm = (): JSX.Element => {
         if (!_model) {
             return
         }
-
-        // generator.compileModel(sLearningRate)
-        setModel(_model)
+        generator.compileModel(sLearningRate)
+        // setModel(_model)
 
         const _layerOptions: ILayerSelectOption[] = _model.layers.map((l, index) => {
             return { name: l.name, index }
@@ -153,8 +150,12 @@ const TextGenLstm = (): JSX.Element => {
     }
 
     const handleLayerChange = (value: number): void => {
+        if (!sGenerator || !sGenerator.model) {
+            return
+        }
+
         logger('handleLayerChange', value)
-        const _layer = sModel?.getLayer(undefined, value)
+        const _layer = sGenerator.model.getLayer(undefined, value)
         setCurLayer(_layer)
     }
 
@@ -171,13 +172,14 @@ const TextGenLstm = (): JSX.Element => {
 
     const myCallback = {
         onBatchBegin: async (batch: number) => {
-            if (!sModel) {
+            if (!sGenerator) {
                 return
             }
-            if (sModel && stopRef.current) {
+
+            if (stopRef.current) {
                 logger('Checked stop', stopRef.current)
                 setStatus(STATUS.STOPPED)
-                sModel.stopTraining = stopRef.current
+                sGenerator.stopTrain(stopRef.current)
             }
             await tf.nextFrame()
         }
@@ -213,12 +215,15 @@ const TextGenLstm = (): JSX.Element => {
     }
 
     const handleLoadModelWeight = (): void => {
+        if (!sGenerator) {
+            return
+        }
+
         setStatus(STATUS.WAITING)
         const fileName = `lstm_${sDataIdentifier}`
-        tf.loadLayersModel(`/model/${fileName}.json`).then(
+        sGenerator.loadModelFromFile(`/model/${fileName}.json`).then(
             (model) => {
                 model.summary()
-                setModel(model)
                 setStatus(STATUS.LOADED)
             },
             loggerError
@@ -226,14 +231,14 @@ const TextGenLstm = (): JSX.Element => {
     }
 
     const handleSaveModelWeight = (): void => {
-        if (!sModel) {
+        if (!sGenerator || !sGenerator.model) {
             return
         }
 
         // Save Model
         const fileName = `lstm_${sDataIdentifier}`
         const downloadUrl = `downloads://${fileName}`
-        sModel.save(downloadUrl).then((saveResults) => {
+        sGenerator.model.save(downloadUrl).then((saveResults) => {
             logger(saveResults)
         }, loggerError)
     }
@@ -409,7 +414,7 @@ const TextGenLstm = (): JSX.Element => {
                     </Col>
                     <Col span={12}>
                         <Card title='Model Detail' style={{ margin: '8px' }} size='small'>
-                            <TfvisModelWidget model={sModel}/>
+                            <TfvisModelWidget model={sGenerator?.model}/>
                             <p>backend: {sTfBackend}</p>
                         </Card>
                         <Card title='Layer Detail' style={{ margin: '8px' }} size='small'>
@@ -445,7 +450,7 @@ const TextGenLstm = (): JSX.Element => {
                                     <Slider min={100} max={300} step={50} marks={{ 100: 100, 200: 200, 300: 300 }}/>
                                 </Form.Item>
                                 <Form.Item name='temperature' label='Generation temperature' >
-                                    <Slider min={0.25} max={1} step={0.25} marks={{ 0.25: 0.25, 0.75: 0.75, 1.25: 1.25 }}/>
+                                    <Slider min={0.25} max={1.25} step={0.25} marks={{ 0.25: 0.25, 0.75: 0.75, 1.25: 1.25 }}/>
                                 </Form.Item>
                                 <Form.Item name='seedText' label='Seed Text'>
                                     <TextArea rows={10} />

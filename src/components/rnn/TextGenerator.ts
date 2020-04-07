@@ -124,6 +124,18 @@ export class LSTMTextGenerator {
         }
         return model.generateText(this.model, this.textData_, sentenceIndices, length, temperature, callbacks)
     }
+
+    stopTrain = (stop: boolean): void => {
+        if (!this.model) {
+            return
+        }
+        this.model.stopTraining = stop
+    }
+
+    loadModelFromFile = async (url: string): Promise<tf.LayersModel> => {
+        this.model = await tf.loadLayersModel(url)
+        return this.model
+    }
 }
 
 /**
@@ -131,7 +143,7 @@ export class LSTMTextGenerator {
  *
  * The model is saved to and loaded from browser's IndexedDB.
  */
-export class SaveableLSTMTextGenerator extends LSTMTextGenerator {
+export class SavableLSTMTextGenerator extends LSTMTextGenerator {
     modelIdentifier_: string
     MODEL_SAVE_PATH_PREFIX_: string
     modelSavePath_: string

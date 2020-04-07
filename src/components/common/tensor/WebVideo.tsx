@@ -69,7 +69,7 @@ const WebVideo = (props: IProps, ref: Ref<IWebVideoHandler>): JSX.Element => {
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         detectFromVideoFrame(sCamera).then()
-    }, [sCamera])
+    }, [sCamera, props.predict])
 
     useEffect(() => {
         if (!props.prediction) {

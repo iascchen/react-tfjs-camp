@@ -18,6 +18,10 @@ import JenaWeather from './components/rnn/JenaWeather'
 import ImdbSentiment from './components/rnn/ImdbSentiment'
 import TextGenLstm from './components/rnn/TextGenLstm'
 
+import HandPose from './components/pretrained/HandPose'
+import FaceMesh from './components/pretrained/FaceMesh'
+import Posenet from './components/pretrained/Posenet'
+
 import FetchWidget from './components/sandbox/FetchWidget'
 import TypedArrayWidget from './components/sandbox/TypedArrayWidget'
 import TfvisWidget from './components/sandbox/TfvisWidget'
@@ -39,6 +43,10 @@ const routes: RouteConfig[] = [
     { path: '/rnn/jena', component: JenaWeather },
     { path: '/rnn/sentiment', component: ImdbSentiment },
     { path: '/rnn/lstm', component: TextGenLstm },
+
+    { path: '/pretrained/handpose', component: HandPose },
+    { path: '/pretrained/facemesh', component: FaceMesh },
+    { path: '/pretrained/posenet', component: Posenet },
 
     { path: '/sandbox/fetch', component: FetchWidget },
     { path: '/sandbox/array', component: TypedArrayWidget },
@@ -67,6 +75,10 @@ export const breadcrumbNameMap: IBreadcrumbMap = {
     '/rnn/jena': 'Jena Weather',
     '/rnn/sentiment': 'Sentiment',
     '/rnn/lstm': 'Lstm Text',
+
+    '/pretrained/handpose': 'Hand Pose',
+    '/pretrained/facemesh': 'Face Mesh',
+    '/pretrained/posenet': 'Pose',
 
     '/sandbox/array': 'TypedArray',
     '/sandbox/fetch': 'Fetch',

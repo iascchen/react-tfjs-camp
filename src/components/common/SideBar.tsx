@@ -4,6 +4,7 @@ import { Menu } from 'antd'
 import {
     CalculatorOutlined,
     ExperimentOutlined,
+    RocketOutlined,
     EyeOutlined,
     HomeOutlined,
     LineChartOutlined,
@@ -92,6 +93,23 @@ const SideBar = (props: IProps): JSX.Element => {
                     <Item key='5.3'>
                         <Link to='/rnn/lstm'>
                             <span> 文本生成 LSTM </span>
+                        </Link>
+                    </Item>
+                </SubMenu>
+                <SubMenu title={<span><RocketOutlined /><span>预训练模型 Pre-trained</span></span>}>
+                    <Item key='6.1'>
+                        <Link to='/pretrained/handpose'>
+                            <span> 手势识别 Hand Pose</span>
+                        </Link>
+                    </Item>
+                    <Item key='6.2'>
+                        <Link to='/pretrained/facemesh'>
+                            <span> 面部特征 Face Mesh</span>
+                        </Link>
+                    </Item>
+                    <Item key='6.3'>
+                        <Link to='/pretrained/posenet'>
+                            <span> 姿势识别 Pose</span>
                         </Link>
                     </Item>
                 </SubMenu>

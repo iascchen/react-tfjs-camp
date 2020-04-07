@@ -120,8 +120,6 @@ const PoseNetPanel = (): JSX.Element => {
         const poses = predictions
 
         poses.forEach(({ score, keypoints }) => {
-            logger(score)
-
             if (score >= sMinConfidence) {
                 drawKeypoints(keypoints, sMinConfidence, ctx)
                 drawSkeleton(keypoints, sMinConfidence, ctx)

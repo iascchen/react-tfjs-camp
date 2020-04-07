@@ -17,3 +17,13 @@ export const drawPath = (ctx: CanvasRenderingContext2D, points: number[][], clos
     }
     ctx.stroke(region)
 }
+
+export const drawSegment = (ctx: CanvasRenderingContext2D, [ay, ax]: number[],
+    [by, bx]: number[], scale: number): void => {
+    ctx.beginPath()
+    ctx.moveTo(ax * scale, ay * scale)
+    ctx.lineTo(bx * scale, by * scale)
+    ctx.lineWidth = 2
+    // ctx.strokeStyle = color;
+    ctx.stroke()
+}

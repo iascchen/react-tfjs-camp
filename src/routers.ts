@@ -18,9 +18,9 @@ import JenaWeather from './components/rnn/JenaWeather'
 import ImdbSentiment from './components/rnn/ImdbSentiment'
 import TextGenLstm from './components/rnn/TextGenLstm'
 
-import HandPose from './components/pretrained/HandPose'
-import FaceMesh from './components/pretrained/FaceMesh'
-import Posenet from './components/pretrained/Posenet'
+import HandPosePanel from './components/pretrained/HandPosePanel'
+import FaceMeshPanel from './components/pretrained/FaceMeshPanel'
+import PoseNetPanel from './components/pretrained/PoseNetPanel'
 
 import FetchWidget from './components/sandbox/FetchWidget'
 import TypedArrayWidget from './components/sandbox/TypedArrayWidget'
@@ -44,9 +44,9 @@ const routes: RouteConfig[] = [
     { path: '/rnn/sentiment', component: ImdbSentiment },
     { path: '/rnn/lstm', component: TextGenLstm },
 
-    { path: '/pretrained/handpose', component: HandPose },
-    { path: '/pretrained/facemesh', component: FaceMesh },
-    { path: '/pretrained/posenet', component: Posenet },
+    { path: '/pretrained/handpose', component: HandPosePanel },
+    { path: '/pretrained/facemesh', component: FaceMeshPanel },
+    { path: '/pretrained/posenet', component: PoseNetPanel },
 
     { path: '/sandbox/fetch', component: FetchWidget },
     { path: '/sandbox/array', component: TypedArrayWidget },

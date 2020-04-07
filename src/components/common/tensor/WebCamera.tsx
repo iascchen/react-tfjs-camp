@@ -4,7 +4,7 @@ import { WebcamIterator } from '@tensorflow/tfjs-data/dist/iterators/webcam_iter
 import { Button, Row, Col } from 'antd'
 import { CameraOutlined } from '@ant-design/icons'
 
-import {IKnnPredictResult, ILabelMap, logger, loggerError} from '../../../utils'
+import { IKnnPredictResult, ILabelMap, logger, loggerError } from '../../../utils'
 import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
 
 import TensorImageThumbWidget from './TensorImageThumbWidget'

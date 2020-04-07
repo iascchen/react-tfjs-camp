@@ -7,6 +7,7 @@
         "@tensorflow-models/facemesh": "^0.0.1",
         "@tensorflow-models/handpose": "^0.0.3",
         "@tensorflow-models/knn-classifier": "^1.2.1",
+        "@tensorflow-models/posenet": "^2.2.1",
         "@tensorflow/tfjs": "^1.7.1",
         "@tensorflow/tfjs-vis": "^1.4.0",
         "@testing-library/jest-dom": "^4.2.4",

@@ -10,7 +10,7 @@ import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 
-import { PRETRAINED_HOSTED_URLS, SentimentPredictor } from './modelSentiment'
+import { PRETRAINED_HOSTED_URLS, SentimentPredictor } from './SentimentPredictor'
 import { loadData } from './dataSentiment'
 import SentimentSampleDataVis from './SentimentSampleDataVis'
 import { writeEmbeddingMatrixAndLabels } from './embedding'
@@ -57,7 +57,7 @@ const saveToDownload = (anchorElm: HTMLAnchorElement, filename: string, body: Bu
     window.URL.revokeObjectURL(blobUrl)
 }
 
-const ImdbSentiment = (): JSX.Element => {
+const SentimentImdb = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -612,4 +612,4 @@ const ImdbSentiment = (): JSX.Element => {
     )
 }
 
-export default ImdbSentiment
+export default SentimentImdb

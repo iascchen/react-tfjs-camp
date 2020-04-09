@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Button, Card, Col, Form, Input, Row, Select, Slider, Tabs } from 'antd'
+import { Button, Card, Col, Form, Input, message, Row, Select, Slider, Tabs } from 'antd'
 
 import { layout, tailLayout } from '../../constant'
 import { fetchResource, ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
@@ -38,18 +38,17 @@ const TextGenLstm = (): JSX.Element => {
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
 
     // Data
-    const [sDataIdentifier, setDataIdentifier] = useState<string>('nietzsche')
+    const [sDataIdentifier, setDataIdentifier] = useState<string>('julesverne')
     const [sTextString, setTextString] = useState<string>('')
 
     // Model
-    const [sLstmLayerSizes, setLstmLayerSizes] = useState<number[]>([256, 128])
+    const [sLstmLayerSizes, setLstmLayerSizes] = useState<number[]>([128, 128])
     const [sGenerator, setGenerator] = useState<LSTMTextGenerator>()
-    // const [sModel, setModel] = useState<tf.LayersModel>()
     const [sLayersOption, setLayersOption] = useState<ILayerSelectOption[]>()
     const [sCurLayer, setCurLayer] = useState<tf.layers.Layer>()
 
     // Train
-    const stopRef = useRef(false)
+    // const stopRef = useRef(false)
     const [sEpochs, setEpochs] = useState<number>(50)
     const [sExamplesPerEpoch, setExamplesPerEpoch] = useState<number>(5000)
     const [sBatchSize, setBatchSize] = useState<number>(128)
@@ -170,35 +169,19 @@ const TextGenLstm = (): JSX.Element => {
         setValidationSplit(validationSplit)
     }
 
-    const myCallback = {
-        onBatchBegin: async (batch: number) => {
-            if (!sGenerator) {
-                return
-            }
-
-            if (stopRef.current) {
-                logger('Checked stop', stopRef.current)
-                setStatus(STATUS.STOPPED)
-                sGenerator.stopTrain(stopRef.current)
-            }
-            await tf.nextFrame()
-        }
-    }
-
     const handleTrain = (values: any): void => {
         if (!sGenerator) {
             return
         }
         logger('handleTrain', values)
         setStatus(STATUS.WAITING)
-        stopRef.current = false
+        // stopRef.current = false
 
         const { epochs, examplesPerEpoch, batchSize, validationSplit, learningRate } = values
         sGenerator.compileModel(learningRate)
 
         const callbacks = [
-            tfvis.show.fitCallbacks(historyRef.current, ['loss', 'acc', 'val_loss', 'val_acc']),
-            myCallback
+            tfvis.show.fitCallbacks(historyRef.current, ['loss', 'acc', 'val_loss', 'val_acc'])
         ]
 
         sGenerator.fitModel(epochs, examplesPerEpoch, batchSize, validationSplit, callbacks).then(
@@ -210,8 +193,11 @@ const TextGenLstm = (): JSX.Element => {
     }
 
     const handleTrainStop = (): void => {
+        if (!sGenerator) {
+            return
+        }
         logger('handleTrainStop')
-        stopRef.current = true
+        sGenerator.stopTrain()
     }
 
     const handleLoadModelWeight = (): void => {
@@ -261,6 +247,8 @@ const TextGenLstm = (): JSX.Element => {
         } else {
             seedSentence = seedText
             if (seedSentence.length < sTextData.sampleLen()) {
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                message.warning(`The seed is too short, it should more than ${sTextData.sampleLen()}`)
                 return
             }
             seedSentence = seedSentence.slice(seedSentence.length - sTextData.sampleLen(), seedSentence.length)
@@ -286,7 +274,7 @@ const TextGenLstm = (): JSX.Element => {
     const dataAdjustCard = (): JSX.Element => {
         return (
             <Card title='Source Text' size='small' style={{ margin: '8px' }}>
-                <Form {...layout} initialValues={{ dataSource: 'nietzsche' }} >
+                <Form {...layout} initialValues={{ dataSource: 'julesverne' }}>
                     <Form.Item name='dataSource' label='Text Source'>
                         <Select onChange={handleDataSourceChange}>
                             {
@@ -312,7 +300,7 @@ const TextGenLstm = (): JSX.Element => {
             <Card title='Adjust LSTM Model' style={{ margin: '8px' }} size='small'>
                 <Form {...layout}>
                     <Form.Item name='layerSize' label='LSTM Layer Size'>
-                        <Select onChange={handleLstmLayerSizeChange} defaultValue={0} >
+                        <Select onChange={handleLstmLayerSizeChange} defaultValue={1}>
                             {
                                 LSTM_LAYER_SIZE.map((value, index) => {
                                     return <Option key={index} value={index}>{value.join(',')}</Option>
@@ -343,7 +331,7 @@ const TextGenLstm = (): JSX.Element => {
                     <Form.Item name='epochs' label='Epochs'>
                         <Slider min={50} max={150} step={25} marks={{ 50: 50, 100: 100, 150: 150 }}/>
                     </Form.Item>
-                    <Form.Item name='examplesPerEpoch' label='Examples Per Epoch' >
+                    <Form.Item name='examplesPerEpoch' label='Examples Per Epoch'>
                         <Slider min={5000} max={15000} step={2500} marks={{ 5000: 5000, 10000: 10000, 15000: 15000 }}/>
                     </Form.Item>
                     <Form.Item name='batchSize' label='Batch Size'>
@@ -380,7 +368,7 @@ const TextGenLstm = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'LSTM Text Generator'} current={sTabCurrent} onChange={handleTabChange} >
+        <AIProcessTabs title={'LSTM Text Generator'} current={sTabCurrent} onChange={handleTabChange}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/lstm.md'}/>
             </TabPane>
@@ -432,7 +420,7 @@ const TextGenLstm = (): JSX.Element => {
                     </Col>
                     <Col span={16}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
-                            <div ref={historyRef} />
+                            <div ref={historyRef}/>
                         </Card>
                     </Col>
                 </Row>
@@ -446,17 +434,19 @@ const TextGenLstm = (): JSX.Element => {
                                 temperature: sTemperature,
                                 seedText: sSeedText
                             }}>
-                                <Form.Item name='genTextLen' label='Length of generated text' >
+                                <Form.Item name='genTextLen' label='Length of generated text'>
                                     <Slider min={100} max={300} step={50} marks={{ 100: 100, 200: 200, 300: 300 }}/>
                                 </Form.Item>
-                                <Form.Item name='temperature' label='Generation temperature' >
-                                    <Slider min={0.25} max={1.25} step={0.25} marks={{ 0.25: 0.25, 0.75: 0.75, 1.25: 1.25 }}/>
+                                <Form.Item name='temperature' label='Generation temperature'>
+                                    <Slider min={0.25} max={1.25} step={0.25}
+                                        marks={{ 0.25: 0.25, 0.75: 0.75, 1.25: 1.25 }}/>
                                 </Form.Item>
                                 <Form.Item name='seedText' label='Seed Text'>
-                                    <TextArea rows={10} />
+                                    <TextArea rows={10}/>
                                 </Form.Item>
                                 <Form.Item {...tailLayout}>
-                                    <Button type='primary' htmlType='submit' style={{ width: '50%', margin: '0 10%' }}> Generate Text </Button>
+                                    <Button type='primary' htmlType='submit'
+                                        style={{ width: '50%', margin: '0 10%' }}> Generate Text </Button>
                                 </Form.Item>
                             </Form>
                             <p> {sStatus} </p>

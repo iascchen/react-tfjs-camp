@@ -29,9 +29,18 @@
 import * as tf from '@tensorflow/tfjs'
 
 import { TextData } from './dataTextGen'
-import * as model from './modelTextGen'
 
 import { logger } from '../../utils'
+
+const sample = (probs: tf.Tensor, temperature: number): number => {
+    return tf.tidy(() => {
+        const logits = tf.div(tf.log(probs), Math.max(temperature, 1e-6))
+        const isNormalized = false
+        // `logits` is for a multinomial distribution, scaled by the temperature.
+        // We randomly draw a sample from the distribution.
+        return tf.multinomial(logits as tf.Tensor1D, 1, undefined, isNormalized).dataSync()[0]
+    })
+}
 
 /**
  * Class that manages LSTM-based text generation.
@@ -49,6 +58,7 @@ export class LSTMTextGenerator {
     textLen_: number
 
     model: tf.LayersModel | undefined
+    stopFlag = false
 
     /**
      * Constructor of NeuralNetworkTextGenerator.
@@ -68,8 +78,24 @@ export class LSTMTextGenerator {
      * @param {number | number[]} lstmLayerSizes Sizes of the LSTM layers, as a
      *   number or an non-empty array of numbers.
      */
+
     createModel = (lstmLayerSizes: number | number[]): void => {
-        this.model = model.createModel(this.sampleLen_, this.charSetSize_, lstmLayerSizes)
+        if (!Array.isArray(lstmLayerSizes)) {
+            lstmLayerSizes = [lstmLayerSizes]
+        }
+
+        const model = tf.sequential()
+        for (let i = 0; i < lstmLayerSizes.length; ++i) {
+            const lstmLayerSize = lstmLayerSizes[i]
+            model.add(tf.layers.lstm({
+                units: lstmLayerSize,
+                returnSequences: i < lstmLayerSizes.length - 1,
+                inputShape: i === 0 ? [this.sampleLen_, this.charSetSize_] : undefined
+            }))
+        }
+        model.add(tf.layers.dense({ units: this.charSetSize_, activation: 'softmax' }))
+
+        this.model = model
     }
 
     /**
@@ -81,26 +107,52 @@ export class LSTMTextGenerator {
         if (!this.model) {
             return
         }
-        model.compileModel(this.model, learningRate)
+        // logger(`Compiled model with learning rate ${learningRate}`)
+        const optimizer = tf.train.rmsprop(learningRate)
+        this.model.compile({ optimizer: optimizer, loss: 'categoricalCrossentropy' })
+        // model.summary()
     }
 
-    /**
-     * Train the LSTM model.
-     *
-     * @param {number} numEpochs Number of epochs to train the model for.
-     * @param {number} examplesPerEpoch Number of epochs to use in each training
-     *   epochs.
-     * @param {number} batchSize Batch size to use during training.
-     * @param {number} validationSplit Validation split to be used during the
-     *   training epochs.
-     */
+    myCallback = {
+        onBatchBegin: async (batch: number) => {
+            if (!this.model) {
+                return
+            }
+
+            if (this.stopFlag) {
+                logger('Checked stop', this.stopFlag)
+                this.model.stopTraining = this.stopFlag
+            }
+            await tf.nextFrame()
+        }
+    }
+
     fitModel = async (numEpochs: number, examplesPerEpoch: number, batchSize: number, validationSplit: number,
         callbacks: any[]): Promise<void> => {
         if (!this.model || !this.textData_) {
             return
         }
-        await model.fitModel(this.model, this.textData_, numEpochs, examplesPerEpoch, batchSize,
-            validationSplit, callbacks)
+
+        const _callbacks = [this.myCallback, ...callbacks]
+
+        this.stopFlag = false
+        for (let i = 0; i < numEpochs; ++i) {
+            if (this.stopFlag) {
+                return
+            }
+
+            const [xs, ys] = tf.tidy(() => {
+                return this.textData_.nextDataEpoch(examplesPerEpoch)
+            })
+            await this.model.fit(xs, ys, {
+                epochs: 1,
+                batchSize: batchSize,
+                validationSplit,
+                callbacks: _callbacks
+            })
+            xs.dispose()
+            ys.dispose()
+        }
     }
 
     /**
@@ -118,18 +170,52 @@ export class LSTMTextGenerator {
             return
         }
 
-        // onTextGenerationBegin()
-        const callbacks = async (char: string): Promise<void> => {
+        const callbacks = (char: string): void => {
             // ignore
+            logger('genCallback', char)
         }
-        return model.generateText(this.model, this.textData_, sentenceIndices, length, temperature, callbacks)
+
+        const sampleLen = this.model.inputs[0].shape[1] as number
+        const charSetSize = this.model.inputs[0].shape[2] as number
+
+        // Avoid overwriting the original input.
+        sentenceIndices = sentenceIndices.slice()
+
+        let generated = ''
+        while (generated.length < length) {
+        // Encode the current input sequence as a one-hot Tensor.
+            const inputBuffer = new tf.TensorBuffer([1, sampleLen, charSetSize], 'float32')
+
+            // Make the one-hot encoding of the seeding sentence.
+            for (let i = 0; i < sampleLen; ++i) {
+                inputBuffer.set(1, 0, i, sentenceIndices[i])
+            }
+            const input = inputBuffer.toTensor()
+
+            // Call model.predict() to get the probability values of the next
+            // character.
+            const output = this.model.predict(input) as tf.Tensor
+
+            // Sample randomly based on the probability values.
+            const winnerIndex = sample(tf.squeeze(output), temperature)
+            const winnerChar = this.textData_.getFromCharSet(winnerIndex)
+            if (callbacks != null) {
+                await callbacks(winnerChar)
+            }
+
+            generated += winnerChar
+            sentenceIndices = sentenceIndices.slice(1)
+            sentenceIndices.push(winnerIndex)
+
+            // Memory cleanups.
+            input.dispose()
+            output.dispose()
+        }
+        return generated
     }
 
-    stopTrain = (stop: boolean): void => {
-        if (!this.model) {
-            return
-        }
-        this.model.stopTraining = stop
+    stopTrain = (): void => {
+        this.stopFlag = true
     }
 
     loadModelFromFile = async (url: string): Promise<tf.LayersModel> => {

@@ -15,7 +15,7 @@ import MobilenetTransfer from './components/mobilenet/MobilenetTransfer'
 import MobilenetObjDetector from './components/mobilenet/MobilenetObjDetector'
 
 import JenaWeather from './components/rnn/JenaWeather'
-import ImdbSentiment from './components/rnn/ImdbSentiment'
+import SentimentImdb from './components/rnn/SentimentImdb'
 import TextGenLstm from './components/rnn/TextGenLstm'
 
 import HandPosePanel from './components/pretrained/HandPosePanel'
@@ -41,7 +41,7 @@ const routes: RouteConfig[] = [
     { path: '/mobilenet/objdetector', component: MobilenetObjDetector },
 
     { path: '/rnn/jena', component: JenaWeather },
-    { path: '/rnn/sentiment', component: ImdbSentiment },
+    { path: '/rnn/sentiment', component: SentimentImdb },
     { path: '/rnn/lstm', component: TextGenLstm },
 
     { path: '/pretrained/handpose', component: HandPosePanel },

@@ -5,7 +5,6 @@ import {
     CalculatorOutlined,
     ExperimentOutlined,
     EyeOutlined,
-    HomeOutlined,
     LineChartOutlined,
     ReadOutlined,
     RocketOutlined

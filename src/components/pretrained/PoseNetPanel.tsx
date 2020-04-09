@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import {
     getAdjacentKeyPoints,
@@ -10,11 +10,13 @@ import {
     PoseNetOutputStride
 } from '@tensorflow-models/posenet'
 import { PoseNetArchitecture, PoseNetDecodingMethod, PoseNetQuantBytes } from '@tensorflow-models/posenet/dist/types'
-import { Col, Row } from 'antd'
+import { Button, Col, Row } from 'antd'
 
 import { logger, loggerError, STATUS } from '../../utils'
 import WebVideo, { IWebVideoHandler } from '../common/tensor/WebVideo'
-import { drawPoint, drawSegment } from './pretrainedUtils'
+import { downloadJson, drawPoint, drawSegment } from './pretrainedUtils'
+
+const JSON_NAME = 'pose-net.json'
 
 const POSENET_CONFIG = {
     architecture: 'MobileNetV1' as PoseNetArchitecture, // ['MobileNetV1', 'ResNet50']
@@ -66,7 +68,10 @@ const PoseNetPanel = (): JSX.Element => {
     const [sModel, setModel] = useState<PoseNet>()
     const [sMinConfidence] = useState<number>(0.1)
 
-    const webvideoRef = useRef<IWebVideoHandler>(null)
+    const webVideoRef = useRef<IWebVideoHandler>(null)
+
+    const [sJson, setJson] = useState<any>()
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     /***********************
      * useEffect
@@ -96,30 +101,29 @@ const PoseNetPanel = (): JSX.Element => {
         }
     }, [])
 
-    /***********************
-     * Functions
-     ***********************/
-    const handlePredict = async (data: tf.Tensor3D): Promise<Pose[]> => {
+    const handlePredict = useCallback(async (data: tf.Tensor3D): Promise<Pose[]> => {
         if (!sModel) {
             return []
         }
-        const poses = await sModel.estimatePoses(data, PREDICT_CONFIG)
-        return poses
-    }
+        return sModel.estimatePoses(data, PREDICT_CONFIG)
+    }, [sModel])
+
+    /***********************
+     * Functions
+     ***********************/
 
     const showDetections = (predictions: Pose[]): void => {
-        if (!webvideoRef.current || predictions.length <= 0) {
+        if (!webVideoRef.current || predictions?.length <= 0) {
             return
         }
 
-        const ctx = webvideoRef.current.getContext()
+        const ctx = webVideoRef.current.getContext()
         if (!ctx) {
             return
         }
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        const poses = predictions
 
-        poses.forEach(({ score, keypoints }) => {
+        predictions.forEach(({ score, keypoints }) => {
             if (score >= sMinConfidence) {
                 drawKeypoints(keypoints, sMinConfidence, ctx)
                 drawSkeleton(keypoints, sMinConfidence, ctx)
@@ -128,21 +132,28 @@ const PoseNetPanel = (): JSX.Element => {
     }
 
     const showDetectionsText = (predictions: Pose[]): void => {
-        if (!webvideoRef.current || predictions.length <= 0) {
+        if (!webVideoRef.current || predictions?.length <= 0) {
             return
         }
 
-        const data = predictions.map((pose: Pose) => {
-            return pose.keypoints.map((point: Keypoint) => {
-                return [+point.position.x.toFixed(2), +point.position.y.toFixed(2)]
-            })
-        })
-        webvideoRef.current.setPred(data)
+        logger('predictions', predictions.length)
+        // If you want to show more data, please revise it
+        const data = predictions[0]
+        webVideoRef.current.setPred(data)
+        setJson(data)
     }
 
-    const showPrediction = (predictions: any): void => {
+    const showPrediction = (predictions: Pose[]): void => {
         showDetectionsText(predictions)
         showDetections(predictions)
+    }
+
+    const handleJsonSave = (): void => {
+        if (!sJson || !downloadRef.current) {
+            return
+        }
+        logger('handleJsonSave')
+        downloadJson(sJson, JSON_NAME, downloadRef.current)
     }
 
     /***********************
@@ -153,9 +164,17 @@ const PoseNetPanel = (): JSX.Element => {
         <>
             <h1>姿态识别 Posenet</h1>
             <Row>
+                <Col span={12}>
+                </Col>
+                <Col span={12}>
+                    <div className='centerContainer'>
+                        <Button style={{ width: '30%', margin: '0 10%' }} onClick={handleJsonSave}
+                            disabled={sStatus === STATUS.WAITING} >Save Json</Button>
+                    </div>
+                </Col>
                 <Col span={24}>
                     <div className='centerContainer'>
-                        <WebVideo ref={webvideoRef} show={showPrediction} predict={handlePredict}/>
+                        <WebVideo ref={webVideoRef} show={showPrediction} predict={handlePredict}/>
                     </div>
                 </Col>
                 <Col span={24}>
@@ -163,6 +182,7 @@ const PoseNetPanel = (): JSX.Element => {
                     <div>TfBackend : {sTfBackend}</div>
                 </Col>
             </Row>
+            <a ref={downloadRef}/>
         </>
     )
 }

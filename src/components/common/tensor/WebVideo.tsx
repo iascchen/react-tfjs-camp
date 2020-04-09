@@ -18,12 +18,11 @@ const DEFAULT_CONFIG = {
 
 export interface IWebVideoHandler extends IWebCameraHandler {
     getContext: () => CanvasRenderingContext2D | void
-    setPred: (value: any[]) => void
+    setPred: (value: any) => void
 }
 
 interface IProps {
     predict: (value: tf.Tensor3D) => Promise<any>
-    prediction?: any[]
     config?: tf.data.WebcamConfig
 
     show: (value: any) => void
@@ -70,13 +69,6 @@ const WebVideo = (props: IProps, ref: Ref<IWebVideoHandler>): JSX.Element => {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         detectFromVideoFrame(sCamera).then()
     }, [sCamera, props.predict])
-
-    useEffect(() => {
-        if (!props.prediction) {
-            return
-        }
-        setPrediction(props.prediction)
-    }, [props.prediction])
 
     const detectFromVideoFrame = async (video: WebcamIterator): Promise<void> => {
         try {

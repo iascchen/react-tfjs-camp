@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { HandPose, load as handPoseLoad } from '@tensorflow-models/handpose'
-import { Col, Row, Switch } from 'antd'
+import { Button, Col, Row } from 'antd'
 
 import { logger, loggerError, STATUS } from '../../utils'
 import WebVideo, { IWebVideoHandler } from '../common/tensor/WebVideo'
-import { drawPath, drawPoint } from './pretrainedUtils'
+import { downloadJson, drawPath, drawPoint } from './pretrainedUtils'
+
+const JSON_NAME = 'hand-pose.json'
 
 interface IKeyIndices {
     [index: string]: number[]
@@ -45,9 +47,11 @@ const HandPosePanel = (): JSX.Element => {
 
     const [sModel, setModel] = useState<HandPose>()
 
-    const webvideoRef = useRef<IWebVideoHandler>(null)
+    // const switchRef = useRef<boolean>(false)
+    const webVideoRef = useRef<IWebVideoHandler>(null)
 
-    const switchRef = useRef<boolean>(false)
+    const [sJson, setJson] = useState<any>()
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     /***********************
      * useEffect
@@ -77,42 +81,43 @@ const HandPosePanel = (): JSX.Element => {
         }
     }, [])
 
-    /***********************
-     * Functions
-     ***********************/
-    const handlePredict = async (data: tf.Tensor3D): Promise<any> => {
-        if (!sModel || !switchRef.current) {
+    const handlePredict = useCallback(async (data: tf.Tensor3D): Promise<any[]> => {
+        if (!sModel) {
             return []
         }
         return sModel.estimateHands(data)
-    }
+    }, [sModel])
+
+    /***********************
+     * Functions
+     ***********************/
 
     const showDetections = (predictions: any[]): void => {
-        if (!webvideoRef.current || predictions.length <= 0) {
+        if (!webVideoRef.current || predictions?.length <= 0) {
             return
         }
 
-        const ctx = webvideoRef.current.getContext()
+        const ctx = webVideoRef.current.getContext()
         if (!ctx) {
             return
         }
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        const result = predictions[0].landmarks
-        drawKeypoints(ctx, result)
+        predictions.forEach((hand: any) => {
+            const result = hand.landmarks
+            drawKeypoints(ctx, result)
+        })
     }
 
     const showDetectionsText = (predictions: any[]): void => {
-        if (!webvideoRef.current || predictions.length <= 0) {
+        if (!webVideoRef.current || predictions?.length <= 0) {
             return
         }
 
-        // logger('predictions', predictions)
-        webvideoRef.current.setPred(predictions[0])
-
-        // const data = predictions[0].landmarks.map((point: number[]) => {
-        //     return point.map((v: number) => +v.toFixed(2))
-        // })
-        // webvideoRef.current.setPred(data)
+        logger('predictions', predictions.length)
+        // If you want to show more data, please revise it
+        const data = predictions[0]
+        webVideoRef.current.setPred(data)
+        setJson(data)
     }
 
     const showPrediction = (predictions: any[]): void => {
@@ -120,9 +125,11 @@ const HandPosePanel = (): JSX.Element => {
         showDetections(predictions)
     }
 
-    const handleSwitch = (value: boolean): void => {
-        logger('handleSwitch', value)
-        switchRef.current = value
+    const handleJsonSave = (): void => {
+        if (!sJson || !downloadRef.current) {
+            return
+        }
+        downloadJson(sJson, JSON_NAME, downloadRef.current)
     }
 
     /***********************
@@ -137,12 +144,13 @@ const HandPosePanel = (): JSX.Element => {
                 </Col>
                 <Col span={12}>
                     <div className='centerContainer'>
-                        <Switch onChange={handleSwitch}/>
+                        <Button style={{ width: '30%', margin: '0 10%' }} onClick={handleJsonSave}
+                            disabled={sStatus === STATUS.WAITING} >Save Json</Button>
                     </div>
                 </Col>
                 <Col span={24}>
                     <div className='centerContainer'>
-                        <WebVideo ref={webvideoRef} show={showPrediction} predict={handlePredict}/>
+                        <WebVideo ref={webVideoRef} show={showPrediction} predict={handlePredict}/>
                     </div>
                 </Col>
                 <Col span={24}>
@@ -150,6 +158,7 @@ const HandPosePanel = (): JSX.Element => {
                     <div>TfBackend : {sTfBackend}</div>
                 </Col>
             </Row>
+            <a ref={downloadRef}/>
         </>
     )
 }

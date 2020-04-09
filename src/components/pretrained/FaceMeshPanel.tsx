@@ -1,12 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { AnnotatedPrediction, FaceMesh, load as faceMeshLoad } from '@tensorflow-models/facemesh'
-import { Col, Row, Switch } from 'antd'
+import { Button, Col, Row, Switch } from 'antd'
 
 import { logger, loggerError, STATUS } from '../../utils'
 import WebVideo, { IWebVideoHandler } from '../common/tensor/WebVideo'
 import { TRIANGULATION } from './triangulation'
-import { drawPath, drawPoint } from './pretrainedUtils'
+import { downloadJson, drawPath, drawPoint } from './pretrainedUtils'
+
+const JSON_NAME = 'face-mesh.json'
 
 const FaceMeshPanel = (): JSX.Element => {
     /***********************
@@ -17,9 +19,11 @@ const FaceMeshPanel = (): JSX.Element => {
 
     const [sModel, setModel] = useState<FaceMesh>()
 
-    const webvideoRef = useRef<IWebVideoHandler>(null)
-
     const switchRef = useRef<boolean>(false)
+    const webVideoRef = useRef<IWebVideoHandler>(null)
+
+    const [sJson, setJson] = useState<any>()
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     /***********************
      * useEffect
@@ -49,57 +53,60 @@ const FaceMeshPanel = (): JSX.Element => {
         }
     }, [])
 
-    /***********************
-     * Functions
-     ***********************/
-
-    const handlePredict = async (data: tf.Tensor3D): Promise<AnnotatedPrediction[]> => {
+    const handlePredict = useCallback(async (data: tf.Tensor3D): Promise<AnnotatedPrediction[]> => {
         if (!sModel) {
             return []
         }
         return sModel.estimateFaces(data)
-    }
+    }, [sModel])
 
+    /***********************
+     * Functions
+     ***********************/
     const showDetections = (predictions: AnnotatedPrediction[]): void => {
-        if (!webvideoRef.current || predictions.length <= 0) {
+        if (!webVideoRef.current || predictions?.length <= 0) {
             return
         }
 
-        const ctx = webvideoRef.current.getContext()
+        const ctx = webVideoRef.current.getContext()
         if (!ctx) {
             return
         }
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-        const keypoints = predictions[0].scaledMesh as number[][]
 
-        if (switchRef.current) {
-            for (let i = 0; i < TRIANGULATION.length / 3; i++) {
-                const points = [
-                    TRIANGULATION[i * 3], TRIANGULATION[i * 3 + 1],
-                    TRIANGULATION[i * 3 + 2]
-                ].map(index => keypoints[index])
+        predictions.forEach((face: AnnotatedPrediction) => {
+            const keyPoints = face.scaledMesh as number[][]
 
-                drawPath(ctx, points, true)
+            if (switchRef.current) {
+                for (let i = 0; i < TRIANGULATION.length / 3; i++) {
+                    const points = [
+                        TRIANGULATION[i * 3], TRIANGULATION[i * 3 + 1],
+                        TRIANGULATION[i * 3 + 2]
+                    ].map(index => keyPoints[index])
+
+                    drawPath(ctx, points, true)
+                }
+            } else {
+                for (let i = 0; i < keyPoints.length; i++) {
+                    const x = keyPoints[i][0]
+                    const y = keyPoints[i][1]
+
+                    drawPoint(ctx, y, x, 1)
+                }
             }
-        } else {
-            for (let i = 0; i < keypoints.length; i++) {
-                const x = keypoints[i][0]
-                const y = keypoints[i][1]
-
-                drawPoint(ctx, y, x, 1)
-            }
-        }
+        })
     }
 
     const showDetectionsText = (predictions: AnnotatedPrediction[]): void => {
-        if (!webvideoRef.current || predictions.length <= 0) {
+        if (!webVideoRef.current || predictions?.length <= 0) {
             return
         }
 
-        const data = (predictions[0].scaledMesh as number[][]).map((point: number[]) => {
-            return point.map((v: number) => +v.toFixed(2))
-        })
-        webvideoRef.current.setPred(data)
+        logger('predictions', predictions.length)
+        // If you want to show more data, please revise it
+        const data = predictions[0]
+        webVideoRef.current.setPred(data)
+        setJson(data)
     }
 
     const showPrediction = (predictions: AnnotatedPrediction[]): void => {
@@ -110,6 +117,13 @@ const FaceMeshPanel = (): JSX.Element => {
     const handleSwitch = (value: boolean): void => {
         // logger('handleSwitch', value)
         switchRef.current = value
+    }
+
+    const handleJsonSave = (): void => {
+        if (!sJson || !downloadRef.current) {
+            return
+        }
+        downloadJson(sJson, JSON_NAME, downloadRef.current)
     }
 
     /***********************
@@ -124,12 +138,14 @@ const FaceMeshPanel = (): JSX.Element => {
                 </Col>
                 <Col span={12}>
                     <div className='centerContainer'>
+                        <Button style={{ width: '30%', margin: '0 10%' }} onClick={handleJsonSave}
+                            disabled={sStatus === STATUS.WAITING} >Save Json</Button>
                         <Switch onChange={handleSwitch}/>
                     </div>
                 </Col>
                 <Col span={24}>
                     <div className='centerContainer'>
-                        <WebVideo ref={webvideoRef} show={showPrediction} predict={handlePredict}/>
+                        <WebVideo ref={webVideoRef} show={showPrediction} predict={handlePredict}/>
                     </div>
                 </Col>
                 <Col span={12}>
@@ -137,6 +153,7 @@ const FaceMeshPanel = (): JSX.Element => {
                     <div>TfBackend : {sTfBackend}</div>
                 </Col>
             </Row>
+            <a ref={downloadRef}/>
         </>
     )
 }

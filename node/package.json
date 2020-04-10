@@ -5,15 +5,11 @@
     "dependencies": {
         "@tensorflow-models/knn-classifier": "^1.2.1",
         "@tensorflow/tfjs-node": "^1.7.1",
-        "@testing-library/jest-dom": "^4.2.4",
-        "@testing-library/user-event": "^7.1.2",
         "@types/argparse": "^1.0.38",
         "@types/jest": "^24.0.0",
         "@types/node": "^12.0.0",
         "argparse": "^1.0.10",
-        "canvas": "^2.6.1",
-        "jimp": "^0.9.5",
-        "remark-math": "^2.0.0"
+        "canvas": "^2.6.1"
     },
     "scripts": {
         "start": "ts-node",

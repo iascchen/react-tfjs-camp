@@ -22,7 +22,7 @@
  * using tfjs-node or tfjs-node-gpu (see the `--gpu` flag).
  *
  * - See [data.js](./data.js) for how the Jena weather dataset is loaded.
- * - See [models.js](./train.js) for the detailed model creation and training
+ * - See [models.js](./train.ts) for the detailed model creation and training
  *   logic.
  */
 
@@ -163,4 +163,4 @@ if (require.main === module) {
     )
 }
 
-// ts-node ./src/jena/train-jena.ts --logDir ./src/jena/logs
+// yarn run ts-node ./src/jena/train.ts --logDir ./logs/jena

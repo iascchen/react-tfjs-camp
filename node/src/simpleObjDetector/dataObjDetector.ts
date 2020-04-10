@@ -20,7 +20,7 @@
  * simple object-detection model.
  *
  * This module is written in a way that can be used in both the Node.js-based
- * training pipeline (train.js) and the browser-based testing environment
+ * training pipeline (train.ts) and the browser-based testing environment
  * (index.js).
  */
 

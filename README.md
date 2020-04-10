@@ -15,6 +15,8 @@ BTW，这是个平民 AI 教程，可以不使用 GPU 完成。
 
 ### 快速开始
 
+更多内容，请移步后面的 “开发教程 Develop Tutorial” 部分
+
 * 下载代码
 
 		git clone https://github.com/iascchen/react-tfjs-camp.git
@@ -96,7 +98,7 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 * 《Deep Learning with Python》 Manning
 * 《Deep Learning with JavaScript》 Manning
 * 《Deep Learning》 花书
-* 逐渐补充
+* 逐渐补充...
 
 ### 相关内容
 
@@ -113,9 +115,9 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 * [AI Concept 9 Jena 气象预报](./public/docs/ai/jena.md)
 * [AI Concept 10 IMDB 语义分类](./public/docs/ai/sentiment-imdb.md)
 * [AI Concept 11 LSTM 文本生成](./public/docs/ai/lstm-txt-gen.md)
-* [AI Concept 12 和摄像头交互的与训练模型](./public/docs/ai/model-with-camara.md)
+* [AI Concept 12 和摄像头交互的预训练模型](./public/docs/ai/model-with-camara.md)
 
-### 第二季 Episode II：AI 游戏场（自己挖坑）
+### 第二季 Episode II：AI 游戏场（挖坑）
 
 如果有时间做第二季的话，会开另外一个 REPO。希望包括的内容如下。主要以应用实例为主，不会拘泥于在浏览器端训练，不过估计没有 GPU 很难玩转了。
 
@@ -130,8 +132,11 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 
 ## 开发教程 Develop Tutorial
 
-这部分内容放在 `public/docs/dev` 目录下，主要是零基础 Step by Step 教程。
+这部分内容放在 `public/docs/dev` 目录下，主要是 Step by Step 的开发教程。
+
+尽量少说废话，不做过多展开，向 MIT Fablab 学习，提供参考链接供您深入了解。
 
 这部分还在修改中...
 
-* [开发教程（一）](./public/docs/dev/scratch-from-zero.md)
+* [Develop Tutorial 1 从零开始](./public/docs/dev/scratch-from-zero.md)
+* [Develop Tutorial 2 构建开发框架](./public/docs/dev/dev-structure.md)

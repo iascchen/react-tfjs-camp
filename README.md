@@ -110,12 +110,12 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 * [AI Concept 6 Mobilenet + KNN](./public/docs/ai/mobilenet-knn.md)
 * [AI Concept 7 Mobilenet 迁移学习](./public/docs/ai/mobilenet-transfer.md)
 * [AI Concept 8 Mobilenet 简单对象检测](./public/docs/ai/mobilenet-objDetector.md)
-* [AI Concept 9](./public/docs/ai/jena.md)
-* [AI Concept 10](./public/docs/ai/sentiment-imdb.md)
-* [AI Concept 11](./public/docs/ai/lstm-txt-gen.md)
-* [AI Concept 12](./public/docs/ai/model-with-camara.md)
+* [AI Concept 9 Jena 气象预报](./public/docs/ai/jena.md)
+* [AI Concept 10 IMDB 语义分类](./public/docs/ai/sentiment-imdb.md)
+* [AI Concept 11 LSTM 文本生成](./public/docs/ai/lstm-txt-gen.md)
+* [AI Concept 12 和摄像头交互的与训练模型](./public/docs/ai/model-with-camara.md)
 
-### 第二季 Episode II：AI 应用（预告）
+### 第二季 Episode II：AI 游戏场（自己挖坑）
 
 如果有时间做第二季的话，会开另外一个 REPO。希望包括的内容如下。主要以应用实例为主，不会拘泥于在浏览器端训练，不过估计没有 GPU 很难玩转了。
 

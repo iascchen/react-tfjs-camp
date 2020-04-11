@@ -3,7 +3,7 @@ import { Col, Row } from 'antd'
 
 import reactLogo from '../../react_logo.svg'
 import tsLogo from '../../typescript_logo.svg'
-const tfLogo = '/tf_logo.jpeg'
+const tfLogo = '/images/tf_logo.jpeg'
 
 const Home = (): JSX.Element => {
     return (

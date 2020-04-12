@@ -73,13 +73,13 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 
 一年多前，有了为人工智能的初学者提供一个“端到端”的学习和体验的平台的想法。
 
-![end2end-ai](./public/images/end2end-ai.png)
+![end2end-ai](./public/docs/images/end2end-ai.png)
 
 所谓端到端，就是从领域问题出发，思考所需的数据，运用相应的模型，执行训练，验证推理，形成新应用。这个过程，我自己理解是“从数据出发”的科学探究方法的延伸，就像是古人观测天象、记录物理现象一样。而未来和过去不一样的地方在于，我们可以利用计算机和 AI ，处理更大量的数据，发现隐藏的更深的规律。
 
 从这个起点出发，甄选了一些 AI 学习的例子，初步形成了当前的框架。
 
-![ui](./public/images/ui.png)
+![ui](./public/docs/images/ui.png)
 
 * 第一部分，AI 来做加减乘除。从传统的实验数据记录处理问题出发，以曲线拟合、经典的 IRIS 鸢尾花为例，介绍了 Tensor、神经元模型、线性回归、以及多层感知机。
 * 第二部分，AI 识数。用 AI 学习的 Hello World 程序 MNIST，介绍了这个例子的数据加载、体验使用不同模型计算的差别，还提供了一个手写数字识别画板，可以直接看到学习前后，模型给出结果的差异。对于 MNIST 的训练学习部分，利用 Tensorflow 的 高级模型 Keras 和基础模型 Graph 分别做了实现。实现的过程并不太顺利，因为太多的数据放在内存之中，会导致内存溢出，程序不可用，这也许是目前在浏览器中做 AI 训练不可逾越的困难吧。不过最终，还是通过调整参数，规避了这个问题。
@@ -105,16 +105,16 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 
 * [AI Concept 1 曲线拟合](./public/docs/ai/curve.md)
 * [AI Concept 2 鸢尾花](./public/docs/ai/iris.md)
-* [AI Concept 3 MNIST Keras 模型](./public/docs/ai/mnist-keras.md)
-* [AI Concept 4 MNIST Core API 实现](./public/docs/ai/mnist-core.md)
+* [AI Concept 3 MNIST Keras 模型](./public/docs/ai/mnist-layer-model.md)
+* [AI Concept 4 MNIST Core API 实现](./public/docs/ai/mnist-core-api.md)
 * [AI Concept 5 Mobilenet](./public/docs/ai/mobilenet.md)
 * [AI Concept 6 Mobilenet + KNN](./public/docs/ai/mobilenet-knn.md)
 * [AI Concept 7 Mobilenet 迁移学习](./public/docs/ai/mobilenet-transfer.md)
-* [AI Concept 8 Mobilenet 简单对象检测](./public/docs/ai/mobilenet-objDetector.md)
+* [AI Concept 8 Mobilenet 简单对象检测](./public/docs/ai/mobilenet-obj-detector.md)
 * [AI Concept 9 Jena 气象预报](./public/docs/ai/jena.md)
 * [AI Concept 10 IMDB 语义分类](./public/docs/ai/sentiment-imdb.md)
 * [AI Concept 11 LSTM 文本生成](./public/docs/ai/lstm-txt-gen.md)
-* [AI Concept 12 和摄像头交互的预训练模型](./public/docs/ai/model-with-camara.md)
+* [AI Concept 12 和摄像头交互的预训练模型](./public/docs/ai/model-with-stream.md)
 
 ## 开发教程 Develop Tutorial
 
@@ -127,3 +127,5 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 
 * [Develop Tutorial 1 从零开始](./public/docs/dev/scratch-from-zero.md)
 * [Develop Tutorial 2 构建 React 开发框架](./public/docs/dev/dev-structure.md)
+* [Develop Tutorial 3 搭建展示端到端 AI 概念的舞台](./public/docs/dev/ai-process-panel.md)
+* 待续

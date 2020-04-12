@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Row, Select, Slider, Tabs } from 'antd'
 
 import { layout, tailLayout } from '../../constant'
-import { ILayerSelectOption, ITrainInfo, logger, STATUS } from '../../utils'
+import { ILayerSelectOption, ITrainInfo, logger, loggerError, STATUS } from '../../utils'
 import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
@@ -236,10 +236,7 @@ const MnistKeras = (): JSX.Element => {
                 const secSpend = (performance.now() - beginMs) / 1000
                 logger(`Spend : ${secSpend.toString()}s`)
             },
-            (error) => {
-                setStatus(STATUS.STOPPED)
-                setErrors(error)
-            }
+            loggerError
         )
     }
 

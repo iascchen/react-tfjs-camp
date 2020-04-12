@@ -366,15 +366,15 @@ useState 和后面介绍的其他的 React Hooks 声明一样，都需要放在�
 
 	import React from 'react'
 	import { renderRoutes } from 'react-router-config'
-	import { Layout } from 'antd'
+	import { Alert } from 'antd'
 	
 	import routes from '../../routers'
 	
-	const { Content } = Layout
+	const { ErrorBoundary } = Alert
 	
 	const BodyContainer = (): JSX.Element => {
 	    return (
-	        <div style={{ padding: 24, background: '#fff', minHeight: '80vh' }}>
+	        <div style={{ padding: 24, background: '#ffffff', minHeight: '80vh' }}>
 	            <ErrorBoundary>
 	                {renderRoutes(routes)}
 	            </ErrorBoundary>
@@ -383,6 +383,7 @@ useState 和后面介绍的其他的 React Hooks 声明一样，都需要放在�
 	}
 	
 	export default BodyContainer
+
 
 所有的路由映射都被定义在 `/src/routers.ts` 中。这么做的好处是便于维护管理，让组件可以专注于自己的功能逻辑。
 
@@ -412,6 +413,11 @@ useState 和后面介绍的其他的 React Hooks 声明一样，都需要放在�
 
 你有没有注意到，在 `/src/components/common/BodyContainer.tsx` 中，我们为 Content 封装一个 ErrorBoundary，用于截获在 Web APP 运行时，没能被 Catch 到的异常和错误，对它们进行统一的显示。
 
+目前，React 官方还没有实现 getDerivedStateFromError、componentDidCatch 这些用于错误和异常处理的函数，所以只能够采用 React 类组件来完成这个功能。参考文档 [错误边界](https://zh-hans.reactjs.org/docs/error-boundaries.html)
+
+AntD 对 React 官方文档中的 ErrorBoundary 做了封装，我们可以直接使用。
+
+**请注意** 在开发模式下，ErrorBoundary 显不出效果。
 
 
 

@@ -9,3 +9,7 @@
 从这个起点出发，甄选了一些 AI 学习的例子，初步形成了当前的框架。
 
 ![ui](../images/ui.png)
+
+## AIProcessPanel
+
+## MarkDownWidget

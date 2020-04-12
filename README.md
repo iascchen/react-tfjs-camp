@@ -104,8 +104,8 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 
 ### 文档部分
 
-- [ ] [AI Concept 1 曲线拟合](./public/docs/ai/curve.md)
-- [ ] [AI Concept 2 鸢尾花](./public/docs/ai/iris.md)
+- [x] [AI Concept 1 曲线拟合](./public/docs/ai/curve.md)
+- [x] [AI Concept 2 鸢尾花](./public/docs/ai/iris.md)
 - [ ] [AI Concept 3 MNIST Keras 模型](./public/docs/ai/mnist-layer-model.md)
 - [ ] [AI Concept 4 MNIST Core API 实现](./public/docs/ai/mnist-core-api.md)
 - [ ] [AI Concept 5 Mobilenet](./public/docs/ai/mobilenet.md)

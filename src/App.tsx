@@ -6,9 +6,8 @@ import './App.css'
 import SideBar from './components/common/SideBar'
 import BodyContainer from './components/common/BodyContainer'
 import GitHubLogo from './components/common/GitHubLogo'
-import ErrorBoundary from './components/common/ErrorBoundary'
 
-const { Header, Sider, Footer } = Layout
+const { Content, Header, Sider, Footer } = Layout
 
 const App = (): JSX.Element => {
     const [sCollapsed, setCollapsed] = useState(true)
@@ -28,9 +27,9 @@ const App = (): JSX.Element => {
                         <span style={{ margin: '0 8px' }}>React Tensorflow.js Camp</span>
                         <GitHubLogo/>
                     </Header>
-                    <ErrorBoundary>
+                    <Content style={{ margin: '16px' }}>
                         <BodyContainer/>
-                    </ErrorBoundary>
+                    </Content>
                     <Footer style={{ textAlign: 'center' }}>©2020 Created by Iasc CHEN(iascchen@gmail.com)</Footer>
                 </Layout>
             </Router>

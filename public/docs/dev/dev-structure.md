@@ -1,4 +1,4 @@
-# 构建开发框架
+# 构建 React 开发框架
 
 在上一篇中，我们使用 React-Scripts 创建了一个新的 React APP。现在开始装修改造。
 
@@ -173,20 +173,44 @@ React-tfjs-camp 对目录结构作了如下调整：
 	        },
 	    }
 	};
+	
+## 改造页面布局
 
-## 使用 Ant Design 构建页面框架
+`/src/App.tsx` 是 React App 中常用的根页面组件。
 
-### Ant Design
+### React 函数化组件
 
-Ant Design 是蚂蚁金服体验技术部经过大量项目实践和总结，逐步打磨出的一个服务于企业级产品的设计体系。如果您对于交互界面没有特殊的 VI 设计要求，使用 AntD 能够非常快的开发出交互界面。在实际应用中，AntD 常常被用于 Web 应用的管理后台开发。
+我们先来看一下 App.tsx 页面的结构，这是一个最简单的 React 函数组件的例子。
 
-Ant Design 4 于 2020 年的 2 月 28 日正式发布，当前(码字时)版本已经升级到 4.1.2 了。Ant Design 4 有较大的提升，最重要的更新在于全面支持 React Hooks，重写了Form、Table 等关键组件，使用起来代码优美了不少。
+	import React, { ... } from 'react'
+	
+	const App = (): JSX.Element => {
+        ...	
+	    return (
+	        <Layout>
+	            ...
+	        </Layout>
+	    )
+	}
+	
+	export default App
+
+* `import React, { ... } from 'react'` 语句声明了当前组件所依赖 React 包。
+* `const App = (): JSX.Element => { ... }` 声明了这是一个名为 `App` 的页面函数组件，这个组件的返回值是 JSX.Element 类型。
+* `return (<Layout>...</Layout>)` 这段代码展示的是具体返回的 JSX.Element 由哪些页面组件和元素组成。
+* `export default App` export 输出的内容，才能够被其他组件引用。非 default 的输出，需要在 import 时放在 `{}` 中。
+
+### 使用 Ant Design 构建页面框架
+
+Ant Design 是蚂蚁金服体验技术部推出的一个服务于企业级产品的设计体系。如果您对于交互界面没有特殊的视觉效果设计要求，使用 AntD 是个不错的选择。在实际应用中，AntD 常常被用于 Web 应用的管理后台开发，能够非常快的搞定交互界面。
+
+Ant Design v4 于 2020 年的 2 月 28 日正式发布，当前(码字时)版本已经升级到 v4.1.2 了。Ant Design 4 有较大的提升，最重要的更新在于全面支持 React Hooks，重写了 Form、Table 等关键组件的实现，使用起来代码优美了不少。
 
 AntD 的文档非常易于理解和使用。参考链接 [https://ant.design/index-cn](https://ant.design/index-cn)
 
 参照 AntD 的官方文档，很快就能够搭出 React-tfjs-camp 的页面框架。
 
-### 在项目中使用 AntD
+#### 在项目中使用 AntD
 
 在项目根目录中，执行以下命令，安装 AntD 包。安装完成之后，package.json 中会自动增加 `"antd": "^4.1.2",` 的依赖包条目。
 
@@ -199,18 +223,14 @@ AntD 的文档非常易于理解和使用。参考链接 [https://ant.design/ind
 在需要的页面 import 所需使用 AntD 组件即可。
 
 	import { ... } from 'antd'
-	
-### 改造 App.tsx
 
-App.tsx 是 React App 中常用的根页面组件。
-
-####  页面布局
+###  页面布局
 
 使用 AntD 的 Layout 组件，能够帮助我们非常容易的构建出各种结构的应用框架。React-tfjs-camp 采用左右结构的页面布局，如下图所示。
 
 ![页面布局](../images/dev_layout_ui.png)
 
-左侧的菜单条被封装在 SideBar 里，页面主体被封装在 BodyContainer 里。修改 App.tsx 如下：
+左侧的菜单条被封装在 SideBar 里，页面主体被封装在 BodyContainer 里。修改 `/src/App.tsx` 如下：
 
 	import React, { useState } from 'react'
 	import { Layout } from 'antd'
@@ -218,17 +238,11 @@ App.tsx 是 React App 中常用的根页面组件。
 	import './App.css'
 	import SideBar from './components/common/SideBar'
 	import BodyContainer from './components/common/BodyContainer'
-	import GitHubLogo from './components/common/GitHubLogo'
-	
-	const { Header, Sider, Footer } = Layout
+	...
+	const { Content, Header, Sider, Footer } = Layout
 	
 	const App = (): JSX.Element => {
-	    const [sCollapsed, setCollapsed] = useState(true)
-	
-	    const onCollapse = (): void => {
-	        setCollapsed(collapsed => !collapsed)
-	    }
-	
+        ...	
 	    return (
 	        <Layout>
 	            ...
@@ -237,27 +251,167 @@ App.tsx 是 React App 中常用的根页面组件。
 	                </Sider>
 	                <Layout className='site-layout'>
 	                    <Header style={{ background: '#fff', padding: '0' }}>
-	                        <span style={{ margin: '0 8px' }}>React Tensorflow.js Camp</span>
-	                        <GitHubLogo/>
+	                        ...
 	                    </Header>
-	                    ...
+	                    <Content style={{ margin: '16px' }}>
 	                        <BodyContainer/>
-	                    ...
+	                    </Content>
 	                    <Footer style={{ textAlign: 'center' }}>©2020 Created by Iasc CHEN(iascchen@gmail.com)</Footer>
 	                </Layout>
 	            ...
 	        </Layout>
 	    )
 	}
+	...
+
+## 边栏菜单导航
+
+### AntD Layout Sider
+
+边栏菜单的实现使用了 AntD Layout 中的 Sider 组件。
+
+	<Sider collapsible collapsed={sCollapsed} onCollapse={onCollapse}>
+		<SideBar/>
+	</Sider>
+
+ * `collapsible` 属性说明了它可以折叠与展开
+ * `collapsed` 指示折叠状态，它的值被设定为 sCollapsed
+ * `onCollapse` 函数是对应折叠按钮点击的响应方法
+
+### 使用 React Hooks 的 useState 管理边栏状态
+
+App.tsx 需要保存 Sider 组件的折叠状态。这里用到了 Hooks 的 useState。
+
+	import React, { useState } from 'react'
+		...
+	const [sCollapsed, setCollapsed] = useState(true)
+		...
+	const onCollapse = (): void => {
+		setCollapsed(collapsed => !collapsed)
+	}
+
+* `const [sCollapsed, setCollapsed] = useState(true)` 声明了一个名为 `sCollapsed` 的状态变量，对其进行赋值的函数为 `setCollapsed`，这个状态的初始值为 `true`
+* `setCollapsed`的参数，可以是具体的一个值，也可以是一个回调函数。如果新的 state 需要通过使用先前的 state 计算得出，那么可以将回调函数当做参数传递给 setState。该回调函数将接收先前的 state，并返回一个更新后的值。
+* 个人的 Tips：将所有的 State 变量，以 `s` 开头命名，在引用的时候便于和局部变量区分。
+
+**请注意：**
+
+useState 和后面介绍的其他的 React Hooks 声明一样，都需要放在组件函数的**前部**，才能被正确使用，这是由 Hooks 使用队列实现的原理决定的。更多使用 Hooks 的规则细节请参考[Invalid Hook Call Warning](https://reactjs.org/warnings/invalid-hook-call-warning.html)。
+
+### 用 React-Route 实现页面路由跳转
+
+使用 React 构建的单页面应用，要实现页面间的跳转，需要使用页面路由切换——React-Route。
+
+在项目中增加 React-Route 相关的包，后两个 @types 包是 TypeScript 的需要：
+
+	$ yarn add react-router-config react-router-dom @types/react-router-config @types/react-router-dom
+
+`/src/App.tsx` 使用 BrowserRouter 将需要进行路由的页面部分包起来。
+
+	import React, { useState } from 'react'
+	import { BrowserRouter as Router } from 'react-router-dom'
+	...
 	
-	export default App
+	const App = (): JSX.Element => {
+	    ...
+	    return (
+	        <Layout>
+	            <Router>
+	                <Sider collapsible collapsed={sCollapsed} onCollapse={onCollapse}>
+	                    <SideBar/>
+	                </Sider>
+	                <Layout className='site-layout'>
+	                    ...
+	                        <BodyContainer/>
+	                    ...
+	                </Layout>
+	            </Router>
+	        </Layout>
+	    )
+	}
+	...
 
-## 边栏菜单和页面导航
+`/src/components/common/SideBar.tsx` 使用了 AntD 的 Menu 组件设置边栏菜单格式，用 react-route-dom 的 Link 设置页面之间的路由关系。
 
-### React-Route 
+	import React from 'react'
+	import { Link } from 'react-router-dom'
+	import { Menu } from 'antd'
+	...
+	
+	const { Item, SubMenu } = Menu
+	
+	const SideBar = (): JSX.Element => {
+	    return (
+	        <div>
+	            <header className='App-header'>
+	                <Link to='/'>
+	                    <img src={logo} className='App-logo' alt='logo'/><h2 style={{ color: 'white' }}>RTCamp</h2>
+	                </Link>
+	            </header>
+	            <Menu theme='dark' mode='inline'}>
+	                <SubMenu title={<span><LineChartOutlined/><span>逻辑回归 Logisttc </span></span>}>
+	                    <Item key='1.1'>
+	                        <Link to='/curve'><span> 曲线拟合 Curve </span></Link>
+	                    </Item>
+	                    ...
+	                </SubMenu>
+	                ...
+	            </Menu>
+	        </div>
+	    )
+	}
+	...
 
-### 面包屑和页面组件渲染
+`/src/components/common/BodyContainer.tsx` 使用 react-router-config 包里的 renderRoutes，我们可以将集中设置在 routers.ts 中的路由映射，对应到页面框架里的 BodyContainer 里。
 
-### 使用 React Hooks 管理边栏状态
+	import React from 'react'
+	import { renderRoutes } from 'react-router-config'
+	import { Layout } from 'antd'
+	
+	import routes from '../../routers'
+	
+	const { Content } = Layout
+	
+	const BodyContainer = (): JSX.Element => {
+	    return (
+	        <div style={{ padding: 24, background: '#fff', minHeight: '80vh' }}>
+	            <ErrorBoundary>
+	                {renderRoutes(routes)}
+	            </ErrorBoundary>
+	        </div>
+	    )
+	}
+	
+	export default BodyContainer
+
+所有的路由映射都被定义在 `/src/routers.ts` 中。这么做的好处是便于维护管理，让组件可以专注于自己的功能逻辑。
+
+	import { RouteConfig } from 'react-router-config'
+	
+	import Home from './components/common/Home'
+	import Curve from './components/curve/Curve'
+	...
+	
+	const routes: RouteConfig[] = [
+	    { path: '/', exact: true, component: Home },
+	    { path: '/curve', component: Curve },
+	    ...
+	
+	    { path: '*', component: Home }
+	]
+
+* 设置 `'/'` 映射时，使用 `exact: true` 以表明不会“误杀”其他以 `'/'` 开头的路由设置。你可以试试 `exact: false` ，或者把这个设置去掉，看看会出现什么结果。
+* 设置 `'*'` 映射，对无效的页面路由统一处理，都映射到 Home。试试去掉这个映射，看看会出现什么😄
+	
+我们只用到了 React-Route 的一点点基础部分。关于 React-Route 的更多内容可以参考：
+
+* [官方Github](https://github.com/ReactTraining/react-router)
+* [React-Router 的 Hooks 实现](https://blog.csdn.net/weixin_43870742/article/details/102966040)
 
 ## ErrorBoundary
+
+你有没有注意到，在 `/src/components/common/BodyContainer.tsx` 中，我们为 Content 封装一个 ErrorBoundary，用于截获在 Web APP 运行时，没能被 Catch 到的异常和错误，对它们进行统一的显示。
+
+
+
+

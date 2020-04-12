@@ -9,18 +9,12 @@ import {
     ReadOutlined,
     RocketOutlined
 } from '@ant-design/icons'
-import { ClickParam } from 'antd/es/menu'
 
 import logo from '../../react_logo.svg'
 
 const { Item, SubMenu } = Menu
 
-interface IProps {
-    collapsed?: boolean
-    onClick?: (param: ClickParam) => void
-}
-
-const SideBar = (props: IProps): JSX.Element => {
+const SideBar = (): JSX.Element => {
     return (
         <div>
             <header className='App-header'>
@@ -28,7 +22,7 @@ const SideBar = (props: IProps): JSX.Element => {
                     <img src={logo} className='App-logo' alt='logo'/><h2 style={{ color: 'white' }}>RTCamp</h2>
                 </Link>
             </header>
-            <Menu theme='dark' mode='inline' onClick={props.onClick}>
+            <Menu theme='dark'>
                 <SubMenu title={<span><LineChartOutlined/><span>逻辑回归 Logisttc </span></span>}>
                     <Item key='1.1'>
                         <Link to='/curve'><span> 曲线拟合 Curve </span></Link>

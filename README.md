@@ -65,8 +65,6 @@ BTW，这是个平民 AI 教程，可以不使用 GPU 完成。
 
 AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个目录下的内容，在Web APP 程序运行时，会展示在“问题”标签页面下。
 
-### 第一季 Episode I：AI 基础
-
 学习新的技术，仅仅看看文档，跑几个例子，基本上也就能够了解了。不过要想真正深入了解这个技术的优缺点，在初步学习的基础上，还得按照自己的想法做点东西。
 
 这个项目的开始比较随性，2020年的 COVID-19 疫情宅家期间，列了个 AI 技术实践点的列表，起了个Repo，只是想着把 TFJS Example 的典型例子重刷一遍，能够留下些学习的记录，希望对大家有些帮助。
@@ -102,6 +100,7 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 
 ### 相关内容
 
+// TODO
 这部分还在修改中...
 
 * [AI Concept 1 曲线拟合](./public/docs/ai/curve.md)
@@ -117,26 +116,14 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 * [AI Concept 11 LSTM 文本生成](./public/docs/ai/lstm-txt-gen.md)
 * [AI Concept 12 和摄像头交互的预训练模型](./public/docs/ai/model-with-camara.md)
 
-### 第二季 Episode II：AI 游戏场（挖坑）
-
-如果有时间做第二季的话，会开另外一个 REPO。希望包括的内容如下。主要以应用实例为主，不会拘泥于在浏览器端训练，不过估计没有 GPU 很难玩转了。
-
-还会考虑增加利用图形化拖拽构建模型的实现。或者增加一些 3D 可视化的东西（例如集成 tensorspace ）
-
-* GAN 生成对抗网络
-* 对话机器人
-* 强化学习：玩游戏，如：metacar-project.com
-* 遗传算法赛车：玩游戏
-* 博弈：MiniGO，https://github.com/tensorflow/minigo 
-* 联邦学习
-
 ## 开发教程 Develop Tutorial
 
 这部分内容放在 `public/docs/dev` 目录下，主要是 Step by Step 的开发教程。
 
 尽量少说废话，不做过多展开，向 MIT Fablab 学习，提供参考链接供您深入了解。
 
+// TODO
 这部分还在修改中...
 
 * [Develop Tutorial 1 从零开始](./public/docs/dev/scratch-from-zero.md)
-* [Develop Tutorial 2 构建开发框架](./public/docs/dev/dev-structure.md)
+* [Develop Tutorial 2 构建 React 开发框架](./public/docs/dev/dev-structure.md)

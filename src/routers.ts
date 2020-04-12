@@ -1,7 +1,6 @@
 import { RouteConfig } from 'react-router-config'
 
 import Home from './components/common/Home'
-import NotFound from './components/common/NotFound'
 
 import Curve from './components/curve/Curve'
 import Iris from './components/iris/Iris'
@@ -52,37 +51,7 @@ const routes: RouteConfig[] = [
     { path: '/sandbox/array', component: TypedArrayWidget },
     { path: '/sandbox/tfvis', component: TfvisWidget },
 
-    { path: '*', component: NotFound }
+    { path: '*', component: Home }
 ]
-
-interface IBreadcrumbMap {
-    [index: string]: string
-}
-
-export const breadcrumbNameMap: IBreadcrumbMap = {
-    '/': 'Home',
-    '/curve': 'Curve',
-    '/iris': 'Iris',
-
-    '/mnist/keras': 'MNIST Layer Model',
-    '/mnist/core': 'MNIST Core API',
-
-    '/mobilenet/basic': 'Mobilenet Classifier',
-    '/mobilenet/knn': 'Teachable Machine',
-    '/mobilenet/transfer': 'Transfer Learning: Classifier',
-    '/mobilenet/objdetector': 'Transfer Learning: Object Detector',
-
-    '/rnn/jena': 'Jena Weather',
-    '/rnn/sentiment': 'Sentiment',
-    '/rnn/lstm': 'Lstm Text',
-
-    '/pretrained/handpose': 'Hand Pose',
-    '/pretrained/facemesh': 'Face Mesh',
-    '/pretrained/posenet': 'Pose',
-
-    '/sandbox/array': 'TypedArray',
-    '/sandbox/fetch': 'Fetch',
-    '/sandbox/tfvis': 'TfVis Widget'
-}
 
 export default routes

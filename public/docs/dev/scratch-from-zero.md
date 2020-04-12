@@ -57,21 +57,36 @@ yarn 会缓存每个下载过的包，所以再次使用时无需重复下载。
 	registry = "https://registry.npm.taobao.org/"
 	...
 	
-## React Hooks
+## React 和 React Hooks
 
-下面的内容是使用 React-Scripts 创建一个全新的 React 项目。这些内容记录了如何从零开始，一步一步创建 React-Tfjs-Camp 的主要过程。
+使用组件构建 Web APP，是当前前端开发的最佳实践之一。从本质上说，就是将你的应用分拆成一个个功能明确的模块，每个模块之间可以通过合适的方式互相组合和联系，形成复杂的前端 Web 应用。
 
-React 不多介绍，是由 Facebook 开源，是当前最流行的 Web 前端框架之一。
+比较流行的组件框架有 Facebook 开源的 React，还有一个是国人尤雨溪开源的 Vue。想了解这两个框架的基本差异的同学，可以阅读一下知乎上的 [React VS Vue：谁会成为2020年的冠军](https://zhuanlan.zhihu.com/p/89416436)
 
-在这个项目里，使用了 React 16.8 之后推出的新特性 React Hooks。React 团队希望，组件不要变成复杂的容器，最好只是数据流的管道，开发者根据需要，组合管道即可。这种函数化（Function Program）的编程形式，能够大大降低 React 的学习曲线。
+自从 React 诞生后，其创建组件的方式从 ES5 时期声明式的 createClass ，到支持原生 ES6 class 的 OOP 语法，再到发展出 HOC 或 render props 的函数式写法，官方和社区一直在探索更方便合理的 React 组件化之路。随之而来的一些问题是：
+
+* 组件往往变得嵌套过多
+* 各种写法的组件随着逻辑的增长，变得难以理解
+* 尤其是基于类写法的组件中，this 关键字暧昧模糊，人和机器读起来都比较懵，难以在不同的组件直接复用基于 state 的逻辑
+* 人们不满足于只用函数式组件做简单的展示组件，也想把 state 和生命周期等引入其中
+
+Hooks 是 React 16.8 之后推出的新特性，React 团队希望，组件不要变成复杂的容器，最好只是数据流的管道，开发者根据需要，组合管道即可。
+这种函数化（Function Program）的编程形式，能够大大降低 React 的学习曲线。
+属实讲，挺香的。
 
 关于 React Hooks，已经有了不少中文文章。例如：阮一峰的入门介绍就写得挺好。在后续的内容中，对于一些初级使用，我不会做太多展开，重点会记录在 React-Tfjs-Camp 的实现过程中，遇到的一些典型问题，以及是如何使用合适的方式进行解决的。
 
 参考链接：
 
-* React-Scripts  [https://create-react-app.dev/](https://create-react-app.dev/)
 * React Hooks 官方链接 [https://reactjs.org/docs/hooks-intro.html](https://reactjs.org/docs/hooks-intro.html)
 * 阮一峰的入门介绍 [React Hooks 入门教程](https://www.ruanyifeng.com/blog/2019/09/react-hooks.html)。
+* 深入剖析可以读一下 [React Hooks 深入不浅出](https://segmentfault.com/a/1190000017182184)
+
+### 创建 React 应用
+
+下面的内容是使用 React-Scripts 创建一个全新的 React 项目。这些内容记录了如何从零开始，一步一步创建 React-Tfjs-Camp 的主要过程。
+
+参考链接：React-Scripts  [https://create-react-app.dev/](https://create-react-app.dev/)
 
 ### 创建一个新的 React 项目
 

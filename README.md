@@ -123,7 +123,13 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 
 尽量少说废话，不做过多展开，向 MIT Fablab 学习，提供参考链接供您深入了解。
 
+### 构建开发框架
+
 - [x] [Develop Tutorial 1 从零开始](./public/docs/dev/start-from-scratch.md)
 - [x] [Develop Tutorial 2 构建 React 开发框架](./public/docs/dev/dev-structure.md)
-- [ ] [Develop Tutorial 3 搭建展示端到端 AI 概念的舞台](./public/docs/dev/ai-process-panel.md)
+- [x] [Develop Tutorial 3 搭建展示端到端 AI 概念的舞台](./public/docs/dev/ai-process-panel.md)
+
+### 操练 Tensorflow.js
+
+- [ ] [Develop Tutorial 4 初步了解 Tensorflow.js](./public/docs/dev/tfjs-intro.md)
 - [ ] 待续

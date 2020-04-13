@@ -1,21 +1,17 @@
-## 开发教程 Develop Tutorial
+# 开发教程 Develop Tutorial
 
-基于 TensorFlow.js 的无服务架构机器学习
-https://juejin.im/post/5bc13de2e51d450e827b88fc
+## 构建开发框架
 
-#### 构建程序框架
-
-[x] React 概述
-
-[x] 简介 React-Hooks， React-Route
-
-[x] 代码风格检查 ESLint，tsconfig.json。
-
-[x] 使用 AntD 构造了一个左右结构的程序框架
-
-[x] MD 文档显示Widget
+- [x] [Develop Tutorial 1 从零开始](./public/docs/dev/start-from-scratch.md)
+- [x] [Develop Tutorial 2 构建 React 开发框架](./public/docs/dev/dev-structure.md)
+- [x] [Develop Tutorial 3 搭建展示端到端 AI 概念的舞台](./public/docs/dev/ai-process-panel.md)
     
+## 操练 Tensorflow.js
+
+- [ ] [Develop Tutorial 4 初步了解 Tensorflow.js](./public/docs/dev/tfjs-intro.md)
+
 ### 曲线拟合：数学公式线性回归
+
 
 #### 问题和解决模型
 
@@ -192,5 +188,6 @@ BERT
 
 ## 第二季 TODO
 
-
+基于 TensorFlow.js 的无服务架构机器学习
+https://juejin.im/post/5bc13de2e51d450e827b88fc
 

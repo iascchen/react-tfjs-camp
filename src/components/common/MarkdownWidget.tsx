@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { message } from 'antd'
 import ReactMarkdown from 'react-markdown'
 import MathJax from '@matejmazur/react-mathjax'
 import RemarkMathPlugin from 'remark-math'
+import { message } from 'antd'
 
 import { fetchResource, logger } from '../../utils'
 

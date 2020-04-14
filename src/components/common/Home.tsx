@@ -26,14 +26,14 @@ const Home = (): JSX.Element => {
             <h2>Tensorflow.js Study Camp -- full-stack develop from zero</h2>
             <h3>Powered by: </h3>
             <ul>
-                <li>Tensorflow.js 1.7.0, tfjs-example and tfjs-model</li>
-                <li>React 16.12 (React Hooks)</li>
+                <li>Tensorflow.js 1.7.1, tfjs-example and tfjs-model</li>
+                <li>React 16.13 (React Hooks)</li>
                 <li>Typescript 3.7.2</li>
                 <li>Node.js / ts-node</li>
             </ul>
             <ul>
-                <li>Ant.Design v4.0.0</li>
-                <li>Ant.V Bizchart</li>
+                <li>Ant.Design v4.1.3</li>
+                <li>Ant.V Bizchart </li>
                 <li>Teachable Machine</li>
             </ul>
         </>

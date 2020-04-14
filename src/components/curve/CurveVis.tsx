@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import * as tf from '@tensorflow/tfjs'
+import { Tensor } from '@tensorflow/tfjs'
 import { Card } from 'antd'
 import { Axis, Chart, Geom, Legend, Tooltip } from 'bizcharts'
 
@@ -7,16 +7,7 @@ import { arrayDispose, logger } from '../../utils'
 
 const MAX_SAMPLES_COUNT = 100
 
-interface IProps {
-    xDataset?: tf.Tensor
-    yDataset?: tf.Tensor
-    pDataset?: tf.Tensor
-    sampleCount?: number
-
-    debug?: boolean
-}
-
-const prepareData = (_tensor: tf.Tensor, _sampleCount: number = MAX_SAMPLES_COUNT): number[] => {
+const prepareData = (_tensor: Tensor, _sampleCount: number = MAX_SAMPLES_COUNT): number[] => {
     if (!_tensor) {
         return []
     }
@@ -24,14 +15,29 @@ const prepareData = (_tensor: tf.Tensor, _sampleCount: number = MAX_SAMPLES_COUN
     return Array.from(_array ?? []).splice(0, _sampleCount)
 }
 
+interface IChartData {
+    x: number
+    y: number
+    type: string
+}
+
+interface IProps {
+    xDataset: Tensor
+    yDataset: Tensor
+    pDataset?: Tensor
+    sampleCount?: number
+
+    debug?: boolean
+}
+
 const CurveVis = (props: IProps): JSX.Element => {
     /***********************
      * useState
      ***********************/
 
-    const [xData, setXData] = useState()
-    const [yData, setYData] = useState()
-    const [pData, setPData] = useState()
+    const [xData, setXData] = useState<number[]>([])
+    const [yData, setYData] = useState<number[]>([])
+    const [pData, setPData] = useState<number[]>([])
     const [data, setData] = useState()
     const [sampleCount] = useState(props.sampleCount)
 
@@ -100,10 +106,10 @@ const CurveVis = (props: IProps): JSX.Element => {
     useEffect(() => {
         logger('init sample data [p] ...')
 
-        const _data: any[] = []
+        const _data: IChartData[] = []
         pData?.forEach((v: number, i: number) => {
-            _data.push({ x: xData[i], type: 'p', y: v })
-            _data.push({ x: xData[i], type: 'y', y: yData[i] })
+            _data.push({ x: xData[i], y: yData[i], type: 'y' })
+            _data.push({ x: xData[i], y: v, type: 'p' })
         })
         setData(_data)
 
@@ -120,13 +126,13 @@ const CurveVis = (props: IProps): JSX.Element => {
     return (
         <Card>
             <Chart height={400} data={data} padding='auto' forceFit>
-                <Axis name='X' />
-                <Axis name='Y' />
-                <Legend />
+                <Axis name='X'/>
+                <Axis name='Y'/>
+                <Legend/>
                 <Tooltip/>
                 <Geom type='line' position='x*y' size={2} color={'type'} shape={'smooth'}/>
             </Chart>
-            Sample count : { props.sampleCount }
+            Sample count : {props.sampleCount}
             {props.debug ? JSON.stringify(data) : ''}
         </Card>
     )

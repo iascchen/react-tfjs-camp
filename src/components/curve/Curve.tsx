@@ -29,8 +29,10 @@ const BATCH_SIZE = 100
 const VALIDATE_SPLIT = 0.2
 
 const genCurveParams = (): number[] => {
-    const params = tf.randomUniform([3], -10, 10).toInt()
-    return Array.from(params.dataSync())
+    return tf.tidy(() => {
+        const params = tf.randomUniform([3], -10, 10).toInt()
+        return Array.from(params.dataSync())
+    })
 }
 
 const numberToStringWithSign = (x: number): string => {
@@ -77,9 +79,11 @@ const Curve = (): JSX.Element => {
      ***********************/
 
     const calc = useCallback((x: tf.Tensor) => {
-        const [a, b, c] = sCurveParams
-        // = a * x^2 + b * x + c
-        return x.pow(2).mul(a).add(x.mul(b)).add(c)
+        return tf.tidy(() => {
+            const [a, b, c] = sCurveParams
+            // = a * x^2 + b * x + c
+            return x.pow(2).mul(a).add(x.mul(b)).add(c)
+        })
     }, [sCurveParams])
 
     /***********************
@@ -205,11 +209,12 @@ const Curve = (): JSX.Element => {
         setTestV(evaluate)
     }
 
-    const handlePredict = (): void => {
-        if (!sModel || !sTestSet) {
-            return
-        }
-        evaluateModel(sModel, sTestSet)
+    /***********************
+     * Event Handlers
+     ***********************/
+
+    const handleTabChange = (current: number): void => {
+        setTabCurrent(current)
     }
 
     const handleResetCurveParams = (): void => {
@@ -252,8 +257,11 @@ const Curve = (): JSX.Element => {
         stopRef.current = true
     }
 
-    const handleTabChange = (current: number): void => {
-        setTabCurrent(current)
+    const handlePredict = (): void => {
+        if (!sModel || !sTestSet) {
+            return
+        }
+        evaluateModel(sModel, sTestSet)
     }
 
     /***********************

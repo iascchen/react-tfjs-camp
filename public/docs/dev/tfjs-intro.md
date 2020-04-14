@@ -81,7 +81,7 @@ $$ y = a x^2 + b x + c $$
     }
 	    
 * `genCurveParams` 是个单纯的本地功能函数，放在 Curve 之外；使用它的 `useEffect` 被放在 Curve 组件的前部位置，符合我们前面说的使用 Hooks 的规则。
-* `genCurveParams` 通过 `tf.randomUniform` 生成了 -10 到 10 之间的三个随机数，我们取整之后，用作 a, b, c。tfjs 里面还有好几种用于生成随机数的方法，用起来非常容易，可以根据问题需要使用。
+* `genCurveParams` 通过 `tf.randomUniform` 生成了 -10 到 10 之间的三个随机数，取整之后，用作 a, b, c。tfjs 里面还有好几种用于生成随机数的方法，用起来非常容易，可以根据问题需要使用。
 * 这段代码被封装在 tf.tidy 中，以及时回收不用的内存。
 * useEffect 第二个参数设置为 `[]`，表示在组件加载时调用。
 
@@ -97,7 +97,7 @@ $$ y = a x^2 + b x + c $$
 
 * tf.Tensor 提供了很多用于张量计算的函数，使用函数式编程的链式调用用起来也比较方便。需要注意的是，这种链式的调用仅仅与顺序有关，没有“先乘除，后加减”的计算符的优先级。
 * 假如在此处使用普通的 JS 函数实现，每一次 Curve 组件渲染都会生成一个新的 calc 函数实例。
-* `useCallback` 是我们所用到的第三类 React Hook。`useCallback` 会返回一个 memoized 的函数，用来对函数进行缓存，防止总是重复的生成新的函数。calc 函数被封装到了 `useCallback` 之后，只有当触发条件 [sCurveParams] 被修改时，才会触发回调函数 calc 发生改变，创建新实例。在下一节的内容里，我们利用这个功能。仅在当 calc 由于参数改变而发生改变时，才触发对于训练集和测试集的更新。
+* `useCallback` 是我们所用到的第三类 React Hook。`useCallback` 会返回一个 memoized 的函数，用来对函数进行缓存，防止总是重复的生成新的函数。calc 函数被封装到了 `useCallback` 之后，只有当触发条件 [sCurveParams] 被修改时，才会触发回调函数 calc 发生改变，创建新实例。
 
 ### 训练集和测试集的生成
 
@@ -128,6 +128,7 @@ $$ y = a x^2 + b x + c $$
         }
     }, [calc])
     
+* 仅在当 calc 由于参数改变而发生改变时，才触发对于训练集和测试集的更新。
 * 随机生成了 1000 个 (-1,1) 之间的浮点数，作为训练集 trainTensorX。随机生成了 200 个 (-1,1) 之间的浮点数，作为测试集 testTensorX。
 * 初始化数据的 `useEffect` 函数和以前的用法相比，有了返回值。在 effect 中返回一个函数是 effect 的清除机制。每个 effect 都可以返回一个清除函数，它们都属于 effect 的一部分。对于 tfjs 应用来说，正好可以在这里清除不用的 tf.Tensor 对象，React Hooks 和 Tensorflow.js 真是相得益彰。React 会在执行当前 effect 之前对上一个 effect 进行清除。
 
@@ -206,8 +207,8 @@ AntD v4 的 Form 做了较大的修改，我们一起来看看。
 * Form 内的各数据项使用 Form.Item 装饰。	其 `name`属性为 Form 内变量名称。
                  
 		<Form.Item name='a' label='Curve param a'>
-                        {curveParam()}
-                    </Form.Item>
+			{curveParam()}
+		</Form.Item>
  
 * 在界面上调整 Slider 组件时，会触发由 `onFieldsChange={handleCurveParamsChange}` 定义的回调函数。利用 `const values = formData.getFieldsValue()` 读取 Form 中的数据值。
 * 点击 Button 时，`onClick={handleResetCurveParams}` 定义的回调函数会采用 `formData.setFieldsValue({ a, b, c })` 设置 From 中的数据值。
@@ -220,9 +221,10 @@ AntD v4 的 Form 做了较大的修改，我们一起来看看。
 
 要对训练集和测试集数据进行直观的观察，我们使用了阿里巴巴的前端领域通用图表组件库 Bizchart。Bizchart 的功能相当强大，在这个项目中只使用了九牛一毛。[BizCharts参考链接](https://bizcharts.net/)
 
-`./src/components/curve/CurveVis.tsx` 封装了函数曲线可视化的组件。
+`/src/components/curve/CurveVis.tsx` 封装了函数曲线可视化的组件。
 
-	<CurveVis xDataset={sTrainSet.xs as tf.Tensor} yDataset={sTrainSet.ys as tf.Tensor} sampleCount={TOTAL_RECORD}/>
+	<CurveVis xDataset={sTrainSet.xs as tf.Tensor} yDataset={sTrainSet.ys as tf.Tensor} 
+		sampleCount={TOTAL_RECORD}/>
 
 CurveVis 的实现要点如下：
 
@@ -250,17 +252,14 @@ CurveVis 的实现要点如下：
 	}
 	
 	const CurveVis = (props: IProps): JSX.Element => {
-	    /***********************
-	     * useState
-	     ***********************/
-	
+
 	    const [xData, setXData] = useState<number[]>([])
 	    const [yData, setYData] = useState<number[]>([])
 	    const [pData, setPData] = useState<number[]>([])
 	    const [data, setData] = useState()
 	    const [sampleCount] = useState(props.sampleCount)
-	
-		...
+
+	    ...
 	    useEffect(() => {
 	        logger('init sample data [p] ...')
 	
@@ -276,10 +275,6 @@ CurveVis 的实现要点如下：
 	            arrayDispose(_data)
 	        }
 	    }, [pData])
-	
-	    /***********************
-	     * Functions
-	     ***********************/
 	
 	    return (
 	        <Card>
@@ -298,7 +293,7 @@ CurveVis 的实现要点如下：
 	
 	export default CurveVis
 	
-* 需要将从属性设置的 X、Y、P Tensor 转化成格式如下的数组。使用 IChartData.type 区分不同的曲线。
+* 需要将从属性设置的 X、Y、P Tensor 转化成格式如 IChartData 的数组。使用 IChartData.type 区分不同的曲线。
 
 		interface IChartData {
 		    x: number
@@ -330,17 +325,196 @@ CurveVis 的实现要点如下：
 	        </Card>
 	    )
                    
-## 探究 Tensorflow.js 中的 LayerModel
+## 使用 Tensorflow.js 创建人工神经网络
 
 ![curve-data](../images/dev-curve-2.png)
 
+### 实现一个简单的多层人工神经网络
 
+通过 formModel 调整，可以调整人工神经网络的层数 sLayerCount、每层的神经元数 sDenseUnits、以及激活函数 sActivation。当这几个值改变的时候，Curve.tsx 会相应调整人工神经网络模型。
 
-## 训练 
+    useEffect(() => {
+        logger('init model ...')
+
+        tf.backend()
+        setTfBackend(tf.getBackend())
+
+        // The linear regression model.
+        const model = tf.sequential()
+        model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
+
+        for (let i = sLayerCount - 2; i > 0; i--) {
+            model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
+        }
+
+        model.add(tf.layers.dense({ units: 1 }))
+        setModel(model)
+
+        return () => {
+            logger('Model Dispose')
+            model.dispose()
+        }
+    }, [sActivation, sLayerCount, sDenseUnits])
+    
+* 使用 tf.sequential 很容易构建出顺序多层神经网络。最简单的顺序全联接网络。tf.Sequential 是 LayerModel 的一个实例。
+
+		const model = tf.sequential()
+		
+* 为网络增加输入层，因为 X 为一维向量，所以 `inputShape: [1]`。
+
+		model.add(tf.layers.dense({ inputShape: [1], units: sDenseUnits, activation: sActivation as any }))
+
+* 中间根据用户选择，增加多个隐藏层。
+
+		for (let i = sLayerCount - 2; i > 0; i--) {
+			model.add(tf.layers.dense({ units: sDenseUnits, activation: sActivation as any }))
+		}
+		
+* 输出层，因为只输出一维的 Y 值，所以 `{ units: 1 }`。
+	
+		model.add(tf.layers.dense({ units: 1 }))
+
+### 窥探一下 LayerModel 的内部
+
+* 使用 `model.summary()`是最常用的观察模型的方法，只能够在浏览器的 Console 里显示结果。
+* 实现一个简单的模型展示组件 `/src/components/common/tensor/ModelInfo.tsx`，看看模型的层次和权重相关的信息。
+
+		import React from 'react'
+		import * as tf from '@tensorflow/tfjs'
+		
+		interface IProps {
+		    model: tf.LayersModel
+		}
+		
+		const ModelInfo = (props: IProps): JSX.Element => {
+		    const { model } = props
+		    return (
+		        <>
+		            <div>
+		                <h2>Layers</h2>
+		                {model.layers.map((l, index) => <div key={index}>{l.name}</div>)}
+		            </div>
+		            <div>
+		                <h2>Weights</h2>
+		                {model.weights.map((w, index) => <div key={index}>{w.name}, [{w.shape.join(', ')}]</div>)}
+		            </div>
+		        </>
+		    )
+		}
+		
+		export default ModelInfo
+
+## 模型训练 
 
 ![curve-data](../images/dev-curve-3.png)
 
+### 调整 LearningRate 观察对训练的影响
 
+    useEffect(() => {
+        if (!sModel) {
+            return
+        }
+        logger('init optimizer ...')
+
+        const optimizer = tf.train.sgd(sLearningRate)
+        sModel.compile({ loss: 'meanSquaredError', optimizer })
+
+        return () => {
+            logger('Optimizer Dispose')
+            optimizer.dispose()
+        }
+    }, [sModel, sLearningRate])
+
+* 调整训练优化器的 sLearningRate。需要通过下面的代码生效。
+
+		const optimizer = tf.train.sgd(sLearningRate)
+		sModel.compile({ loss: 'meanSquaredError', optimizer })
+
+* 生成了新的优化器后，可以对老的 Effect 做清除。
+
+		return () => {
+			logger('Optimizer Dispose')
+			optimizer.dispose()
+		}
+
+### 模型训练
+
+	const trainModel = (model: tf.LayersModel, trainSet: tf.TensorContainerObject, testSet: tf.TensorContainerObject): void => {
+        if (!model || !trainSet || !testSet) {
+            return
+        }
+
+        setStatus(STATUS.WAITING)
+        stopRef.current = false
+
+        model.fit(trainSet.xs as tf.Tensor, trainSet.ys as tf.Tensor, {
+            epochs: NUM_EPOCHS,
+            batchSize: BATCH_SIZE,
+            validationSplit: VALIDATE_SPLIT,
+            callbacks: {
+                onEpochEnd: async (epoch: number) => {
+                    const trainStatus = `${(epoch + 1).toString()}/${NUM_EPOCHS.toString()} = ${((epoch + 1) / NUM_EPOCHS * 100).toFixed(0)} %`
+                    setTrainStatusStr(trainStatus)
+
+                    if (epoch % 10 === 0) {
+                        evaluateModel(model, testSet)
+                    }
+
+                    if (stopRef.current) {
+                        logger('Checked stop', stopRef.current)
+                        setStatus(STATUS.STOPPED)
+                        model.stopTraining = stopRef.current
+                    }
+
+                    await tf.nextFrame()
+                }
+            }
+        }).then(
+            () => {
+                setStatus(STATUS.TRAINED)
+            },
+            loggerError
+        )
+    }
+
+### 模型训练的回调函数
+
+				onEpochEnd: async (epoch: number) => {
+                    const trainStatus = `${(epoch + 1).toString()}/${NUM_EPOCHS.toString()} = ${((epoch + 1) / NUM_EPOCHS * 100).toFixed(0)} %`
+                    setTrainStatusStr(trainStatus)
+
+                    if (epoch % 10 === 0) {
+                        evaluateModel(model, testSet)
+                    }
+
+                    if (stopRef.current) {
+                        logger('Checked stop', stopRef.current)
+                        setStatus(STATUS.STOPPED)
+                        model.stopTraining = stopRef.current
+                    }
+
+                    await tf.nextFrame()
+                }
+
+
+### 停止模型训练
+
+* JS 的线程模型
+* 及时停止训练 —— useRef Hook
+
+## 模型推理
+
+	const evaluateModel = (model: tf.LayersModel, testSet: tf.TensorContainerObject): void => {
+        if (!model || !testSet) {
+            return
+        }
+
+        const pred = model.predict(testSet.xs as tf.Tensor) as tf.Tensor
+        setTestP(pred)
+        const evaluate = model.evaluate(testSet.xs as tf.Tensor, testSet.ys as tf.Tensor) as tf.Scalar
+        setTestV(evaluate)
+    }
+    
 =========
 
 ### Tensor

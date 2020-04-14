@@ -1,8 +1,8 @@
 import React from 'react'
-import * as tf from '@tensorflow/tfjs'
+import { LayersModel } from '@tensorflow/tfjs'
 
 interface IProps {
-    model?: tf.LayersModel
+    model: LayersModel
 }
 
 const ModelInfo = (props: IProps): JSX.Element => {
@@ -11,11 +11,11 @@ const ModelInfo = (props: IProps): JSX.Element => {
         <>
             <div>
                 <h2>Layers</h2>
-                {model?.layers.map((l, index) => <div key={index}>{l.name}</div>)}
+                {model.layers.map((l, index) => <div key={index}>{l.name}</div>)}
             </div>
             <div>
                 <h2>Weights</h2>
-                {model?.weights.map((w, index) => <div key={index}>{w.name}, [{w.shape.join(', ')}]</div>)}
+                {model.weights.map((w, index) => <div key={index}>{w.name}, [{w.shape.join(', ')}]</div>)}
             </div>
         </>
     )

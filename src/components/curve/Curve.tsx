@@ -110,6 +110,7 @@ const Curve = (): JSX.Element => {
         }
 
         model.add(tf.layers.dense({ units: 1 }))
+        model.summary()
         setModel(model)
 
         return () => {

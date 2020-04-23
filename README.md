@@ -126,10 +126,67 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
 ### 构建开发框架
 
 - [x] [Develop Tutorial 1 从零开始](./public/docs/dev/start-from-scratch.md)
+
+    * 环境安装
+        * 安装 Node 环境
+        * 安装 yarn 工具
+    * React 和 React Hooks
+        * 创建 React 应用
+            * 创建一个新的 React 项目
+            * React 项目目录简述
+
 - [x] [Develop Tutorial 2 构建 React 开发框架](./public/docs/dev/dev-structure.md)
+
+    * React-tfjs-camp 的目录结构
+        * public 目录结构
+        * src 目录结构
+        * node 目录结构
+    * 规范代码语法和风格检查
+        * tsconfig.json
+        * .eslintrc.js
+    * 改造页面布局
+        * React 函数化组件
+        * 使用 Ant Design 构建页面框架
+            * 在项目中使用 AntD
+        * 页面布局
+    * 边栏菜单导航
+        * AntD Layout Sider
+        * 使用 React Hooks 的 useState 管理边栏状态
+        * 用 React-Route 实现页面路由跳转
+    * ErrorBoundary
+
 - [x] [Develop Tutorial 3 搭建展示端到端 AI 概念的舞台](./public/docs/dev/ai-process-panel.md)
 
+    * 端到端的 AI 概念
+    * AIProcessTabs
+        * 带参数的 React 函数组件
+        * 使用 React Hooks 的 useEffect 处理组件内的数据依赖
+        * 处理需要隐藏的 TabPane
+        * Sticky 的使用
+    * MarkdownWidget
+    
 ### 操练 Tensorflow.js
 
-- [ ] [Develop Tutorial 4 初步了解 Tensorflow.js](./public/docs/dev/tfjs-intro.md)
+- [x] [Develop Tutorial 4 初步了解 Tensorflow.js](./public/docs/dev/tfjs-intro.md)
+
+    * 使用 Tensorflow.js 的几点须知
+        * Backend —— 为什么我的 tfjs 运行很慢？
+        * 内存管理 —— 这样避免我的程序内存溢出？
+        * tfjs 安装
+        * tfjs 加载
+    * 使用 Tensorflow.js 和 React 生成数据集
+        * 随机生成 a, b, c 三个参数
+        * 实现公式计算 & useCallback
+        * 训练集和测试集的生成
+    * 函数数据可视化
+    * 使用 Tensorflow.js 创建人工神经网络
+        * 实现一个简单的多层人工神经网络
+        * 窥探一下 LayerModel 的内部
+    * 模型训练
+        * 调整 LearningRate 观察对训练的影响
+        * 模型训练 model.fit
+        * 及时停止模型训练 —— useRef Hook 登场
+    * 模型推理
+
+- [ ] [Develop Tutorial 5 用 Tensorflow.js 处理按数据分类问题](./public/docs/dev/data-classifier.md)
 - [ ] 待续

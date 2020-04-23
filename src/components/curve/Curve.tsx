@@ -70,6 +70,7 @@ const Curve = (): JSX.Element => {
     const [sLearningRate, setLearningRate] = useState<number>(0.03)
     const [sTrainStatusStr, setTrainStatusStr] = useState<string>('0%')
     const stopRef = useRef(false)
+    const [sStop, setStop] = useState<boolean>(false)
 
     const [formData] = Form.useForm()
     const [formModel] = Form.useForm()
@@ -168,6 +169,7 @@ const Curve = (): JSX.Element => {
 
         setStatus(STATUS.WAITING)
         stopRef.current = false
+        setStop(false)
 
         model.fit(trainSet.xs as tf.Tensor, trainSet.ys as tf.Tensor, {
             epochs: NUM_EPOCHS,
@@ -182,8 +184,14 @@ const Curve = (): JSX.Element => {
                         evaluateModel(model, testSet)
                     }
 
+                    // Compare useRef with useState
+                    if (sStop) {
+                        logger('Checked stop by useState', sStop)
+                        setStatus(STATUS.STOPPED)
+                        model.stopTraining = sStop
+                    }
                     if (stopRef.current) {
-                        logger('Checked stop', stopRef.current)
+                        logger('Checked stop by useRef', stopRef.current)
                         setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
@@ -192,7 +200,8 @@ const Curve = (): JSX.Element => {
                 }
             }
         }).then(
-            () => {
+            (history) => {
+                logger(history)
                 setStatus(STATUS.TRAINED)
             },
             loggerError
@@ -256,6 +265,11 @@ const Curve = (): JSX.Element => {
     const handleTrainStop = (): void => {
         logger('handleTrainStop')
         stopRef.current = true
+    }
+
+    const handleTrainStopState = (): void => {
+        logger('handleTrainStopState')
+        setStop(true)
     }
 
     const handlePredict = (): void => {
@@ -373,11 +387,13 @@ const Curve = (): JSX.Element => {
                         </Select>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
-                        <Button type='primary' htmlType={'submit'} style={{ width: '30%', margin: '0 10%' }}> Train </Button>
-                        <Button onClick={handleTrainStop} style={{ width: '30%', margin: '0 10%' }}> Stop </Button>
+                        <Button type='primary' htmlType={'submit'} style={{ width: '80%', margin: '0 10%' }}> Train </Button>
+                        <Button onClick={handleTrainStop} style={{ width: '80%', margin: '0 10%' }}> Stop with useRef </Button>
+                        <Button onClick={handleTrainStopState} style={{ width: '80%', margin: '0 10%' }}> Stop with useState </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <div>Status: {sStatus}</div>
+                        <div>Stop: {sStop ? 'T' : 'F'}</div>
                         <div>Backend: {sTfBackend}</div>
                     </Form.Item>
                 </Form>

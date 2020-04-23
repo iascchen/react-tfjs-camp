@@ -88,7 +88,7 @@ Hooks 是 React 16.8 之后推出的新特性，React 团队希望，组件不�
 
 参考链接：React-Scripts  [https://create-react-app.dev/](https://create-react-app.dev/)
 
-### 创建一个新的 React 项目
+#### 创建一个新的 React 项目
 
 `yarn create react-app` 用于创建 React App，等于 npm 原生命令的 `npx create-react-app`。
 
@@ -109,7 +109,7 @@ Hooks 是 React 16.8 之后推出的新特性，React 团队希望，组件不�
 	$ yarn test
 	$ yarn build
 
-### React 项目目录简述
+#### React 项目目录简述
 
 使用 `ls -la` 能够看到项目中生成一些文件。
 

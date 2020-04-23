@@ -3,7 +3,7 @@ import { Tensor } from '@tensorflow/tfjs'
 import { Card } from 'antd'
 import { Axis, Chart, Geom, Legend, Tooltip } from 'bizcharts'
 
-import { arrayDispose, logger } from '../../utils'
+import { logger } from '../../utils'
 
 const MAX_SAMPLES_COUNT = 100
 
@@ -53,11 +53,6 @@ const CurveVis = (props: IProps): JSX.Element => {
 
         const _d = prepareData(props.xDataset, sampleCount)
         setXData(_d)
-
-        return () => {
-            logger('Dispose xDataset ...')
-            arrayDispose(_d)
-        }
     }, [props.xDataset, sampleCount])
 
     useEffect(() => {
@@ -68,11 +63,6 @@ const CurveVis = (props: IProps): JSX.Element => {
 
         const _d = prepareData(props.yDataset, sampleCount)
         setYData(_d)
-
-        return () => {
-            logger('Dispose yDataset ...')
-            arrayDispose(_d)
-        }
     }, [props.yDataset, sampleCount])
 
     useEffect(() => {
@@ -83,11 +73,6 @@ const CurveVis = (props: IProps): JSX.Element => {
 
         const _d = prepareData(props.pDataset, sampleCount)
         setPData(_d)
-
-        return () => {
-            logger('Dispose pDataset ...')
-            arrayDispose(_d)
-        }
     }, [props.pDataset, sampleCount])
 
     useEffect(() => {
@@ -96,11 +81,6 @@ const CurveVis = (props: IProps): JSX.Element => {
             return { x: v, type: 'y', y: yData[i] }
         })
         setData(_data)
-
-        return () => {
-            logger('Dispose sample data [x,y] ...')
-            arrayDispose(_data)
-        }
     }, [xData, yData])
 
     useEffect(() => {
@@ -112,11 +92,6 @@ const CurveVis = (props: IProps): JSX.Element => {
             _data.push({ x: xData[i], y: v, type: 'p' })
         })
         setData(_data)
-
-        return () => {
-            logger('Dispose sample data [p] ...')
-            arrayDispose(_data)
-        }
     }, [pData])
 
     /***********************

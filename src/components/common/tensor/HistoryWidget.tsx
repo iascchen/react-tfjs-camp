@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Col, Row } from 'antd'
 import { Axis, Chart, Geom, Legend, Tooltip } from 'bizcharts'
 
-import { arrayDispose, ITrainInfo, logger } from '../../../utils'
+import { ITrainInfo, logger } from '../../../utils'
 
 interface IProps {
     totalIterations: number
@@ -37,12 +37,6 @@ const HistoryWidget = (props: IProps): JSX.Element => {
         })
         setLossData(_lossData)
         setAccData(_accData)
-
-        return () => {
-            logger('Dispose data ...')
-            arrayDispose(_lossData)
-            arrayDispose(_accData)
-        }
     }, [props.infos])
 
     useEffect(() => {

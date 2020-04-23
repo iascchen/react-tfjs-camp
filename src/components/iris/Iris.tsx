@@ -73,19 +73,16 @@ const Iris = (): JSX.Element => {
         }
         logger('encode dataset ...')
 
-        const [tSet, vSet] = data.getIrisData(VALIDATE_SPLIT, sTargetEncode === ONE_HOT)
+        const isOneHot = sTargetEncode === ONE_HOT
+        const [tSet, vSet] = data.getIrisData(VALIDATE_SPLIT, isOneHot)
 
         // Batch datasets.
         setTrainSet(tSet.batch(BATCH_SIZE))
         setValidSet(vSet.batch(BATCH_SIZE))
 
         // one-hot or int-label data, use different loss
-        const loss = sTargetEncode === ONE_HOT ? 'categoricalCrossentropy' : 'sparseCategoricalCrossentropy'
+        const loss = isOneHot ? 'categoricalCrossentropy' : 'sparseCategoricalCrossentropy'
         setLoss(loss)
-
-        return () => {
-            logger('Encode Data Dispose')
-        }
     }, [sTargetEncode])
 
     useEffect(() => {

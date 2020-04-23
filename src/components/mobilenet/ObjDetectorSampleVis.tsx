@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Table } from 'antd'
 
-import { arrayDispose, formatTensorToStringArray, logger } from '../../utils'
+import { formatTensorToStringArray, logger } from '../../utils'
 import TensorImageThumbWidget from '../common/tensor/TensorImageThumbWidget'
 
 const MAX_SAMPLES_COUNT = 20
@@ -62,11 +62,6 @@ const ObjDetectorSampleVis = (props: IProps): JSX.Element => {
         const _sampleInfo = props.xDataset.split(props.xDataset.shape[0])
         const _data = _sampleInfo.slice(0, sampleCount)
         setXData(_data)
-
-        return () => {
-            logger('Dispose x')
-            arrayDispose(_sampleInfo)
-        }
     }, [props.xDataset, sampleCount])
 
     useEffect(() => {
@@ -78,12 +73,6 @@ const ObjDetectorSampleVis = (props: IProps): JSX.Element => {
         const _sampleInfo = props.yDataset.split(props.yDataset.shape[0])
         const _data = _sampleInfo.slice(0, sampleCount)
         setYData(_data)
-
-        return () => {
-            logger('Dispose y')
-            arrayDispose(_sampleInfo)
-            // arrayDispose(_sampleLabel)
-        }
     }, [props.yDataset, sampleCount])
 
     useEffect(() => {
@@ -95,11 +84,6 @@ const ObjDetectorSampleVis = (props: IProps): JSX.Element => {
         const _sampleInfo = props.pDataset.split(props.pDataset.shape[0])
         const _data = _sampleInfo.slice(0, sampleCount)
         setPData(_data)
-
-        return () => {
-            logger('Dispose p')
-            arrayDispose(_sampleInfo)
-        }
     }, [props.pDataset, sampleCount])
 
     useEffect(() => {
@@ -112,11 +96,6 @@ const ObjDetectorSampleVis = (props: IProps): JSX.Element => {
             return { key: i, x: xData[i], y: v }
         })
         setData(_data)
-
-        return () => {
-            logger('Dispose sample data [x,y] ...')
-            arrayDispose(_data)
-        }
     }, [xData, yData])
 
     useEffect(() => {
@@ -130,11 +109,6 @@ const ObjDetectorSampleVis = (props: IProps): JSX.Element => {
                 : null
         })
         setData(_data)
-
-        return () => {
-            logger('Dispose sample data [p] ...')
-            arrayDispose(_data)
-        }
     }, [pData, xData, yData])
 
     useEffect(() => {

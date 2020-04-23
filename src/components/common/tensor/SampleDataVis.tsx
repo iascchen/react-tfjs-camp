@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Table } from 'antd'
-import { arrayDispose, formatTensorToStringArray, getTensorLabel, logger } from '../../../utils'
+import { formatTensorToStringArray, getTensorLabel, logger } from '../../../utils'
 import RowImageWidget from './RowImageWidget'
 
 const MAX_SAMPLES_COUNT = 20
@@ -66,11 +66,6 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         const _sampleInfo = props.xDataset.split(props.xDataset.shape[0])
         const _data = _sampleInfo.slice(0, sampleCount)
         setXData(_data)
-
-        return () => {
-            logger('Dispose x')
-            arrayDispose(_sampleInfo)
-        }
     }, [props.xDataset, sampleCount])
 
     useEffect(() => {
@@ -84,12 +79,6 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         const _sampleLabel = getTensorLabel(_data)
         setYData(_data)
         setYDataLabel(_sampleLabel)
-
-        return () => {
-            logger('Dispose y')
-            arrayDispose(_sampleInfo)
-            arrayDispose(_sampleLabel)
-        }
     }, [props.yDataset, sampleCount])
 
     useEffect(() => {
@@ -103,12 +92,6 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         const _sampleLabel = getTensorLabel(_data)
         setPData(_data)
         setPDataLabel(_sampleLabel)
-
-        return () => {
-            logger('Dispose p')
-            arrayDispose(_sampleInfo)
-            arrayDispose(_sampleLabel)
-        }
     }, [props.pDataset, sampleCount])
 
     useEffect(() => {
@@ -121,11 +104,6 @@ const SampleDataVis = (props: IProps): JSX.Element => {
             return { key: i, x: xData[i], y: v, yLabel: yDataLabel[i] }
         })
         setData(_data)
-
-        return () => {
-            logger('Dispose sample data [x,y] ...')
-            arrayDispose(_data)
-        }
     }, [xData, yData])
 
     useEffect(() => {
@@ -145,11 +123,6 @@ const SampleDataVis = (props: IProps): JSX.Element => {
         }, 0)
         setAcc(correct / pData.length)
         logger('Acc = ', acc, pData.length)
-
-        return () => {
-            logger('Dispose sample data [p] ...')
-            arrayDispose(_data)
-        }
     }, [pData, xData, yData])
 
     useEffect(() => {

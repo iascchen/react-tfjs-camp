@@ -3,7 +3,7 @@ import { Tensor, Tensor2D } from '@tensorflow/tfjs-core'
 import { Col, Row } from 'antd'
 import { Axis, Chart, Geom, Legend, Tooltip } from 'bizcharts'
 
-import { arrayDispose, logger } from '../../../utils'
+import { logger } from '../../../utils'
 
 interface IProps {
     data: {
@@ -46,11 +46,6 @@ const VectorWidget = (props: IProps): JSX.Element => {
             })
         }
         setData(_data)
-
-        return () => {
-            logger('Dispose data ...')
-            arrayDispose(_data)
-        }
     }, [props.data, props.predFeature])
 
     return (

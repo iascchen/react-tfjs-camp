@@ -4,6 +4,8 @@ TensorFlow.js 是 Goolge Tensorflow 的 JS 版本，将高性能机器学习能�
 
 通过《曲线拟合》这个例子，我们对 Tensorflow.js 进行初步了解。在这个例子中，我们要构建一个一元二次方程，并观察使用人工神经网络模型求解的过程。
 
+![../images/curve.mp4](../images/curve.mp4)
+
 ## 使用 Tensorflow.js 的几点须知
 
 官方文档 [平台和环境](https://www.tensorflow.org/js/guide/platform_environment)

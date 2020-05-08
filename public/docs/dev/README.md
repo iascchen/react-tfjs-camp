@@ -66,6 +66,24 @@
     * 模型推理
 
 - [ ] [Develop Tutorial 5 用 Tensorflow.js 处理按数据分类问题](./data-classifier.md)
+
+    * 分类问题的数据表述
+        * 标签编码
+        * One-Hot
+    * 构造训练集和测试集
+        * 按比例分配数据集
+        * 了解 tf.data.Dataset
+        * 初始化数据集
+        * SampleDataVis 展示数据样本
+            * 使用 useEffect 构建细粒度的数据驱动渲染
+            * AntD Table 的使用
+    * 全联接网络模型
+    * 训练
+        * 调整训练参数：注意一下 Loss 函数
+        * 使用 Model.fitDataset 训练
+        * 展示训练过程 —— 在 useState 中使用数组
+    
+
 - [ ] 待续
 
 ### 曲线拟合：数学公式线性回归

@@ -203,11 +203,105 @@ Dataset 表示一个有序的元素集合对象，这个对象能够通过链式
 
 为了便于观察数据样本，构造了 SampleDataVis 组件，来自 `./src/components/common/tensor/SampleDataVis.tsx`。
 
-## 模型
+#### 使用 useEffect 构建细粒度的数据驱动渲染
 
-鸢尾花的计算模型使用的是两层的全联接网络。
+在 `SampleDataVis.tsx` 中，我们设计了如下的数据变化 useEffect，以避免不必要的 UI 渲染：
 
-参考代码实现如下。其中激活函数、输入层的神经元数量都可以在页面上直接调整。
+1. [] => SampleDataVis 组件创建时，创建 AntD Table 的数据列，这个操作只做一次。
+
+2. 展示太多数据，对我们了解数据集情况意义不大。因此，属性数据 props.*Dataset 变化时，我们仅取出 sSampleCount 个数据用于显示。
+
+	* [props.xDataset, sSampleCount] => 因此，属性数据 props.xDataset 变化时，仅取出 sSampleCount 个数据用于显示，将取出的数据结果放在 xData 中。
+	* [props.yDataset, sSampleCount] , [props.pDataset, sSampleCount] => 和 props.xDataset 处理类似，多一步将计算出的 OneHot 向量转化为 Label 的步骤，便于在显示是对比 Predict 值是否正确。
+
+3. 	SampleDataVis 组件内部的数据按需渲染。
+
+	* [xData, yData] => 有变化时，及时渲染。
+	* [pData] => 每一次使用模型进行 Predict 之后，都会更改 props.pDataset 数据，引起 pData 的变化。而此时 props.xDataset、props.yDataset 并不变化。所以我们只修改 pData 的显示即可，不必重复渲染 xData， yData。
+
+#### AntD Table 的使用
+
+SampleDataVis 组件使用 AntD Table 进行数据显示。
+
+* 如果 Y 数据是 Label，会直接显示数值。
+
+	![../images/SampleDataVis_digit.png](../images/SampleDataVis_label.png)
+
+* 如果 Y 数据是 OneHot，则显示 OneHot 数组以及对应的 Label。
+
+	![../images/SampleDataVis_digit.png](../images/SampleDataVis_onehot.png)
+
+下面的代码展示了 AntD 中 Table 的用法，通过构建 columns 数组来描述每列的数据及其渲染，其中每一行展示的数据格式如 interface IDataRecord 的定义。
+
+	interface IDataRecord {
+	    key: number
+	    x: tf.Tensor
+	    y: tf.Tensor
+	    p?: tf.Tensor
+	    yLabel?: string
+	    pLabel?: string
+	}
+	...
+
+	useEffect(() => {
+	        const _columns = [
+	            {
+	                title: 'X',
+	                dataIndex: 'x',
+	                render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
+	                    return <span>{formatX(record.x as tf.Tensor)}</span>
+	                }
+	            },
+	            {
+	                title: 'Y',
+	                dataIndex: 'y',
+	                render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
+	                    const yArray = formatTensorToStringArray(record.y as tf.Tensor, 0)
+	                    const yStr = yArray.length > 1 ? `[${yArray.join(', ')}] => ${record.yLabel}` : yArray.join(', ')
+	                    const color = record.yLabel === record.pLabel ? 'green' : 'red'
+	                    return <span style={{ color: color }}>{yStr}</span>
+	                }
+	            },
+	            {
+	                title: 'P',
+	                dataIndex: 'p',
+	                render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
+	                    const pArray = formatTensorToStringArray(record.p as tf.Tensor, 2)
+	                    const pStr = pArray.length > 1 ? `[${pArray.join(', ')}] => ${record.pLabel}` : pArray.join(', ')
+	                    const color = record.yLabel === record.pLabel ? 'green' : 'red'
+	                    return pStr ? <span style={{ color: color }}>{pStr}</span> : <></>
+	                }
+	            }]
+	        setColumns(_columns)
+	    }, [])
+	    
+	...
+	    
+	return (
+        <div>
+        	...
+            <Table columns={columns} dataSource={sData as object[]} pagination={{ pageSize: props.pageSize ?? DEFAULT_PAGE_SIZE }}/>
+        </div>
+    )
+
+让我们来看看，列的数据是如何展示的。
+
+				{
+	                title: 'X',
+	                dataIndex: 'x',
+	                render: (text: string, record: tf.TensorContainerObject): JSX.Element => {
+	                    return <span>{formatX(record.x as tf.Tensor)}</span>
+	                }
+	            },
+
+* `dataIndex` 为列数据在 IDataRecord 数据项中对应的路径，支持通过数组查询嵌套路径。
+* `render` 生成复杂数据的渲染函数，参数分别为当前行的值，当前行数据，行索引，@return 里面可以设置表格行/列合并。`Function(text, record, index) {}`
+
+更多 AntD Table 的信息请参考 [https://ant.design/components/table-cn/](https://ant.design/components/table-cn/)
+
+## 全联接网络模型
+
+鸢尾花分类采用全联接网络，参考代码实现如下。其中激活函数、输入层的神经元数量都可以在页面上直接调整。
 
 	const model = tf.sequential()
 	model.add(tf.layers.dense({
@@ -219,5 +313,100 @@ Dataset 表示一个有序的元素集合对象，这个对象能够通过链式
 
 * 输入层的 inputShape 是和特征数据相关的，是个 4 元向量。
 * 因为要输出三个分类，所以输出层的神经元数量设置为 3。
-* 多分类问题的输出层，激活函数使用 Softmax。如果是二分类问题，激活函数可以使用 Sigmoid
+* 多分类问题的输出层，激活函数使用 Softmax。如果是二分类问题，激活函数可以使用 Sigmoid。
+* `sActivation` 激活函数可以选择 `['sigmoid', 'relu', 'tanh']`, 感受一下不同激活函数对于分类的影响。
+* `sDenseUnits` 全联接网络的神经元数量可调。
 
+## 训练
+
+### 调整训练参数：注意一下 Loss 函数
+
+调整训练参数，体会一下对于训练过程有什么影响。
+
+    useEffect(() => {
+        if (!sModel || !sLearningRate || !sOptimizer || !sLoss) {
+            return
+        }
+        logger('init optimizer ...')
+
+        let optimizer: tf.Optimizer
+        switch (sOptimizer) {
+            case 'SGD' :
+                optimizer = tf.train.sgd(sLearningRate)
+                break
+            case 'RMSProp' :
+                optimizer = tf.train.rmsprop(sLearningRate)
+                break
+            case 'Adam' :
+            default:
+                optimizer = tf.train.adam(sLearningRate)
+                break
+        }
+
+        sModel.compile({ optimizer: optimizer, loss: sLoss, metrics: ['accuracy'] })
+        // setModel(model)
+
+        return () => {
+            logger('Optimizer Dispose')
+            optimizer?.dispose()
+        }
+    }, [sModel, sLearningRate, sOptimizer, sLoss])
+
+* sLearningRate 调整。
+* sOptimizer 训练时的优化器可以选择 `['SGD', 'Adam', 'RMSProp']` 三种算法
+* sLoss 必须要注意一下，这个 Loss 函数的选择是和目标数据编码方式相关的。
+	* 如果选择 Label 编码，则需要使用 `sparseCategoricalCrossentropy`，
+	* 如果选择 OneHot 编码，则需要使用 `categoricalCrossentropy`
+
+### 使用 Model.fitDataset 训练
+
+		const beginMs = performance.now()
+		model.fitDataset(trainDataset, {
+            epochs: EPOCHS,
+            validationData: validDataset,
+            callbacks: {
+                onEpochEnd: async (epoch, logs) => {
+                    logger('onEpochEnd', epoch)
+
+                    logs && addTrainInfo({ iteration: epoch, logs })
+                    predictModel(model, sPredictSet?.xs)
+                    await tf.nextFrame()
+                },
+                onBatchEnd: async () => {
+                    if (stopRef.current) {
+                        logger('onBatchEnd Checked stop', stopRef.current)
+                        setStatus(STATUS.STOPPED)
+                        model.stopTraining = stopRef.current
+                    }
+                    await tf.nextFrame()
+                }
+            }
+        }).then(
+            () => {
+                setStatus(STATUS.TRAINED)
+
+                const secPerEpoch = (performance.now() - beginMs) / (1000 * EPOCHS)
+                logger(secPerEpoch)
+            },
+            loggerError
+        )
+
+### 展示训练过程 —— 在 useState 中使用数组 
+
+在 onEpochEnd 或 onBatchEnd 回调函数被调用时，可以得到当前训练的 logs 信息，结合我们在上一张中使用过的 BizChart 工具，可以自己定义训练过程的展示组件  HistoryWidget。HistoryWidget 的实现和画曲线类似，不做过多赘述。
+
+不过，这一次和以前使用 useState 的场景略有不一样，需要注意一下。先看看代码：
+
+	const [sTrainInfos, setTrainInfos] = useState<ITrainInfo[]>([])
+	
+	const addTrainInfo = (info: ITrainInfo): void => {
+       sTrainInfos.push(info)
+       setTrainInfos([...sTrainInfos])
+    }
+    
+    ...
+    <HistoryWidget infos={sTrainInfos} totalIterations={EPOCHS}/>
+
+你发现了没有？我们在 useState 时定义了一个**数组**。而且，当我们在往 sTrainInfos 里 push 数据时，还增加了一个**看似无用**的 `setTrainInfos([...sTrainInfos])` 语句。
+
+你可以去掉它试试，会发现 log 数据就显示不出来了。这是因为React Hooks 函数组件每次因刷新渲染而被调用时，都会重新创建内部的对象。因此，在这里只能再次强行赋值一遍。

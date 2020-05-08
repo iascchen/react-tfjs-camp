@@ -1791,7 +1791,7 @@
   resolved "https://registry.npm.taobao.org/@tensorflow-models/handpose/download/@tensorflow-models/handpose-0.0.3.tgz#e7e7a355dab69341f9fdbefe0bd2a3091944a9bf"
   integrity sha1-5+ejVdq2k0H5/b7+C9KjCRlEqb8=
 
-"@tensorflow-models/knn-classifier@^1.2.1":
+"@tensorflow-models/knn-classifier@^1.2.2":
   version "1.2.2"
   resolved "https://registry.npm.taobao.org/@tensorflow-models/knn-classifier/download/@tensorflow-models/knn-classifier-1.2.2.tgz#a5a9045b3d225a06e60f2b1cc2de56bdac6748e8"
   integrity sha1-pakEWz0iWgbmDyscwt5WvaxnSOg=
@@ -1801,15 +1801,15 @@
   resolved "https://registry.npm.taobao.org/@tensorflow-models/posenet/download/@tensorflow-models/posenet-2.2.1.tgz#2f0a68d909842f59eec195f23c6f3d4cebc53fa8"
   integrity sha1-Lwpo2QmEL1nuwZXyPG89TOvFP6g=
 
-"@tensorflow/tfjs-converter@1.7.2":
-  version "1.7.2"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-converter/download/@tensorflow/tfjs-converter-1.7.2.tgz#a2bb479f271aa9a5bb2909b3b8d90c431996893d"
-  integrity sha1-ortHnycaqaW7KQmzuNkMQxmWiT0=
+"@tensorflow/tfjs-converter@1.7.4":
+  version "1.7.4"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-converter/download/@tensorflow/tfjs-converter-1.7.4.tgz?cache=0&sync_timestamp=1588805428348&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-converter%2Fdownload%2F%40tensorflow%2Ftfjs-converter-1.7.4.tgz#90838fe9ca2d540f22a65fdcbe2311a01e786380"
+  integrity sha1-kIOP6cotVA8ipl/cviMRoB54Y4A=
 
-"@tensorflow/tfjs-core@1.7.2":
-  version "1.7.2"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-core/download/@tensorflow/tfjs-core-1.7.2.tgz#c7b4ac37a7b8bd7226766ee9bcd930274bf8e019"
-  integrity sha1-x7SsN6e4vXImdm7pvNkwJ0v44Bk=
+"@tensorflow/tfjs-core@1.7.4":
+  version "1.7.4"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-core/download/@tensorflow/tfjs-core-1.7.4.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-core%2Fdownload%2F%40tensorflow%2Ftfjs-core-1.7.4.tgz#43a44bc01d46de98ee9f15c0b2a4d9af4723e7ea"
+  integrity sha1-Q6RLwB1G3pjunxXAsqTZr0cj5+o=
   dependencies:
     "@types/offscreencanvas" "~2019.3.0"
     "@types/seedrandom" "2.4.27"
@@ -1818,18 +1818,18 @@
     node-fetch "~2.1.2"
     seedrandom "2.4.3"
 
-"@tensorflow/tfjs-data@1.7.2":
-  version "1.7.2"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-data/download/@tensorflow/tfjs-data-1.7.2.tgz#6a3ab4d2c1fd1cfdf768f9774b108fb6477c75a0"
-  integrity sha1-ajq00sH9HP33aPl3SxCPtkd8daA=
+"@tensorflow/tfjs-data@1.7.4":
+  version "1.7.4"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-data/download/@tensorflow/tfjs-data-1.7.4.tgz?cache=0&sync_timestamp=1588805428914&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-data%2Fdownload%2F%40tensorflow%2Ftfjs-data-1.7.4.tgz#3aa1cb14ac48a0354acd21d08f177c8a262fbb32"
+  integrity sha1-OqHLFKxIoDVKzSHQjxd8iiYvuzI=
   dependencies:
     "@types/node-fetch" "^2.1.2"
     node-fetch "~2.1.2"
 
-"@tensorflow/tfjs-layers@1.7.2":
-  version "1.7.2"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-layers/download/@tensorflow/tfjs-layers-1.7.2.tgz#b76e73042e999e1ea755869c1764503e43cf60f5"
-  integrity sha1-t25zBC6Znh6nVYacF2RQPkPPYPU=
+"@tensorflow/tfjs-layers@1.7.4":
+  version "1.7.4"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-layers/download/@tensorflow/tfjs-layers-1.7.4.tgz?cache=0&sync_timestamp=1588805429132&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-layers%2Fdownload%2F%40tensorflow%2Ftfjs-layers-1.7.4.tgz#93cdef70a4f414edb4ee470c49415d216f54ba20"
+  integrity sha1-k83vcKT0FO207kcMSUFdIW9UuiA=
 
 "@tensorflow/tfjs-vis@^1.4.0":
   version "1.4.0"
@@ -1844,15 +1844,15 @@
     vega-embed "~5.1.2"
     vega-lite "~4.0.0-beta.1"
 
-"@tensorflow/tfjs@^1.7.2":
-  version "1.7.2"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs/download/@tensorflow/tfjs-1.7.2.tgz#25a152246017c996948bde18f5a2cac16995e232"
-  integrity sha1-JaFSJGAXyZaUi94Y9aLKwWmV4jI=
+"@tensorflow/tfjs@^1.7.4":
+  version "1.7.4"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs/download/@tensorflow/tfjs-1.7.4.tgz#ea5483bc4b34f5a4c66d600e456c25b6071ea75e"
+  integrity sha1-6lSDvEs09aTGbWAORWwltgcep14=
   dependencies:
-    "@tensorflow/tfjs-converter" "1.7.2"
-    "@tensorflow/tfjs-core" "1.7.2"
-    "@tensorflow/tfjs-data" "1.7.2"
-    "@tensorflow/tfjs-layers" "1.7.2"
+    "@tensorflow/tfjs-converter" "1.7.4"
+    "@tensorflow/tfjs-core" "1.7.4"
+    "@tensorflow/tfjs-data" "1.7.4"
+    "@tensorflow/tfjs-layers" "1.7.4"
 
 "@testing-library/dom@^6.15.0":
   version "6.16.0"
@@ -2103,9 +2103,17 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^16.9.0":
+"@types/react@*":
   version "16.9.34"
   resolved "https://registry.npm.taobao.org/@types/react/download/@types/react-16.9.34.tgz#f7d5e331c468f53affed17a8a4d488cd44ea9349"
+  integrity sha1-99XjMcRo9Tr/7ReopNSIzUTqk0k=
+  dependencies:
+    "@types/prop-types" "*"
+    csstype "^2.2.0"
+
+"@types/react@^16.9.34":
+  version "16.9.34"
+  resolved "https://registry.npm.taobao.org/@types/react/download/@types/react-16.9.34.tgz?cache=0&sync_timestamp=1588201547431&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Freact%2Fdownload%2F%40types%2Freact-16.9.34.tgz#f7d5e331c468f53affed17a8a4d488cd44ea9349"
   integrity sha1-99XjMcRo9Tr/7ReopNSIzUTqk0k=
   dependencies:
     "@types/prop-types" "*"
@@ -10604,9 +10612,18 @@ react-sticky@^6.0.3:
     prop-types "^15.5.8"
     raf "^3.3.0"
 
-react@^16.0.0, react@^16.13.1:
+react@^16.0.0:
   version "16.13.1"
   resolved "https://registry.npm.taobao.org/react/download/react-16.13.1.tgz#2e818822f1a9743122c063d6410d85c1e3afe48e"
+  integrity sha1-LoGIIvGpdDEiwGPWQQ2FweOv5I4=
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
+    prop-types "^15.6.2"
+
+react@^16.13.1:
+  version "16.13.1"
+  resolved "https://registry.npm.taobao.org/react/download/react-16.13.1.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Freact%2Fdownload%2Freact-16.13.1.tgz#2e818822f1a9743122c063d6410d85c1e3afe48e"
   integrity sha1-LoGIIvGpdDEiwGPWQQ2FweOv5I4=
   dependencies:
     loose-envify "^1.1.0"

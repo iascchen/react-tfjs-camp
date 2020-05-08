@@ -229,7 +229,7 @@ SampleDataVis 组件使用 AntD Table 进行数据显示。
 
 * 如果 Y 数据是 OneHot，则显示 OneHot 数组以及对应的 Label。
 
-	![../images/SampleDataVis_digit.png](../images/SampleDataVis_onehot.png)
+	![../images/SampleDataVis_onehot.png](../images/SampleDataVis_onehot.png)
 
 下面的代码展示了 AntD 中 Table 的用法，通过构建 columns 数组来描述每列的数据及其渲染，其中每一行展示的数据格式如 interface IDataRecord 的定义。
 

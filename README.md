@@ -188,7 +188,7 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
         * 及时停止模型训练 —— useRef Hook 登场
     * 模型推理
 
-- [ ] [Develop Tutorial 5 用 Tensorflow.js 处理按数据分类问题](./public/docs/dev/data-classifier.md)
+- [x] [Develop Tutorial 5 用 Tensorflow.js 处理按数据分类问题](./public/docs/dev/data-classifier.md)
 
     * 分类问题的数据表述
         * 标签编码

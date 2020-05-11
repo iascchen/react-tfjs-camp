@@ -7,6 +7,10 @@ export const tailLayout = {
     wrapperCol: { offset: 8, span: 16 }
 }
 
+export const normalLayout = {
+    wrapperCol: { span: 24 }
+}
+
 export const formItemLayout = {
     wrapperCol: {
         xs: { span: 24 },

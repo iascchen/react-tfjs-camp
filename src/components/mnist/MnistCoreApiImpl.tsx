@@ -12,8 +12,8 @@ import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 
-import { MnistCoreDataset } from './dataCore'
-import { MnistGzDataset } from './dataGz'
+import { MnistDatasetPng } from './MnistDatasetPng'
+import { MnistDatasetGz } from './MnistDatasetGz'
 import * as modelCore from './modelCore'
 
 const { Option } = Select
@@ -42,7 +42,7 @@ const MnistCoreApiImpl = (): JSX.Element => {
 
     // Data
     const [sDataSourceName, setDataSourceName] = useState()
-    const [sDataSet, setDataSet] = useState<MnistCoreDataset | MnistGzDataset>()
+    const [sDataSet, setDataSet] = useState<MnistDatasetPng | MnistDatasetGz>()
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
@@ -65,11 +65,11 @@ const MnistCoreApiImpl = (): JSX.Element => {
 
         setStatus(STATUS.WAITING)
 
-        let mnistDataset: MnistGzDataset | MnistCoreDataset
+        let mnistDataset: MnistDatasetGz | MnistDatasetPng
         if (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') {
-            mnistDataset = new MnistGzDataset(sDataSourceName)
+            mnistDataset = new MnistDatasetGz(sDataSourceName)
         } else {
-            mnistDataset = new MnistCoreDataset()
+            mnistDataset = new MnistDatasetPng()
         }
 
         let tSet: tf.TensorContainerObject
@@ -118,8 +118,8 @@ const MnistCoreApiImpl = (): JSX.Element => {
         predictModel(sTestSet?.xs as tf.Tensor)
     }
 
-    const trainModel = (_dataset: MnistCoreDataset | MnistGzDataset, steps = TRAIN_STEPS,
-        batchSize = 128, learningRate = 0.01): void => {
+    const trainModel = (_dataset: MnistDatasetPng | MnistDatasetGz, steps = TRAIN_STEPS,
+                        batchSize = 128, learningRate = 0.01): void => {
         if (!_dataset) {
             return
         }

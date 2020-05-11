@@ -17,7 +17,7 @@
 
 import * as tf from '@tensorflow/tfjs'
 import { fetchResource, logger } from '../../utils'
-import { IMnistDataSet, IMAGE_H, IMAGE_W, IMAGE_SIZE, NUM_CLASSES } from './dataCore'
+import { IMnistDataSet, IMAGE_H, IMAGE_W, IMAGE_SIZE, NUM_CLASSES } from './mnistConsts'
 
 const NUM_TRAIN_ELEMENTS = 35000
 const NUM_TEST_ELEMENTS = 7000
@@ -90,7 +90,7 @@ const loadLabels = async (url: string): Promise<Uint8Array[]> => {
     return labels
 }
 
-export class MnistGzDataset implements IMnistDataSet {
+export class MnistDatasetGz implements IMnistDataSet {
     source: string
     baseUrl: string
     trainImagesFileUrl: string

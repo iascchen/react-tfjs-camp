@@ -31,7 +31,7 @@ const routes: RouteConfig[] = [
     { path: '/curve', component: Curve },
     { path: '/iris', component: Iris },
 
-    { path: '/mnist/keras', component: MnistLayersModelImpl },
+    { path: '/mnist/layers', component: MnistLayersModelImpl },
     { path: '/mnist/core', component: MnistCoreApiImpl },
 
     { path: '/mobilenet/basic', component: MobilenetClassifier },

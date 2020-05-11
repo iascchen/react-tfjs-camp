@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Row, Select, Slider, Tabs } from 'antd'
 
-import { layout, tailLayout } from '../../constant'
+import { layout, tailLayout, normalLayout } from '../../constant'
 import { ILayerSelectOption, ITrainInfo, logger, loggerError, STATUS } from '../../utils'
+
 import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
@@ -13,15 +14,16 @@ import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 
-import { MnistGzDataset } from './dataGz'
-import { IMnistDataSet, MnistCoreDataset } from './dataCore'
+import { IMnistDataSet } from './mnistConsts'
+import { MnistDatasetGz } from './MnistDatasetGz'
+import { MnistDatasetPng } from './MnistDatasetPng'
 import { addCovDropoutLayers, addDenseLayers, addCovPoolingLayers } from './modelKeras'
 
 const { Option } = Select
 const { TabPane } = Tabs
 
 // Data
-const DATA_SOURCE = ['web-mnist', 'mnist', 'fashion']
+const DATA_SOURCE = ['mnist-png', 'mnist', 'fashion']
 const BATCH_SIZES = [64, 128, 256, 512]
 const SHOW_SAMPLE = 50
 
@@ -42,7 +44,6 @@ const MnistLayersModelImpl = (): JSX.Element => {
     // General
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>()
-    const [sErrors, setErrors] = useState()
 
     // Data
     const [sDataSourceName, setDataSourceName] = useState()
@@ -132,9 +133,9 @@ const MnistLayersModelImpl = (): JSX.Element => {
 
         let mnistDataset: IMnistDataSet
         if (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') {
-            mnistDataset = new MnistGzDataset(sDataSourceName)
+            mnistDataset = new MnistDatasetGz(sDataSourceName)
         } else {
-            mnistDataset = new MnistCoreDataset()
+            mnistDataset = new MnistDatasetPng()
         }
 
         let tSet: tf.TensorContainerObject
@@ -149,9 +150,7 @@ const MnistLayersModelImpl = (): JSX.Element => {
 
                 setStatus(STATUS.LOADED)
             },
-            (error) => {
-                logger(error)
-            }
+            loggerError
         )
 
         return () => {
@@ -301,7 +300,7 @@ const MnistLayersModelImpl = (): JSX.Element => {
         return (
             <Card title='Data Source' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} initialValues={{
-                    dataSource: 'web-mnist'
+                    dataSource: 'mnist-png'
                 }}>
                     <Form.Item name='dataSource' label='Select Data Source'>
                         <Select onChange={handleDataSourceChange}>
@@ -312,13 +311,15 @@ const MnistLayersModelImpl = (): JSX.Element => {
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <div>Status: {sStatus}</div>
+                    </Form.Item>
+                    <Form.Item {...normalLayout}>
                         <ul>
                             <li><div style={{ color: 'red' }}>!!! 请注意 !!! 如果您是从 Github 上克隆项目，在运行之前，
-                            请先前往目录 ./public/data , 运行 download_mnist.sh 脚本，下载所需的数据。</div></li>
+                            请先前往目录 ./public/preload/data , 运行 download_mnist_data.sh 脚本，下载所需的数据。</div></li>
                             <li>如果您是在 Docker 中运行，数据已经预先放在相应的目录下。</li>
                             <li>由于数据量较大，多次加载会影响程序运行效率。</li>
                             <li><div style={{ color: 'red' }}>如果 Train Data Set 中的图片未能正常显示，表明要加载的训练集大小超过了您的内存。
-                                您可以减少代码中 data.js 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集</div></li>
+                                您可以减少代码中 MnistDatasetGz.ts 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集</div></li>
                         </ul>
                     </Form.Item>
                 </Form>
@@ -377,7 +378,6 @@ const MnistLayersModelImpl = (): JSX.Element => {
                     <Form.Item {...tailLayout}>
                         <div>Status: {sStatus}</div>
                         <div>Backend: {sTfBackend}</div>
-                        <div>Errors: {sErrors}</div>
                     </Form.Item>
                 </Form>
             </Card>

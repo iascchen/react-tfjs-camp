@@ -16,11 +16,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-
-export const IMAGE_H = 28
-export const IMAGE_W = 28
-export const IMAGE_SIZE = IMAGE_H * IMAGE_W
-export const NUM_CLASSES = 10
+import { IMnistDataSet, IMAGE_H, IMAGE_W, IMAGE_SIZE, NUM_CLASSES } from './mnistConsts'
 
 const NUM_DATASET_ELEMENTS = 65000
 
@@ -38,16 +34,7 @@ const MNIST_LABELS_PATH = `${BASE_URL}/mnist_labels_uint8`
  * manipulation manually.
  */
 
-export interface IMnistDataSet {
-    loadData: () => Promise<void>
-    getTrainData: (numExamples?: number) => tf.TensorContainerObject
-    getTestData: (numExamples?: number) => tf.TensorContainerObject
-
-    nextTrainBatch: (batchSize: number) => tf.TensorContainerObject
-    nextTestBatch: (batchSize: number) => tf.TensorContainerObject
-}
-
-export class MnistCoreDataset implements IMnistDataSet {
+export class MnistDatasetPng implements IMnistDataSet {
     datasetImages!: Float32Array
     trainImages!: Float32Array
     testImages!: Float32Array

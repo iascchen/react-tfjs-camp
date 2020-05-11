@@ -1,4 +1,4 @@
-# MNIST 的 LayerModel 实现
+# MNIST 的 Layer Model 实现
 
 ## MNIST 的数据集
 
@@ -302,21 +302,164 @@ GZ 数据的加载和 PNG 格式略有不同。考虑到支持 Node.js 利用命
 	        return { xs, ys }
 	    }
 
-## 修改 Sample 图片数据的显示
+## 修改 SampleDataVis 以显示图片
 
-### 数据集的切换
+MNIST 数据集的 X 为图片，我们修改 SampleDataVis 以获得更直观的展示。
 
-### 内存的限制
+* 为 SampleDataVis 组件增加新的属性，以说明对 X 数据使用图片方式预览。
+
+		interface IProps {
+			...
+		    xIsImage?: boolean
+			...
+		}
+
+	    const formatX = useCallback((sampleInfo: tf.Tensor) => {
+	        return props.xIsImage
+	            ? formatImage(sampleInfo)
+	            : formatTensorToStringArray(sampleInfo, props?.xFloatFixed).join(', ')
+	    }, [props.xFloatFixed, props.xIsImage])
+
+* 创建 RowImageWidget 组件用于显示图片。
+
+		const formatImage = (sampleInfo: tf.Tensor): JSX.Element => {
+		    const data = Array.from(sampleInfo.dataSync())
+		    const shapeArg = sampleInfo.shape.slice(1, 3) as [number, number]
+		    return <RowImageWidget data={data} shape={shapeArg}/>
+		}
+
+### 组件 RowImageWidget—— 使用 useRef 访问 HTML 组件 
+
+组件 RowImageWidget 的代码位于 `./src/componenets/common/tensor/RowImageWidget.tsx`。
+
+	import React, { useEffect, useRef, useState } from 'react'
+	
+	const draw = (canvas: HTMLCanvasElement | null, data: number[] | undefined, shape: number[]): void => {
+	    if (!canvas || !data || data.length === 0) {
+	        return
+	    }
+	
+	    const [width, height] = shape
+	    canvas.width = width
+	    canvas.height = height
+	
+	    const ctx = canvas.getContext('2d')
+	    const imageData = new ImageData(width, height)
+	    // const data = image.dataSync()
+	    for (let i = 0; i < height * width; ++i) {
+	        const j = i * 4
+	        imageData.data[j] = data[i] * 255
+	        imageData.data[j + 1] = data[i] * 255
+	        imageData.data[j + 2] = data[i] * 255
+	        imageData.data[j + 3] = 255
+	    }
+	    ctx?.putImageData(imageData, 0, 0)
+	}
+	
+	interface IProps {
+	    data?: number[]
+	    shape?: number[]
+	}
+	
+	const RowImageWidget = (props: IProps): JSX.Element => {
+	    const [shape, setShape] = useState<number[]>([28, 28])
+	
+	    const rowCanvasRef = useRef<HTMLCanvasElement>(null)
+	
+	    useEffect(() => {
+	        if (props.shape) {
+	            setShape(props.shape)
+	        }
+	    }, [props.shape])
+	
+	    useEffect(() => {
+	        if (!props.data || !rowCanvasRef) {
+	            return
+	        }
+	        draw(rowCanvasRef.current, props.data, shape)
+	    }, [props.data, shape])
+	
+	    return <canvas width={shape[0]} height={shape[1]} ref={rowCanvasRef} />
+	}
+	
+	export default RowImageWidget
+
+* 这里我们使用了 useRef 访问 HTML canvas，这是 useRef 另外一种常用的使用场景。比较直观，不多做赘述。
+* 此处的是 canvas 的 width 和 height **必须用属性来指定**。如果用 style 来制定，会被放大两倍。
+* 在 draw 函数中，我们把图片数据乘了 255, 将浮点数的颜色值转成整数，用于 canvas 的显示。
+
+	![../images/SampleDataVis_image.png](../images/SampleDataVis_image.png)
 
 ## CNN 网络模型
+
+在代码实现中，我们提供了从简单到复杂的三种参考实现。
+
+    useEffect(() => {
+        logger('init model ...')
+
+        tf.backend()
+        setTfBackend(tf.getBackend())
+
+        // Create a sequential neural network model. tf.sequential provides an API
+        // for creating "stacked" models where the output from one layer is used as
+        // the input to the next layer.
+        const model = tf.sequential()
+        switch (sModelName) {
+            case 'dense' :
+                addDenseLayers(model)
+                break
+            case 'cnn-pooling' :
+                addCovPoolingLayers(model)
+                break
+            case 'cnn-dropout' :
+                addCovDropoutLayers(model)
+                break
+        }
+        model.add(tf.layers.dense({ units: 10, activation: 'softmax' }))
+        setModel(model)
+        ...
+        
+        return () => {
+            logger('Model Dispose')
+            model?.dispose()
+        }
+    }, [sModelName])
+
+下面的代码展示了其中最复杂的一种 —— 带 maxPooling 和 dropout 的 CNN，这段代码展示了使用 Layer Model 构建的顺序深度神经网络：
+
+	const model = tf.sequential()
+	
+    model.add(tf.layers.conv2d({
+        inputShape: [IMAGE_H, IMAGE_W, 1], filters: 32, kernelSize: 3, activation: 'relu'
+    }))
+    
+    model.add(tf.layers.conv2d({ filters: 32, kernelSize: 3, activation: 'relu' }))
+    model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2 }))
+    model.add(tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu' }))
+    model.add(tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu' }))
+    model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2 }))
+    
+    model.add(tf.layers.flatten())
+    model.add(tf.layers.dropout({ rate: 0.25 }))
+    model.add(tf.layers.dense({ units: 512, activation: 'relu' }))
+    model.add(tf.layers.dropout({ rate: 0.5 }))
+    
+	model.add(tf.layers.dense({ units: 10, activation: 'softmax' }))
+
+### 使用 tfjs-vis 展示模型
+
+在前面的内容里，出于理解和学习的目的，我们曾创建了一些简单的模型可视化和数据可视化组件。Tensorflow.js 提供了一个更强大的 tfjs-vis，能够在浏览器中对模型和数据进行可视化展示。
+
+关于 tfjs-vis 的 API 说明，可以参考 [https://js.tensorflow.org/api_vis/latest/](https://js.tensorflow.org/api_vis/latest/) 
+
+tfjs-vis 并不能通过直接使用 import 语句，在 React 中加载使用。
+
 
 ## 模型训练
 
 ### 使用浏览器训练
 
 ### 使用 Node.js 训练
-
-### tf-vis的集成
 
 ## 推理
 

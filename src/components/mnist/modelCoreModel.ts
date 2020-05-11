@@ -16,7 +16,6 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-
 import { IMAGE_H, IMAGE_W, IMnistDataSet, NUM_CLASSES } from './mnistConsts'
 
 // Variables that we want to optimize

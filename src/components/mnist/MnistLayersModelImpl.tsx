@@ -17,7 +17,7 @@ import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 import { IMnistDataSet } from './mnistConsts'
 import { MnistDatasetGz } from './MnistDatasetGz'
 import { MnistDatasetPng } from './MnistDatasetPng'
-import { addCovDropoutLayers, addDenseLayers, addCovPoolingLayers } from './modelKeras'
+import { addCovDropoutLayers, addDenseLayers, addCovPoolingLayers } from './modelLayerModel'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -95,6 +95,7 @@ const MnistLayersModelImpl = (): JSX.Element => {
                 addCovDropoutLayers(model)
                 break
         }
+
         // Our last layer is a dense layer which has 10 output units, one for each
         // output class (i.e. 0, 1, 2, 3, 4, 5, 6, 7, 8, 9). Here the classes actually
         // represent numbers, but it's the same idea if you had classes that
@@ -319,7 +320,7 @@ const MnistLayersModelImpl = (): JSX.Element => {
                             <li>如果您是在 Docker 中运行，数据已经预先放在相应的目录下。</li>
                             <li>由于数据量较大，多次加载会影响程序运行效率。</li>
                             <li><div style={{ color: 'red' }}>如果 Train Data Set 中的图片未能正常显示，表明要加载的训练集大小超过了您的内存。
-                                您可以减少代码中 MnistDatasetGz.ts 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集</div></li>
+                                您可以减少代码中 MnistDataset*.ts 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集</div></li>
                         </ul>
                     </Form.Item>
                 </Form>

@@ -225,7 +225,7 @@ SampleDataVis 组件使用 AntD Table 进行数据显示。
 
 * 如果 Y 数据是 Label，会直接显示数值。
 
-	![../images/SampleDataVis_digit.png](../images/SampleDataVis_label.png)
+	![../images/SampleDataVis_label.png](../images/SampleDataVis_label.png)
 
 * 如果 Y 数据是 OneHot，则显示 OneHot 数组以及对应的 Label。
 

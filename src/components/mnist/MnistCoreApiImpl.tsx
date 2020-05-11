@@ -14,7 +14,7 @@ import MarkdownWidget from '../common/MarkdownWidget'
 
 import { MnistDatasetPng } from './MnistDatasetPng'
 import { MnistDatasetGz } from './MnistDatasetGz'
-import * as modelCore from './modelCore'
+import * as modelCore from './modelCoreModel'
 
 const { Option } = Select
 const { TabPane } = Tabs

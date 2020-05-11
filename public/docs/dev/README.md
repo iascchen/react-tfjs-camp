@@ -83,7 +83,24 @@
         * 使用 Model.fitDataset 训练
         * 展示训练过程 —— 在 useState 中使用数组
     
+- [x] [Develop Tutorial 6 MNIST CNN 的 Layer Model 实现](./mnist-layer-model.md)
 
+    * MNIST 的数据集
+        * MNIST 的数据集的两种格式—— PNG 和 GZ
+        * 预先下载数据集到本地
+        * PNG 格式数据的加载和使用
+        * GZ 格式数据的加载和使用
+            * 使用 fetch 加载数据文件
+            * 数据的加载
+    * 修改 SampleDataVis 以显示图片
+        * 组件 RowImageWidget—— 使用 useRef 访问 HTML Element
+    * CNN 网络模型
+        * 将 tfjs-vis 集成到 React
+    * 模型训练
+    * 推理
+        * 数字手写板的实现
+        * 将位图转化为 Tensor
+        
 - [ ] 待续
 
 ### 曲线拟合：数学公式线性回归

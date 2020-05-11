@@ -1,4 +1,4 @@
-# MNIST 的 Layer Model 实现
+# MNIST CNN 的 Layer Model 实现
 
 ## MNIST 的数据集
 
@@ -67,7 +67,7 @@ React-tfjs-camp 实现了对这两种格式数据的处理，将 Mnist 数据集
         }
     }, [sDataSourceName])
 
-### 下载数据集到本地
+### 预先下载数据集到本地
 
 要完成 MNIST 实验，需要下载对应的数据集。在国内下载速度比较慢（或者需要科学上网），为了减少不必要的等待，我们先将这些数据集下载到本地，以便多次使用。
 
@@ -328,7 +328,7 @@ MNIST 数据集的 X 为图片，我们修改 SampleDataVis 以获得更直观�
 		    return <RowImageWidget data={data} shape={shapeArg}/>
 		}
 
-### 组件 RowImageWidget—— 使用 useRef 访问 HTML 组件 
+### 组件 RowImageWidget—— 使用 useRef 访问 HTML Element 
 
 组件 RowImageWidget 的代码位于 `./src/componenets/common/tensor/RowImageWidget.tsx`。
 
@@ -446,26 +446,178 @@ MNIST 数据集的 X 为图片，我们修改 SampleDataVis 以获得更直观�
     
 	model.add(tf.layers.dense({ units: 10, activation: 'softmax' }))
 
-### 使用 tfjs-vis 展示模型
+### 将 tfjs-vis 集成到 React
 
 在前面的内容里，出于理解和学习的目的，我们曾创建了一些简单的模型可视化和数据可视化组件。Tensorflow.js 提供了一个更强大的 tfjs-vis，能够在浏览器中对模型和数据进行可视化展示。
 
 关于 tfjs-vis 的 API 说明，可以参考 [https://js.tensorflow.org/api_vis/latest/](https://js.tensorflow.org/api_vis/latest/) 
 
-tfjs-vis 并不能通过直接使用 import 语句，在 React 中加载使用。
+为了展示如何将 React Hooks 和 tfjs-vis 集成在一起，单独写了个用来做测试和验证的 `TfvisWidget.tsx`。代码位置 `./src/componenets/sandbox/TfvisWidget.tsx`。
 
+* 在 React 中引入 tfjs-vis，需要使用 require 语句，不能通过使用 import 语句处理。
+
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const tfvis = require('@tensorflow/tfjs-vis')
+	
+* 使用 useRef 绑定需要 tfjs-vis 渲染的 HTML 元素。
+
+		const logs = {
+		    history: { loss: [1, 2, 1.5], val_loss: [1.5, 2.5, 2.8] }
+		}
+		...
+
+		const canvasRef = useRef<HTMLDivElement>(null)
+		...
+	    const drawDiv1 = (): void => {
+	        if (!canvasRef.current) {
+	            return
+	        }
+	        tfvis.show.history(canvasRef.current, logs, ['loss', 'val_loss'])
+	    }
+
+* 也可以使用 tfvis.visor 展示数据。
+
+		const headers = ['DataSet', 'Shape', 'dType', 'stride', 'json']
+		const tensor = tf.tensor1d([0, 0, 0, 0, 2, 3, 4])
+		const values = [
+		    ['xs', tensor.shape, tensor.dtype, tensor.strides, JSON.stringify(tensor)], // xs
+		    ['ys', tensor.shape, tensor.dtype, tensor.strides, JSON.stringify(tensor)] // ys
+		]
+		
+		const data = [
+		    { index: 0, value: 50 },
+		    { index: 1, value: 100 },
+		    { index: 2, value: 150 }
+		]
+		...
+
+	    const drawSurface1 = (): void => {
+	        // Render to visor
+	        const surface2 = { name: 'Bar chart', tab: 'My Tab1' }
+	        tfvis.render.barchart(surface2, data)
+	    }
+	
+	    const drawSurface2 = (): void => {
+	        const suffer = tfvis.visor().surface({
+	            tab: 'My Tab2',
+	            name: 'Custom Height 2',
+	            styles: {
+	                height: 300
+	            }
+	        })
+	        tfvis.render.table(suffer, { headers, values })
+	    }
+
+React-tfjs-camp 的代码中集成了一些常用的 tfjs-vis 组件，都放在 `./src/componenets/tfvis` 目录下。
+
+下面的代码展示了如何使用 `TfvisModelWidget` 和 `TfvisLayerWidget` 显示模型和层信息。
+
+			<TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
+                <Row>
+                    <Col span={8}>
+                        {modelAdjustCard()}
+                        <Card title='Show Layer' style={{ margin: '8px' }} size='small'>
+                            <Form {...layout} initialValues={{
+                                layer: 0
+                            }}>
+                                <Form.Item name='layer' label='Show Layer'>
+                                    <Select onChange={handleLayerChange} >
+                                        {sLayersOption?.map((v) => {
+                                            return <Option key={v.index} value={v.index}>{v.name}</Option>
+                                        })}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
+                        </Card>
+                    </Col>
+                    <Col span={16}>
+                        <Card title='Model Info' style={{ margin: '8px' }} size='small'>
+                            <TfvisModelWidget model={sModel}/>
+                        </Card>
+                        <Card title='Layer Info' style={{ margin: '8px' }} size='small'>
+                            <TfvisLayerWidget layer={sCurLayer}/>
+                        </Card>
+                    </Col>
+                </Row>
+            </TabPane>
+
+> 已知问题：使用 require 语句引入的 tfjs-vis 组件，会导致 ErrorBoundary 失效，在使用 `TfvisLayerWidget` 选择可视化权重分布时，如果无对应值，会直接返回异常界面。
 
 ## 模型训练
 
-### 使用浏览器训练
+这部分内容和前面介绍的类似。
 
-### 使用 Node.js 训练
+您可以调整 sLearningRate 观察训练结果。
+
+    useEffect(() => {
+        if (!sModel) {
+            return
+        }
+        logger('init model optimizer...', sLearningRate)
+
+        const optimizer = tf.train.adam(sLearningRate)
+        sModel.compile({ optimizer, loss: 'categoricalCrossentropy', metrics: ['accuracy'] })
+    }, [sModel, sLearningRate])
+    
+还可以修改 Epochs 和 Batch 等训练相关的参数。此处，我们将检查停止状态调整放在了 `onBatchBegin` 回调函数中。
+
+		setStatus(STATUS.WAITING)
+        stopRef.current = false
+
+        const beginMs = performance.now()
+        
+        let trainBatchCount = 0
+        let iteration = 0
+        model.fit(trainDataset.xs as tf.Tensor, trainDataset.ys as tf.Tensor, {
+            epochs: sEpochs,
+            batchSize: sBatchSize,
+            validationSplit: VALID_SPLIT,
+            callbacks: {
+                onEpochEnd: async (epoch, logs) => {
+                    logger('onEpochEnd', epoch)
+
+                    logs && addTrainInfo({ iteration: iteration++, logs })
+                    predictModel(model, validDataset.xs as tf.Tensor)
+
+                    await tf.nextFrame()
+                },
+                onBatchEnd: async (batch, logs) => {
+                    trainBatchCount++
+                    logs && addTrainInfo({ iteration: iteration++, logs })
+                    if (batch % 10 === 0) {
+                        logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
+                        predictModel(model, validDataset.xs as tf.Tensor)
+                    }
+                    await tf.nextFrame()
+                },
+                onBatchBegin: async () => {
+                    if (stopRef.current) {
+                        logger('Checked stop', stopRef.current)
+                        setStatus(STATUS.STOPPED)
+                        model.stopTraining = stopRef.current
+                    }
+                    await tf.nextFrame()
+                }
+            }
+        }).then(
+            () => {
+                setStatus(STATUS.TRAINED)
+
+                const secSpend = (performance.now() - beginMs) / 1000
+                logger(`Spend : ${secSpend.toString()}s`)
+            },
+            loggerError
+        )
 
 ## 推理
 
-### 数字手写板的实现
+在推理部分，当然要通过“手写“，来对训练结果做个验证。训练前后分别做一下，感受一下对应的手写识别正确率吧。
 
-### 将位图转化成 Tensor
+### DrawPanelWidget 数字手写板的实现
+
+
+
+### 将位图转化为 Tensor
 
 
 

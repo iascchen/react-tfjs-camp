@@ -2,22 +2,22 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Col, Form, Row, Select, Slider, Tabs } from 'antd'
 
-import { layout, tailLayout, normalLayout } from '../../constant'
+import { layout, normalLayout, tailLayout } from '../../constant'
 import { ILayerSelectOption, ITrainInfo, logger, loggerError, STATUS } from '../../utils'
 
+import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
+import MarkdownWidget from '../common/MarkdownWidget'
+import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 import SampleDataVis from '../common/tensor/SampleDataVis'
 import TfvisModelWidget from '../common/tfvis/TfvisModelWidget'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
-import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
-import MarkdownWidget from '../common/MarkdownWidget'
-import DrawPanelWidget from '../common/tensor/DrawPanelWidget'
 
 import { IMnistDataSet } from './mnistConsts'
 import { MnistDatasetGz } from './MnistDatasetGz'
 import { MnistDatasetPng } from './MnistDatasetPng'
-import { addCovDropoutLayers, addDenseLayers, addCovPoolingLayers } from './modelLayerModel'
+import { addCovDropoutLayers, addCovPoolingLayers, addDenseLayers } from './modelLayerModel'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -219,13 +219,14 @@ const MnistLayersModelImpl = (): JSX.Element => {
                         logger(`onBatchEnd: ${batch.toString()} / ${trainBatchCount.toString()}`)
                         predictModel(model, validDataset.xs as tf.Tensor)
                     }
-
+                    await tf.nextFrame()
+                },
+                onBatchBegin: async () => {
                     if (stopRef.current) {
                         logger('Checked stop', stopRef.current)
                         setStatus(STATUS.STOPPED)
                         model.stopTraining = stopRef.current
                     }
-
                     await tf.nextFrame()
                 }
             }

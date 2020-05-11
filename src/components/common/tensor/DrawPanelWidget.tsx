@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
 import { Button, Card, Row } from 'antd'
+
 import { logger, getTensorLabel } from '../../../utils'
 import RowImageWidget from './RowImageWidget'
 
@@ -20,13 +21,11 @@ interface IProps {
 }
 
 const DrawPanelWidget = (props: IProps): JSX.Element => {
-    const [miniSample, setMiniSample] = useState<number[]>()
+    const [sMiniSample, setMiniSample] = useState<number[]>()
 
-    const [drawing, setDrawing] = useState(false)
-    const [currPos, setCurrPos] = useState<IPoint>({ x: 0, y: 0 })
-
+    const [sDrawing, setDrawing] = useState(false)
+    const [sCurrPos, setCurrPos] = useState<IPoint>({ x: 0, y: 0 })
     const panelRef = useRef<HTMLCanvasElement>(null)
-    const currPosRef = useRef<IPoint | undefined>(currPos)
 
     useEffect(() => {
         const _canvas = panelRef.current
@@ -41,42 +40,28 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
         _canvas?.addEventListener('mouseup', handleWindowMouseup)
         _canvas?.addEventListener('mouseleave', handleWindowMouseup)
 
-        // _canvas?.addEventListener('touchmove', handleWindowMouseMove)
-        // _canvas?.addEventListener('touchstart', handleWindowMouseDown)
-        // _canvas?.addEventListener('touchend', handleWindowMouseup)
-
         return () => {
             logger('Dispose canvasRef')
             _canvas?.removeEventListener('mousemove', handleWindowMouseMove)
             _canvas?.removeEventListener('mousedown', handleWindowMouseDown)
             _canvas?.removeEventListener('mouseup', handleWindowMouseup)
             _canvas?.removeEventListener('mouseleave', handleWindowMouseup)
-
-            // _canvas?.removeEventListener('touchmove', handleWindowMouseMove)
-            // _canvas?.removeEventListener('touchstart', handleWindowMouseDown)
-            // _canvas?.removeEventListener('touchend', handleWindowMouseup)
         }
     }, [panelRef])
 
-    useEffect(() => {
-        currPosRef.current = currPos
-    })
-
-    const draw = (from: IPoint | undefined, to: IPoint): void => {
+    const draw = (from: IPoint | undefined): void => {
         const _canvas = panelRef.current
         const _ctx = _canvas?.getContext('2d')
 
-        if (!_ctx || !currPos || !from) {
+        if (!_ctx || !sCurrPos || !from) {
             return
         }
 
         _ctx.beginPath()
-        // _ctx.moveTo(from.x, from.y)
-        // _ctx.lineTo(to.x, to.y)
         _ctx.lineWidth = 10
         _ctx.strokeStyle = 'white'
         _ctx.fillStyle = 'white'
-        _ctx.arc(to.x, to.y, 8, 0, 2 * Math.PI, false)
+        _ctx.arc(from.x, from.y, 8, 0, 2 * Math.PI, false)
         _ctx.fill()
         _ctx.stroke()
         _ctx.closePath()
@@ -136,20 +121,14 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
         }
     }
 
-    if (drawing && currPos) {
-        // logger('in ', JSON.stringify(currPos))
-        // logger('currPos', currPos)
-        // logger('currPos.current', currPosRef)
-
-        const prevPos = currPosRef.current
-        if (prevPos && prevPos !== currPos) {
-            draw(currPos, prevPos)
-        }
+    if (sDrawing && sCurrPos) {
+        draw(sCurrPos)
     }
+
     return (
         <Card title={'Drawing Panel'} size='small' style={{ margin: '8px' }} >
             <p>Press Down Left Mouse to Draw</p>
-            <p>Mouse : {JSON.stringify(currPos)} : {drawing ? 'Drawing...' : ''}</p>
+            <p>Mouse : {JSON.stringify(sCurrPos)} : {sDrawing ? 'Drawing...' : ''}</p>
             <Row className='centerContainer'>
                 <div style={{ width: '300px', padding: '8px' }}>
                     <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ backgroundColor: 'black' }} ref={panelRef}/>
@@ -163,7 +142,7 @@ const DrawPanelWidget = (props: IProps): JSX.Element => {
             </Row>
             <Row className='centerContainer'>
                 <div style={{ width: '300px', padding: '8px' }}>
-                    {miniSample && <RowImageWidget data={miniSample} shape={MNIST_SHAPE} />}
+                    {sMiniSample && <RowImageWidget data={sMiniSample} shape={MNIST_SHAPE} />}
                     &nbsp; Prediction : { props.prediction && `${getTensorLabel([props.prediction]).join(', ')}` }
                 </div>
             </Row>

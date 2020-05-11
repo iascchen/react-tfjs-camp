@@ -613,13 +613,146 @@ React-tfjs-camp 的代码中集成了一些常用的 tfjs-vis 组件，都放在
 
 在推理部分，当然要通过“手写“，来对训练结果做个验证。训练前后分别做一下，感受一下对应的手写识别正确率吧。
 
-### DrawPanelWidget 数字手写板的实现
+### canvas 数字手写板的实现 —— DrawPanelWidget
 
+DrawPanelWidget 使用 canvas 实现鼠标画图，并将其作为手写数字识别的输入。相关代码在 `./src/componenets/common/tensor/DrawPanelWidget.tsx`。
 
+* 在 canvas 创建后，为其增加鼠标行为相关的 EventListener，并在页面销毁时解除侦听。
+
+		const panelRef = useRef<HTMLCanvasElement>(null)
+		...
+		useEffect(() => {
+	        const _canvas = panelRef.current
+	        if (!_canvas) {
+	            return
+	        }
+	        logger('canvasRef init')
+	
+	        // Note: this implementation is a bit simplified
+	        _canvas?.addEventListener('mousemove', handleWindowMouseMove)
+	        _canvas?.addEventListener('mousedown', handleWindowMouseDown)
+	        _canvas?.addEventListener('mouseup', handleWindowMouseup)
+	        _canvas?.addEventListener('mouseleave', handleWindowMouseup)
+	
+	        return () => {
+	            logger('Dispose canvasRef')
+	            _canvas?.removeEventListener('mousemove', handleWindowMouseMove)
+	            _canvas?.removeEventListener('mousedown', handleWindowMouseDown)
+	            _canvas?.removeEventListener('mouseup', handleWindowMouseup)
+	            _canvas?.removeEventListener('mouseleave', handleWindowMouseup)
+	        }
+	    }, [panelRef])
+
+* 及时获得鼠标位置。
+
+		const handleWindowMouseMove = (e: MouseEvent): void => {
+	        const _pos = getMousePos(e)
+	        _pos && setCurrPos(_pos)
+	    }
+* 从 canvas 获取鼠标位置坐标。
+
+	    const getMousePos = (e: MouseEvent): IPoint | null => {
+	        const _canvas = panelRef.current
+	        const bbox = _canvas?.getBoundingClientRect()
+	        return bbox ? {
+	            x: e.clientX - bbox?.left,
+	            y: e.clientY - bbox?.top
+	        } : null
+	    }
+	    
+* 鼠标按下，进入绘画状态。
+
+		const handleWindowMouseDown = (e: MouseEvent): void => {
+	        setDrawing(true)
+	
+	        const _pos = getMousePos(e)
+	        _pos && setCurrPos(_pos)
+	    }
+	
+	    const handleWindowMouseup = (e: MouseEvent): void => {
+	        setDrawing(false)
+	
+	        const _pos = getMousePos(e)
+	        _pos && setCurrPos(_pos)
+	    }
+
+* 在鼠标位置绘制
+
+		const DrawPanelWidget = (props: IProps): JSX.Element => {
+		    ...
+		
+		    const draw = (from: IPoint | undefined): void => {
+		        const _canvas = panelRef.current
+		        const _ctx = _canvas?.getContext('2d')
+		
+		        if (!_ctx || !sCurrPos || !from) {
+		            return
+		        }
+		
+		        _ctx.beginPath()
+		        _ctx.lineWidth = 10
+		        _ctx.strokeStyle = 'white'
+		        _ctx.fillStyle = 'white'
+		        _ctx.arc(from.x, from.y, 8, 0, 2 * Math.PI, false)
+		        _ctx.fill()
+		        _ctx.stroke()
+		        _ctx.closePath()
+		    }
+		    ...
+				
+		    if (sDrawing && sCurrPos) {
+		        draw(sCurrPos)
+		    }
+		
+		    return (
+		            	...
+		                    <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style={{ backgroundColor: 'black' }} ref={panelRef}/>
+		                ...
+		    )
+		}
+		
+		export default DrawPanelWidget
+    
+* 清除 canvas
+
+		const handleClear = (): void => {
+	        const _canvas = panelRef.current
+	        if (!_canvas) {
+	            return
+	        }
+	        const _ctx = _canvas.getContext('2d')
+	        _ctx?.clearRect(0, 0, _canvas.width, _canvas.height)
+	    }
 
 ### 将位图转化为 Tensor
 
+在向 MNIST CNN Model 提交手写数据时，需要将 canvas 的图片数据转换成 Tensor。
 
+    const handleSubmit = (): void => {
+        const _canvas = panelRef.current
+        if (!_canvas) {
+            return
+        }
+        const _ctx = _canvas.getContext('2d')
+        const imageData = _ctx?.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+        if (imageData && props.onSubmit) {
+            // logger('imageData', imageData)
+            const _tensor = tf.browser.fromPixels(imageData, 1)
+            const _sample = tf.image.resizeBilinear(_tensor, [28, 28])
+            setMiniSample(Array.from(_sample.dataSync()))
+
+            props.onSubmit(_sample.expandDims(0))
+        }
+    }
+
+* Tensorflow.js 提供了将 canvas 图像数据转化为 Tensor 的工具，并提供 resize。这些操作返回的是 Tensor3D 对象。
+
+		const _tensor = tf.browser.fromPixels(imageData, 1)
+		const _sample = tf.image.resizeBilinear(_tensor, [28, 28])
+
+* Reshape，为推理提交 Tensor4D 对象。
+
+		props.onSubmit(_sample.expandDims(0))
 
 
 

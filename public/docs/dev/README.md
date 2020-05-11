@@ -98,8 +98,8 @@
         * 将 tfjs-vis 集成到 React
     * 模型训练
     * 推理
-        * 数字手写板的实现
-        * 将位图转化为 Tensor
+        * 数字手写板的实现 —— 在 React 中使用 canvas 绘图
+        * 使用 Tfjs 将位图转化为 Tensor
 
 - [ ] [MNIST CNN 的 Core API 实现](./mnist-core-api.md)
 

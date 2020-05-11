@@ -221,7 +221,7 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
         * 将 tfjs-vis 集成到 React
     * 模型训练
     * 推理
-        * 数字手写板的实现
+        * canvas 数字手写板的实现 —— DrawPanelWidget
         * 将位图转化为 Tensor
     
 - [ ] [MNIST CNN 的 Core API 实现](./public/docs/dev/mnist-core-api.md)

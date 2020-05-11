@@ -613,7 +613,7 @@ React-tfjs-camp 的代码中集成了一些常用的 tfjs-vis 组件，都放在
 
 在推理部分，当然要通过“手写“，来对训练结果做个验证。训练前后分别做一下，感受一下对应的手写识别正确率吧。
 
-### canvas 数字手写板的实现 —— DrawPanelWidget
+### 数字手写板的实现 —— 在 React 中使用 canvas 绘图
 
 DrawPanelWidget 使用 canvas 实现鼠标画图，并将其作为手写数字识别的输入。相关代码在 `./src/componenets/common/tensor/DrawPanelWidget.tsx`。
 
@@ -724,7 +724,7 @@ DrawPanelWidget 使用 canvas 实现鼠标画图，并将其作为手写数字�
 	        _ctx?.clearRect(0, 0, _canvas.width, _canvas.height)
 	    }
 
-### 将位图转化为 Tensor
+### 使用 Tfjs 将位图转化为 Tensor
 
 在向 MNIST CNN Model 提交手写数据时，需要将 canvas 的图片数据转换成 Tensor。
 

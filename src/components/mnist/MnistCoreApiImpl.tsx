@@ -119,7 +119,7 @@ const MnistCoreApiImpl = (): JSX.Element => {
     }
 
     const trainModel = (_dataset: MnistDatasetPng | MnistDatasetGz, steps = TRAIN_STEPS,
-                        batchSize = 128, learningRate = 0.01): void => {
+        batchSize = 128, learningRate = 0.01): void => {
         if (!_dataset) {
             return
         }

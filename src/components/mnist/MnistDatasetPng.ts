@@ -35,11 +35,9 @@ const MNIST_LABELS_PATH = `${BASE_URL}/mnist_labels_uint8`
  */
 
 export class MnistDatasetPng implements IMnistDataSet {
-    datasetImages!: Float32Array
     trainImages!: Float32Array
     testImages!: Float32Array
 
-    datasetLabels!: Uint8Array
     trainLabels!: Uint8Array
     testLabels!: Uint8Array
 
@@ -55,6 +53,8 @@ export class MnistDatasetPng implements IMnistDataSet {
     }
 
     loadData = async (): Promise<void> => {
+        let datasetImages: Float32Array
+
         // Make a request for the MNIST sprited image.
         const img = new Image()
         const canvas = document.createElement('canvas')
@@ -90,7 +90,7 @@ export class MnistDatasetPng implements IMnistDataSet {
                         datasetBytesView[j] = v / 255
                     }
                 }
-                this.datasetImages = new Float32Array(datasetBytesBuffer)
+                datasetImages = new Float32Array(datasetBytesBuffer)
 
                 resolve()
             }
@@ -98,10 +98,9 @@ export class MnistDatasetPng implements IMnistDataSet {
         })
 
         const labelsRequest = fetch(MNIST_LABELS_PATH)
-        const [imgResponse, labelsResponse] =
-            await Promise.all([imgRequest, labelsRequest])
+        const [_, labelsResponse] = await Promise.all([imgRequest, labelsRequest])
 
-        this.datasetLabels = new Uint8Array(await (labelsResponse as Response).arrayBuffer())
+        const datasetLabels = new Uint8Array(await (labelsResponse as Response).arrayBuffer())
 
         // Create shuffled indices into the train/test set for when we select a
         // random dataset element for training / validation.
@@ -109,19 +108,20 @@ export class MnistDatasetPng implements IMnistDataSet {
         this.testIndices = tf.util.createShuffledIndices(NUM_TEST_ELEMENTS)
 
         // Slice the the images and labels into train and test sets.
-        this.trainImages = this.datasetImages.slice(0, IMAGE_SIZE * NUM_TRAIN_ELEMENTS)
-        this.testImages = this.datasetImages.slice(IMAGE_SIZE * NUM_TRAIN_ELEMENTS)
-        this.trainLabels = this.datasetLabels.slice(0, NUM_CLASSES * NUM_TRAIN_ELEMENTS)
-        this.testLabels = this.datasetLabels.slice(NUM_CLASSES * NUM_TRAIN_ELEMENTS)
+        this.trainImages = datasetImages!.slice(0, IMAGE_SIZE * NUM_TRAIN_ELEMENTS)
+        this.testImages = datasetImages!.slice(IMAGE_SIZE * NUM_TRAIN_ELEMENTS)
+        this.trainLabels = datasetLabels.slice(0, NUM_CLASSES * NUM_TRAIN_ELEMENTS)
+        this.testLabels = datasetLabels.slice(NUM_CLASSES * NUM_TRAIN_ELEMENTS)
     }
 
     /**
      * Get all training data as a data tensor and a labels tensor.
      *
+     * @param {number} numExamples Optional number of examples to get. If not provided,
+     *      all training examples will be returned.
      * @returns
-     *   xs: The data tensor, of shape `[numTrainExamples, 28, 28, 1]`.
-     *   labels: The one-hot encoded labels tensor, of shape
-     *     `[numTrainExamples, 10]`.
+     *   xs: The data tensor, of shape `[numTestExamples, 28, 28, 1]`.
+     *   ys: labels. The one-hot encoded labels tensor, of shape `[numTestExamples, 10]`.
      */
     getTrainData = (numExamples?: number): tf.TensorContainerObject => {
         let xs = tf.tensor4d(
@@ -140,13 +140,11 @@ export class MnistDatasetPng implements IMnistDataSet {
     /**
      * Get all test data as a data tensor a a labels tensor.
      *
-     * @param {number} numExamples Optional number of examples to get. If not
-     *     provided,
-     *   all test examples will be returned.
+     * @param {number} numExamples Optional number of examples to get. If not provided,
+     *      all test examples will be returned.
      * @returns
      *   xs: The data tensor, of shape `[numTestExamples, 28, 28, 1]`.
-     *   labels: The one-hot encoded labels tensor, of shape
-     *     `[numTestExamples, 10]`.
+     *   ys: labels. The one-hot encoded labels tensor, of shape `[numTestExamples, 10]`.
      */
     getTestData = (numExamples?: number): tf.TensorContainerObject => {
         let xs = tf.tensor4d(this.testImages,

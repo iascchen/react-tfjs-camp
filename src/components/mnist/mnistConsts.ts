@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import * as tf from '@tensorflow/tfjs'
+import { TensorContainerObject } from '@tensorflow/tfjs'
 
 export const IMAGE_H = 28
 export const IMAGE_W = 28
@@ -24,9 +24,9 @@ export const NUM_CLASSES = 10
 
 export interface IMnistDataSet {
     loadData: () => Promise<void>
-    getTrainData: (numExamples?: number) => tf.TensorContainerObject
-    getTestData: (numExamples?: number) => tf.TensorContainerObject
+    getTrainData: (numExamples?: number) => TensorContainerObject
+    getTestData: (numExamples?: number) => TensorContainerObject
 
-    nextTrainBatch: (batchSize: number) => tf.TensorContainerObject
-    nextTestBatch: (batchSize: number) => tf.TensorContainerObject
+    nextTrainBatch: (batchSize: number) => TensorContainerObject
+    nextTestBatch: (batchSize: number) => TensorContainerObject
 }

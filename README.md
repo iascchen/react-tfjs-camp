@@ -193,7 +193,7 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
     * 分类问题的数据表述
         * 标签编码
         * One-Hot
-    * 构造训练集和测试集
+    * 用 tf.data.Dataset 构造训练集和测试集
         * 按比例分配数据集
         * 了解 tf.data.Dataset
         * 初始化数据集

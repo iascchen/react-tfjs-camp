@@ -5,8 +5,8 @@ import Home from './components/common/Home'
 import Curve from './components/curve/Curve'
 import Iris from './components/iris/Iris'
 
-import MnistKeras from './components/mnist/MnistKeras'
-import MnistCore from './components/mnist/MnistCore'
+import MnistLayersModelImpl from './components/mnist/MnistLayersModelImpl'
+import MnistCoreApiImpl from './components/mnist/MnistCoreApiImpl'
 
 import MobilenetClassifier from './components/mobilenet/MobilenetClassifier'
 import MobilenetKnnClassifier from './components/mobilenet/MobilenetKnnClassifier'
@@ -31,8 +31,8 @@ const routes: RouteConfig[] = [
     { path: '/curve', component: Curve },
     { path: '/iris', component: Iris },
 
-    { path: '/mnist/keras', component: MnistKeras },
-    { path: '/mnist/core', component: MnistCore },
+    { path: '/mnist/keras', component: MnistLayersModelImpl },
+    { path: '/mnist/core', component: MnistCoreApiImpl },
 
     { path: '/mobilenet/basic', component: MobilenetClassifier },
     { path: '/mobilenet/knn', component: MobilenetKnnClassifier },

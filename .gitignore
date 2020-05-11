@@ -25,7 +25,18 @@ yarn-error.log*
 
 .idea
 
-public/preload
+public/preload/**/*.gz
+public/preload/**/*.png
+public/preload/**/*.csv
+public/preload/**/*.txt
+public/preload/**/*.bin
+public/preload/**/*.zip
+public/preload/**/*.json
+public/preload/**/*.js
+public/preload/**/*uint8
+
+public/preload/**/group*
+
 public/model/*.json
 public/model/*.bin
 public/model/*.tsv

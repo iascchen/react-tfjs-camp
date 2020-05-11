@@ -28,7 +28,7 @@ const SHOW_SAMPLE = 50
 // Train
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
 
-const MnistCore = (): JSX.Element => {
+const MnistCoreApiImpl = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -299,4 +299,4 @@ const MnistCore = (): JSX.Element => {
     )
 }
 
-export default MnistCore
+export default MnistCoreApiImpl

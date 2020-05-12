@@ -206,7 +206,7 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
         * 使用 Model.fitDataset 训练
         * 展示训练过程 —— 在 useState 中使用数组
         
-- [x] [Develop Tutorial 6 MNIST CNN 的 Layer Model 实现](./public/docs/dev/mnist-layer-model.md)
+- [x] [Develop Tutorial 6 MNIST CNN 的 Layer Model 实现](public/docs/dev/mnist-layer-api.md)
 
     * MNIST 的数据集
         * MNIST 的数据集的两种格式—— PNG 和 GZ
@@ -226,4 +226,11 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
     
 - [ ] [Develop Tutorial 7 MNIST CNN 的 Core API 实现](./public/docs/dev/mnist-core-api.md)
 
+    * 数据分片加载
+    * 使用 Tensorflow.js 的 Core API 构造深度神经网络
+        * 等价的 Layers API 实现
+        * 卷积模型的权重参数
+        * 卷积模型的前向传播计算过程
+        * 模型的训练——被隐藏的梯度下降和反向传播
+        
 - [ ] 待续

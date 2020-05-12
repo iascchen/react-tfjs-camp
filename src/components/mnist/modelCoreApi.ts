@@ -18,6 +18,22 @@
 import * as tf from '@tensorflow/tfjs'
 import { IMAGE_H, IMAGE_W, IMnistDataSet, NUM_CLASSES } from './mnistConsts'
 
+// ///////////////////////////////////
+// // Same With follow Layers API Implement
+//
+// const model = tf.sequential()
+//
+// model.add(tf.layers.conv2d({
+//     inputShape: [IMAGE_H, IMAGE_W, 1], kernelSize: 5, filters: 8, activation: 'relu', padding: 'same'
+// }))
+// model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2 }))
+// model.add(tf.layers.conv2d({ kernelSize: 5, filters: 16, activation: 'relu', padding: 'same'}))
+// model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2 }))
+// model.add(tf.layers.flatten({}))
+//
+// model.add(tf.layers.dense({ units: 10, activation: 'softmax' }))
+// ///////////////////////////////////
+
 // Variables that we want to optimize
 const conv1OutputDepth = 8
 const conv1Weights = tf.variable(tf.randomNormal([5, 5, 1, conv1OutputDepth], 0, 0.1))

@@ -14,7 +14,7 @@ import MarkdownWidget from '../common/MarkdownWidget'
 
 import { MnistDatasetPng } from './MnistDatasetPng'
 import { MnistDatasetGz } from './MnistDatasetGz'
-import * as modelCore from './modelCoreModel'
+import * as modelCore from './modelCoreApi'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -245,7 +245,7 @@ const MnistCoreApiImpl = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'MNIST Core API'} current={sTabCurrent} onChange={handleTabChange}
+        <AIProcessTabs title={'MNIST Core API Implement'} current={sTabCurrent} onChange={handleTabChange}
             invisiblePanes={[AIProcessTabPanes.MODEL]} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/mnist.md'}/>

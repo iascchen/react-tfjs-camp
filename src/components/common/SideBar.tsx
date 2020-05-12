@@ -33,7 +33,7 @@ const SideBar = (): JSX.Element => {
                 </SubMenu>
                 <SubMenu title={<span><CalculatorOutlined/><span>手写数字识别 MNIST</span></span>}>
                     <Item key='3.1'>
-                        <Link to='/mnist/layers'><span> Mnist Layer Model </span></Link>
+                        <Link to='/mnist/layers'><span> Mnist Layers API </span></Link>
                     </Item>
                     <Item key='3.2'>
                         <Link to='/mnist/core'><span> Mnist Core API </span></Link>

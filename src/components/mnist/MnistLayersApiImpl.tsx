@@ -17,7 +17,7 @@ import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
 import { IMnistDataSet } from './mnistConsts'
 import { MnistDatasetGz } from './MnistDatasetGz'
 import { MnistDatasetPng } from './MnistDatasetPng'
-import { addCovDropoutLayers, addCovPoolingLayers, addDenseLayers } from './modelLayerModel'
+import { addCovDropoutLayers, addCovPoolingLayers, addDenseLayers } from './modelLayersApi'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -34,7 +34,7 @@ const MODELS = ['dense', 'cnn-pooling', 'cnn-dropout']
 const VALID_SPLIT = 0.15
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10]
 
-const MnistLayersModelImpl = (): JSX.Element => {
+const MnistLayersApiImpl = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -387,7 +387,7 @@ const MnistLayersModelImpl = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'MNIST Layer Model'} current={sTabCurrent} onChange={handleTabChange} >
+        <AIProcessTabs title={'MNIST Layers API Implement'} current={sTabCurrent} onChange={handleTabChange} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/mnist.md'}/>
             </TabPane>
@@ -468,4 +468,4 @@ const MnistLayersModelImpl = (): JSX.Element => {
     )
 }
 
-export default MnistLayersModelImpl
+export default MnistLayersApiImpl

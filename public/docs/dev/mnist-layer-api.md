@@ -1,4 +1,4 @@
-# MNIST CNN 的 Layer Model 实现
+# MNIST CNN 的 Layers API 实现
 
 ## MNIST 的数据集
 
@@ -429,7 +429,7 @@ MNIST 数据集的 X 为图片，我们修改 SampleDataVis 以获得更直观�
             }
         }, [sModelName])
 
-下面的代码展示了其中最复杂的一个模型 —— 带 maxPooling 和 dropout 的 CNN，使用 Layer Model 构建的顺序深度神经网络模型：
+下面的代码展示了其中最复杂的一个模型 —— 带 maxPooling 和 dropout 的 CNN，使用 Layers API 构建的顺序深度神经网络模型：
 
 	const model = tf.sequential()
 	

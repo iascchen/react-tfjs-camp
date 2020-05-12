@@ -200,7 +200,7 @@ GZ 数据的加载和 PNG 格式略有不同。主要代码请参考 `./src/comp
 	        this.testLabelsFileUrl = `${this.baseUrl}/t10k-labels-idx1-ubyte.gz`
 	    }
 
-* 读取文件后，需要跳过文件投中的一些描述数据。
+* 读取文件后，需要跳过文件头中的一些描述数据。
 
 		const IMAGE_HEADER_BYTES = 16
 		const LABEL_HEADER_BYTES = 8

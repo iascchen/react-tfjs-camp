@@ -101,7 +101,7 @@
         * 数字手写板的实现 —— 在 React 中使用 canvas 绘图
         * 使用 Tfjs 将 canvas 位图转化为 Tensor
 
-- [ ] [Develop Tutorial 7 MNIST CNN 的 Core API 实现](./mnist-core-api.md)
+- [x] [Develop Tutorial 7 MNIST CNN 的 Core API 实现](./mnist-core-api.md)
 
     * 数据分片加载
     * 使用 Tensorflow.js 的 Core API 构造深度神经网络
@@ -110,15 +110,16 @@
         * 卷积模型的前向传播计算过程
         * 模型的训练——被隐藏的梯度下降和反向传播
    
+- [ ] [Develop Tutorial 8 站在预训练模型的肩上——以 MobileNet 为例 ](./mobilenet-basic.md)
+
+
 - [ ] 待续
 
 ===========================
 
 
 [ ] 使用 td-node 执行训练
-
 [ ] 卷积层的可视化
-
 
 ### MobileNet 图片分类：使用预训练的模型，进行迁移学习
 

@@ -352,7 +352,7 @@ const MnistLayersApiImpl = (): JSX.Element => {
             <Card title='Train' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formTrain} onFinish={handleTrain} onFieldsChange={handleTrainParamsChange}
                     initialValues={{
-                        learningRate: 0.001,
+                        learningRate: 0.01,
                         batchSize: 256,
                         epochs: 3
                     }}>

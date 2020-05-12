@@ -224,7 +224,7 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
         * canvas 数字手写板的实现 —— DrawPanelWidget
         * 使用 Tfjs 将 canvas 位图转化为 Tensor
     
-- [ ] [Develop Tutorial 7 MNIST CNN 的 Core API 实现](./public/docs/dev/mnist-core-api.md)
+- [x] [Develop Tutorial 7 MNIST CNN 的 Core API 实现](./public/docs/dev/mnist-core-api.md)
 
     * 数据分片加载
     * 使用 Tensorflow.js 的 Core API 构造深度神经网络
@@ -232,5 +232,8 @@ AI 概念相关的文档内容会放在 `public/docs/ai` 目录下。这些个�
         * 卷积模型的权重参数
         * 卷积模型的前向传播计算过程
         * 模型的训练——被隐藏的梯度下降和反向传播
+
+- [ ] [Develop Tutorial 8 站在预训练模型的肩上——以 MobileNet 为例 ](./public/docs/dev/mobilenet-basic.md)
+
         
 - [ ] 待续

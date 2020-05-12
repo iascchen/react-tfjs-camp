@@ -211,12 +211,12 @@ const MnistCoreApiImpl = (): JSX.Element => {
         return (
             <Card title='Train' style={{ margin: '8px' }} size='small'>
                 <Form {...layout} form={formTrain} onFinish={handleTrain} initialValues={{
-                    learningRate: 0.1,
+                    learningRate: 0.01,
                     batchSize: 256,
-                    steps: 30
+                    steps: 50
                 }}>
                     <Form.Item name='steps' label='Train Step'>
-                        <Slider min={30} max={150} step={30} marks={{ 30: 30, 90: 90, 150: 150 }} />
+                        <Slider min={50} max={250} step={50} marks={{ 50: 50, 150: 150, 250: 250 }} />
                     </Form.Item>
                     <Form.Item name='batchSize' label='Batch Size'>
                         <Select >

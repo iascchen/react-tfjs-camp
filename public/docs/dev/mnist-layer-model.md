@@ -95,7 +95,7 @@ PNG 格式数据加载的主要代码请参考 `./src/components/mnist/MnistData
 		const NUM_TRAIN_ELEMENTS = 35000
 		const NUM_TEST_ELEMENTS = 7000
 		
-* 使用了浏览器的 Canvas 对已经加载的大 PNG 文件进行分割，这是个很常用的技巧。另外，图像数据需要做个预处理，将颜色值从 int 值（0-255） 转化成 float 。
+* 使用了浏览器的 Canvas 对已经加载的大 PNG 文件进行分割，这是个很常用的技巧。
 
 	    loadData = async (): Promise<void> => {
 	        let datasetImages: Float32Array
@@ -139,7 +139,7 @@ PNG 格式数据加载的主要代码请参考 `./src/components/mnist/MnistData
 	        ...
 	    }
 
-* 对图像数据需要做个预处理，将颜色值从 int 值（0-255） 转化成 float 。
+* 对图像数据需要做个预处理，将颜色值从 int 值（0-255） 转化成 float。
 
                     const length = imageData?.data.length ?? 0
                     for (let j = 0; j < length / 4; j++) {
@@ -149,7 +149,7 @@ PNG 格式数据加载的主要代码请参考 `./src/components/mnist/MnistData
                         datasetBytesView[j] = v / 255
                     }
 
-* 构建训练数据集，返回形如 `{xs, ys}` 的训练数据。xs 是一个个的小图片，ys 则是对应的 One-Hot 值。
+* 构建训练数据集，返回形如 `{xs, ys}` 的训练数据。xs 是一个个的小图片，ys 则是对应的 One-Hot 向量。
 
 			getTrainData = (numExamples?: number): tf.TensorContainerObject => {
 		        let xs = tf.tensor4d(
@@ -167,7 +167,7 @@ PNG 格式数据加载的主要代码请参考 `./src/components/mnist/MnistData
 
 ### GZ 格式数据的加载和使用
 
-GZ 数据的加载和 PNG 格式略有不同。考虑到支持 Node.js 利用命令行调用，所以不使用 Canvas。主要代码请参考 `./src/components/mnist/MnistDatasetGz.ts`。
+GZ 数据的加载和 PNG 格式略有不同。主要代码请参考 `./src/components/mnist/MnistDatasetGz.ts`。
     
 #### 使用 fetch 加载数据文件
 
@@ -188,7 +188,7 @@ GZ 数据的加载和 PNG 格式略有不同。考虑到支持 Node.js 利用命
 
 #### 数据的加载
 
-* GZ 格式数据可以支持加载手写数字数据集，也可以支持 MNIST-Fashion 数据集。丢赢数据需要预先下载到 `/preload/data/${source}` 目录下。source 取值为 `mnist` 或 `fashion`。
+* GZ 格式数据可以支持加载手写数字数据集，也可以支持 MNIST-Fashion 数据集。对应数据需要预先下载到 `/preload/data/${source}` 目录下。source 取值为 `mnist` 或 `fashion`。
 
 	    constructor (source: string) {
 	        this.source = source
@@ -384,48 +384,52 @@ MNIST 数据集的 X 为图片，我们修改 SampleDataVis 以获得更直观�
 	
 	export default RowImageWidget
 
-* 这里我们使用了 useRef 访问 HTML canvas，这是 useRef 另外一种常用的使用场景。比较直观，不多做赘述。
-* 此处的是 canvas 的 width 和 height **必须用属性来指定**。如果用 style 来制定，会被放大两倍。
-* 在 draw 函数中，我们把图片数据乘了 255, 将浮点数的颜色值转成整数，用于 canvas 的显示。
+* 这里我们使用了 useRef 访问 HTML canvas，这是 useRef 另外一种常用的使用场景。
+* **注意** canvas 的 width 和 height **必须用属性来指定**。如果用 style 来制定，会被放大两倍。
+* 在 draw 函数中，我们把图片数据乘了 255, 将浮点数（0-1）的颜色值转成整数（0-255），用于 canvas 的显示。
 
 	![../images/SampleDataVis_image.png](../images/SampleDataVis_image.png)
 
 ## CNN 网络模型
 
-在代码实现中，我们提供了从简单到复杂的三种参考实现。
+在代码实现中提供了从简单到复杂的三种参考实现。
 
-    useEffect(() => {
-        logger('init model ...')
+* `dense` 最简单的两层全联接网络
+* `cnn-pooling` 带卷积、带 MaxPolling 层
+* `cnn-dropout` 带卷积、MaxPolling 层、以及 dropout 层
 
-        tf.backend()
-        setTfBackend(tf.getBackend())
+        useEffect(() => {
+            logger('init model ...')
+    
+            tf.backend()
+            setTfBackend(tf.getBackend())
+    
+            // Create a sequential neural network model. tf.sequential provides an API
+            // for creating "stacked" models where the output from one layer is used as
+            // the input to the next layer.
+            const model = tf.sequential()
+            switch (sModelName) {
+                case 'dense' :
+                    addDenseLayers(model)
+                    break
+                case 'cnn-pooling' :
+                    addCovPoolingLayers(model)
+                    break
+                case 'cnn-dropout' :
+                    addCovDropoutLayers(model)
+                    break
+            }
+            model.add(tf.layers.dense({ units: 10, activation: 'softmax' }))
+            setModel(model)
+            ...
+            
+            return () => {
+                logger('Model Dispose')
+                model?.dispose()
+            }
+        }, [sModelName])
 
-        // Create a sequential neural network model. tf.sequential provides an API
-        // for creating "stacked" models where the output from one layer is used as
-        // the input to the next layer.
-        const model = tf.sequential()
-        switch (sModelName) {
-            case 'dense' :
-                addDenseLayers(model)
-                break
-            case 'cnn-pooling' :
-                addCovPoolingLayers(model)
-                break
-            case 'cnn-dropout' :
-                addCovDropoutLayers(model)
-                break
-        }
-        model.add(tf.layers.dense({ units: 10, activation: 'softmax' }))
-        setModel(model)
-        ...
-        
-        return () => {
-            logger('Model Dispose')
-            model?.dispose()
-        }
-    }, [sModelName])
-
-下面的代码展示了其中最复杂的一种 —— 带 maxPooling 和 dropout 的 CNN，这段代码展示了使用 Layer Model 构建的顺序深度神经网络：
+下面的代码展示了其中最复杂的一个模型 —— 带 maxPooling 和 dropout 的 CNN，使用 Layer Model 构建的顺序深度神经网络模型：
 
 	const model = tf.sequential()
 	
@@ -448,18 +452,20 @@ MNIST 数据集的 X 为图片，我们修改 SampleDataVis 以获得更直观�
 
 ### 将 tfjs-vis 集成到 React
 
-在前面的内容里，出于理解和学习的目的，我们曾创建了一些简单的模型可视化和数据可视化组件。Tensorflow.js 提供了一个更强大的 tfjs-vis，能够在浏览器中对模型和数据进行可视化展示。
+在前面的内容里，出于理解和学习的目的，我们曾创建了一些简单的模型可视化和数据可视化组件。
+
+Tensorflow.js 提供了一个更强大的 tfjs-vis，能够在浏览器中对模型和数据进行可视化展示。
 
 关于 tfjs-vis 的 API 说明，可以参考 [https://js.tensorflow.org/api_vis/latest/](https://js.tensorflow.org/api_vis/latest/) 
 
 为了展示如何将 React Hooks 和 tfjs-vis 集成在一起，单独写了个用来做测试和验证的 `TfvisWidget.tsx`。代码位置 `./src/componenets/sandbox/TfvisWidget.tsx`。
 
-* 在 React 中引入 tfjs-vis，需要使用 require 语句，不能通过使用 import 语句处理。
+* 在 React 中引入 tfjs-vis，需要使用 require 语句，不能通过 import 语句加载。
 
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const tfvis = require('@tensorflow/tfjs-vis')
 	
-* 使用 useRef 绑定需要 tfjs-vis 渲染的 HTML 元素。
+* 使用 useRef 绑定需要 tfjs-vis 渲染的 HTML div 元素。
 
 		const logs = {
 		    history: { loss: [1, 2, 1.5], val_loss: [1.5, 2.5, 2.8] }
@@ -508,7 +514,7 @@ MNIST 数据集的 X 为图片，我们修改 SampleDataVis 以获得更直观�
 	        tfvis.render.table(suffer, { headers, values })
 	    }
 
-React-tfjs-camp 的代码中集成了一些常用的 tfjs-vis 组件，都放在 `./src/componenets/tfvis` 目录下。
+React-tfjs-camp 的代码中集成了几个常用的 tfjs-vis API，都放在 `./src/componenets/tfvis` 目录下。
 
 下面的代码展示了如何使用 `TfvisModelWidget` 和 `TfvisLayerWidget` 显示模型和层信息。
 
@@ -541,13 +547,13 @@ React-tfjs-camp 的代码中集成了一些常用的 tfjs-vis 组件，都放在
                 </Row>
             </TabPane>
 
-> 已知问题：使用 require 语句引入的 tfjs-vis 组件，会导致 ErrorBoundary 失效，在使用 `TfvisLayerWidget` 选择可视化权重分布时，如果无对应值，会直接返回异常界面。
+> 已知问题：使用 require 语句引入的 tfjs-vis 组件，会导致 ErrorBoundary 失效，在使用 `TfvisLayerWidget` 选择可视化权重分布时，有些操作会导致异常。
 
 ## 模型训练
 
-这部分内容和前面介绍的类似。
+使用 model.fit 进行模型训练，这部分以前介绍过。
 
-您可以调整 sLearningRate 观察训练结果。
+您可以调整 sLearningRate ，修改 model.compile 的相关参数，观察训练结果。
 
     useEffect(() => {
         if (!sModel) {
@@ -559,7 +565,7 @@ React-tfjs-camp 的代码中集成了一些常用的 tfjs-vis 组件，都放在
         sModel.compile({ optimizer, loss: 'categoricalCrossentropy', metrics: ['accuracy'] })
     }, [sModel, sLearningRate])
     
-还可以修改 Epochs 和 Batch 等训练相关的参数。此处，我们将检查停止状态调整放在了 `onBatchBegin` 回调函数中。
+还可以修改 Epochs 和 Batch 等训练相关的参数。将检查停止状态的代码，调整放在 `onBatchBegin` 回调函数中。
 
 		setStatus(STATUS.WAITING)
         stopRef.current = false
@@ -611,7 +617,9 @@ React-tfjs-camp 的代码中集成了一些常用的 tfjs-vis 组件，都放在
 
 ## 推理
 
-在推理部分，当然要通过“手写“，来对训练结果做个验证。训练前后分别做一下，感受一下对应的手写识别正确率吧。
+既然做手写数字识别，必须要支持“手写“。通过数字手写板，可以对模型的训练结果做出最直观的验证。
+
+训练前后分别做一下，感受一下相应的手写识别正确率差距吧。
 
 ### 数字手写板的实现 —— 在 React 中使用 canvas 绘图
 
@@ -649,6 +657,7 @@ DrawPanelWidget 使用 canvas 实现鼠标画图，并将其作为手写数字�
 	        const _pos = getMousePos(e)
 	        _pos && setCurrPos(_pos)
 	    }
+	    
 * 从 canvas 获取鼠标位置坐标。
 
 	    const getMousePos = (e: MouseEvent): IPoint | null => {
@@ -724,7 +733,7 @@ DrawPanelWidget 使用 canvas 实现鼠标画图，并将其作为手写数字�
 	        _ctx?.clearRect(0, 0, _canvas.width, _canvas.height)
 	    }
 
-### 使用 Tfjs 将位图转化为 Tensor
+### 使用 Tfjs 将 canvas 位图转化为 Tensor
 
 在向 MNIST CNN Model 提交手写数据时，需要将 canvas 的图片数据转换成 Tensor。
 
@@ -753,6 +762,3 @@ DrawPanelWidget 使用 canvas 实现鼠标画图，并将其作为手写数字�
 * Reshape，为推理提交 Tensor4D 对象。
 
 		props.onSubmit(_sample.expandDims(0))
-
-
-

@@ -99,9 +99,9 @@
     * 模型训练
     * 推理
         * 数字手写板的实现 —— 在 React 中使用 canvas 绘图
-        * 使用 Tfjs 将位图转化为 Tensor
+        * 使用 Tfjs 将 canvas 位图转化为 Tensor
 
-- [ ] [MNIST CNN 的 Core API 实现](./mnist-core-api.md)
+- [ ] [Develop Tutorial 7 MNIST CNN 的 Core API 实现](./mnist-core-api.md)
 
 - [ ] 待续
 

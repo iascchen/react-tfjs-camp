@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Col, Row, Select, Tag, Tooltip } from 'antd'
 
-import { logger, STATUS } from '../../utils'
+import { logger } from '../../utils'
 import { ImagenetClasses } from './ImagenetClasses'
 
 const { Option } = Select
@@ -13,7 +13,6 @@ const ImagenetTagsWidget = (): JSX.Element => {
      * useState
      ***********************/
 
-    const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)
     const [sLang, setLang] = useState<string>()
 
     /***********************

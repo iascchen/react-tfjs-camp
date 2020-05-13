@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as tf from '@tensorflow/tfjs'
-import { Card, Col, Form, Row, Select, Tabs, Tag, Tooltip } from 'antd'
+import { Card, Col, Form, Row, Select, Tabs } from 'antd'
 
 import { ILayerSelectOption, logger, loggerError, STATUS } from '../../utils'
 import { layout, tailLayout } from '../../constant'
@@ -12,7 +12,6 @@ import MarkdownWidget from '../common/MarkdownWidget'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 
 import { formatImageForMobilenet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
-import { ImagenetClasses } from './ImagenetClasses'
 import ImagenetTagsWidget from './ImagenetTagsWidget'
 
 const { Option } = Select
@@ -22,7 +21,7 @@ const MobilenetClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
-    const [sTabCurrent, setTabCurrent] = useState<number>(5)
+    const [sTabCurrent, setTabCurrent] = useState<number>(3)
 
     const [sTfBackend, setTfBackend] = useState<string>()
     const [sStatus, setStatus] = useState<STATUS>(STATUS.INIT)

@@ -16,7 +16,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-import { IMnistDataSet, IMAGE_H, IMAGE_W, IMAGE_SIZE, NUM_CLASSES } from './mnistConsts'
+import { IMnistDataset, IMAGE_H, IMAGE_W, IMAGE_SIZE, NUM_CLASSES } from './mnistConsts'
 
 const NUM_DATASET_ELEMENTS = 65000
 
@@ -34,7 +34,7 @@ const MNIST_LABELS_PATH = `${BASE_URL}/mnist_labels_uint8`
  * manipulation manually.
  */
 
-export class MnistDatasetPng implements IMnistDataSet {
+export class MnistDatasetPng implements IMnistDataset {
     trainImages!: Float32Array
     testImages!: Float32Array
 

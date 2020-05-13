@@ -15,6 +15,7 @@ import MarkdownWidget from '../common/MarkdownWidget'
 import { MnistDatasetPng } from './MnistDatasetPng'
 import { MnistDatasetGz } from './MnistDatasetGz'
 import * as modelCore from './modelCoreApi'
+import { IMnistDataset } from './mnistConsts'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -40,8 +41,8 @@ const MnistCoreApiImpl = (): JSX.Element => {
     const [sStatus, setStatus] = useState<STATUS>()
 
     // Data
-    const [sDataSourceName, setDataSourceName] = useState()
-    const [sDataSet, setDataSet] = useState<MnistDatasetPng | MnistDatasetGz>()
+    const [sDataSourceName, setDataSourceName] = useState('mnist-png')
+    const [sDataSet, setDataSet] = useState<IMnistDataset>()
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
@@ -64,12 +65,7 @@ const MnistCoreApiImpl = (): JSX.Element => {
 
         setStatus(STATUS.WAITING)
 
-        let mnistDataset: MnistDatasetGz | MnistDatasetPng
-        if (sDataSourceName === 'mnist') {
-            mnistDataset = new MnistDatasetGz(sDataSourceName)
-        } else {
-            mnistDataset = new MnistDatasetPng()
-        }
+        const mnistDataset: IMnistDataset = (sDataSourceName === 'mnist') ? new MnistDatasetGz(sDataSourceName) : new MnistDatasetPng()
 
         let tSet: tf.TensorContainerObject
         let vSet: tf.TensorContainerObject
@@ -117,7 +113,7 @@ const MnistCoreApiImpl = (): JSX.Element => {
         predictModel(sTestSet?.xs as tf.Tensor)
     }
 
-    const trainModel = (_dataset: MnistDatasetPng | MnistDatasetGz, steps = TRAIN_STEPS,
+    const trainModel = (_dataset: IMnistDataset, steps = TRAIN_STEPS,
         batchSize = 128, learningRate = 0.01): void => {
         if (!_dataset) {
             return
@@ -194,12 +190,18 @@ const MnistCoreApiImpl = (): JSX.Element => {
                     </Form.Item>
                     <Form.Item {...normalLayout}>
                         <ul>
-                            <li><div style={{ color: 'red' }}>!!! 请注意 !!! 如果您是从 Github 上克隆项目，在运行之前，
-                                请先前往目录 ./public/preload/data , 运行 download_mnist_data.sh 脚本，下载所需的数据。</div></li>
+                            <li>
+                                <div style={{ color: 'red' }}>!!! 请注意 !!! 如果您是从 Github 上克隆项目，在运行之前，
+                                    请先前往目录 ./public/preload/data , 运行 download_mnist_data.sh 脚本，下载所需的数据。
+                                </div>
+                            </li>
                             <li>如果您是在 Docker 中运行，数据已经预先放在相应的目录下。</li>
                             <li>由于数据量较大，多次加载会影响程序运行效率。</li>
-                            <li><div style={{ color: 'red' }}>如果 Train Data Set 中的图片未能正常显示，表明要加载的训练集大小超过了您的内存。
-                                您可以减少代码中 MnistDataset*.ts 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集</div></li>
+                            <li>
+                                <div style={{ color: 'red' }}>如果 Train Data Set 中的图片未能正常显示，表明要加载的训练集大小超过了您的内存。
+                                    您可以减少代码中 MnistDataset*.ts 里的 NUM_TRAIN_ELEMENTS 使用较小的数据集
+                                </div>
+                            </li>
                         </ul>
                     </Form.Item>
                 </Form>
@@ -216,24 +218,25 @@ const MnistCoreApiImpl = (): JSX.Element => {
                     steps: 50
                 }}>
                     <Form.Item name='steps' label='Train Step'>
-                        <Slider min={50} max={250} step={50} marks={{ 50: 50, 150: 150, 250: 250 }} />
+                        <Slider min={50} max={250} step={50} marks={{ 50: 50, 150: 150, 250: 250 }}/>
                     </Form.Item>
                     <Form.Item name='batchSize' label='Batch Size'>
-                        <Select >
+                        <Select>
                             {BATCH_SIZES.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
                     </Form.Item>
                     <Form.Item name='learningRate' label='Learning Rate'>
-                        <Select >
+                        <Select>
                             {LEARNING_RATES.map((v) => {
                                 return <Option key={v} value={v}>{v}</Option>
                             })}
                         </Select>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
-                        <Button type='primary' htmlType={'submit'} style={{ width: '30%', margin: '0 10%' }}> Train </Button>
+                        <Button type='primary' htmlType={'submit'}
+                            style={{ width: '80%', margin: '0 10%' }}> Train </Button>
                     </Form.Item>
                     <Form.Item {...tailLayout}>
                         <div>Status: {sStatus}</div>
@@ -246,9 +249,9 @@ const MnistCoreApiImpl = (): JSX.Element => {
 
     return (
         <AIProcessTabs title={'MNIST Core API Implement'} current={sTabCurrent} onChange={handleTabChange}
-            invisiblePanes={[AIProcessTabPanes.MODEL]} >
+            invisiblePanes={[AIProcessTabPanes.MODEL]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/ai/mnist.md'}/>
+                <MarkdownWidget url={'/docs/ai/mnist-core-api.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Row>
@@ -256,17 +259,19 @@ const MnistCoreApiImpl = (): JSX.Element => {
                         {dataAdjustCard()}
                     </Col>
                     <Col span={8}>
-                        <Card title={`Train Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
+                        <Card title={`Train Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }}
+                            size='small'>
                             <div>{sTrainSet && <TfvisDatasetInfoWidget value={sTrainSet}/>}</div>
                             <SampleDataVis xDataset={sTrainSet?.xs as tf.Tensor} yDataset={sTrainSet?.ys as tf.Tensor}
-                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
+                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE}/>
                         </Card>
                     </Col>
                     <Col span={8}>
-                        <Card title={`Validate Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }} size='small'>
+                        <Card title={`Validate Data Set (Only show ${SHOW_SAMPLE} samples)`} style={{ margin: '8px' }}
+                            size='small'>
                             <div>{sTestSet && <TfvisDatasetInfoWidget value={sTestSet}/>}</div>
                             <SampleDataVis xDataset={sTestSet?.xs as tf.Tensor} yDataset={sTestSet?.ys as tf.Tensor}
-                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE} />
+                                xIsImage pageSize={5} sampleCount={SHOW_SAMPLE}/>
                         </Card>
                     </Col>
                 </Row>
@@ -284,14 +289,14 @@ const MnistCoreApiImpl = (): JSX.Element => {
                     </Col>
                     <Col span={8}>
                         <Card title='Training History' style={{ margin: '8px' }} size='small'>
-                            <TfvisHistoryWidget logMsg={logMsg} debug />
+                            <TfvisHistoryWidget logMsg={logMsg} debug/>
                         </Card>
                     </Col>
                 </Row>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.PREDICT}>
                 <Col span={8}>
-                    <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={sDrawPred} />
+                    <DrawPanelWidget onSubmit={handleDrawSubmit} prediction={sDrawPred}/>
                 </Col>
             </TabPane>
         </AIProcessTabs>

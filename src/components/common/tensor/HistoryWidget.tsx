@@ -15,9 +15,9 @@ const HistoryWidget = (props: IProps): JSX.Element => {
      * useState
      ***********************/
 
-    const [accData, setAccData] = useState()
-    const [lossData, setLossData] = useState()
-    const [scale, setScale] = useState()
+    const [accData, setAccData] = useState<any[]>()
+    const [lossData, setLossData] = useState<any[]>()
+    const [scale, setScale] = useState<any>()
 
     /***********************
      * useEffect

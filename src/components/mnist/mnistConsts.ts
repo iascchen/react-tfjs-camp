@@ -22,7 +22,7 @@ export const IMAGE_W = 28
 export const IMAGE_SIZE = IMAGE_H * IMAGE_W
 export const NUM_CLASSES = 10
 
-export interface IMnistDataSet {
+export interface IMnistDataset {
     loadData: () => Promise<void>
     getTrainData: (numExamples?: number) => TensorContainerObject
     getTestData: (numExamples?: number) => TensorContainerObject

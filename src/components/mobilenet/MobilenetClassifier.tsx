@@ -13,6 +13,7 @@ import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 
 import { formatImageForMobilenet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
 import { ImagenetClasses } from './ImagenetClasses'
+import ImagenetTagsWidget from './ImagenetTagsWidget'
 
 const { Option } = Select
 const { TabPane } = Tabs
@@ -116,23 +117,7 @@ const MobilenetClassifier = (): JSX.Element => {
                 <MarkdownWidget url={'/docs/ai/mobilenet.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <h2> 1000 Classes of ImageNet </h2>
-                {Object.keys(ImagenetClasses).map((key, index) => {
-                    const tag = ImagenetClasses[index]
-                    const isLongTag = tag.length > 20
-                    const tagElem = (
-                        <Tag key={tag}>
-                            {isLongTag ? `${tag.slice(0, 20)}...` : tag}
-                        </Tag>
-                    )
-                    return isLongTag ? (
-                        <Tooltip title={tag} key={tag}>
-                            {tagElem}
-                        </Tooltip>
-                    ) : (
-                        tagElem
-                    )
-                })}
+                <ImagenetTagsWidget />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>

@@ -18,7 +18,7 @@ const VectorWidget = (props: IProps): JSX.Element => {
      * useState
      ***********************/
 
-    const [sData, setData] = useState()
+    const [sData, setData] = useState<any[]>()
 
     /***********************
      * useEffect

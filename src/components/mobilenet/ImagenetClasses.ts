@@ -550,7 +550,7 @@ export const ImagenetClasses: ILabelMap = {
     514: 'cowboy boot',
     515: 'cowboy hat, ten-gallon hat',
     516: 'cradle',
-    517: 'crane',
+    517: 'crane 2',
     518: 'crash helmet',
     519: 'crate',
     520: 'crib, cot',

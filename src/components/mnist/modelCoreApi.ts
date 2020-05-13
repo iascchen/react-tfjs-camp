@@ -16,7 +16,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs'
-import { IMAGE_H, IMAGE_W, IMnistDataSet, NUM_CLASSES } from './mnistConsts'
+import { IMAGE_H, IMAGE_W, IMnistDataset, NUM_CLASSES } from './mnistConsts'
 
 // ///////////////////////////////////
 // // Same With follow Layers API Implement
@@ -80,8 +80,8 @@ export const model = (inputXs: tf.Tensor): tf.Tensor => {
 }
 
 // Train the model.
-export const train = async (data: IMnistDataSet, log: Function,
-    steps: number, batchSize: number, learningRate: number): Promise<void> => {
+export const train = async (data: IMnistDataset, log: Function,
+                            steps: number, batchSize: number, learningRate: number): Promise<void> => {
     const returnCost = true
     const optimizer = tf.train.adam(learningRate)
 

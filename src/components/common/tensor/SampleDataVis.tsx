@@ -51,7 +51,7 @@ const SampleDataVis = (props: IProps): JSX.Element => {
     const [pDataLabel, setPDataLabel] = useState<string[]>([])
 
     const [sData, setData] = useState<DataRecord[]>()
-    const [sColumns, setColumns] = useState()
+    const [sColumns, setColumns] = useState<any[]>()
 
     /***********************
      * useCallback

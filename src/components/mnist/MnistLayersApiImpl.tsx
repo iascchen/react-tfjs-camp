@@ -14,7 +14,7 @@ import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
 import TfvisDatasetInfoWidget from '../common/tfvis/TfvisDatasetInfoWidget'
 import TfvisHistoryWidget from '../common/tfvis/TfvisHistoryWidget'
 
-import { IMnistDataSet } from './mnistConsts'
+import { IMnistDataset } from './mnistConsts'
 import { MnistDatasetGz } from './MnistDatasetGz'
 import { MnistDatasetPng } from './MnistDatasetPng'
 import { addCovDropoutLayers, addCovPoolingLayers, addDenseLayers } from './modelLayersApi'
@@ -46,7 +46,7 @@ const MnistLayersApiImpl = (): JSX.Element => {
     const [sStatus, setStatus] = useState<STATUS>()
 
     // Data
-    const [sDataSourceName, setDataSourceName] = useState()
+    const [sDataSourceName, setDataSourceName] = useState('mnist-png')
     const [sTrainSet, setTrainSet] = useState<tf.TensorContainerObject>()
     const [sTestSet, setTestSet] = useState<tf.TensorContainerObject>()
 
@@ -132,12 +132,8 @@ const MnistLayersApiImpl = (): JSX.Element => {
 
         setStatus(STATUS.WAITING)
 
-        let mnistDataset: IMnistDataSet
-        if (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') {
-            mnistDataset = new MnistDatasetGz(sDataSourceName)
-        } else {
-            mnistDataset = new MnistDatasetPng()
-        }
+        let mnistDataset: IMnistDataset = (sDataSourceName === 'mnist' || sDataSourceName === 'fashion') ?
+            new MnistDatasetGz(sDataSourceName) : new MnistDatasetPng()
 
         let tSet: tf.TensorContainerObject
         let vSet: tf.TensorContainerObject
@@ -389,7 +385,7 @@ const MnistLayersApiImpl = (): JSX.Element => {
     return (
         <AIProcessTabs title={'MNIST Layers API Implement'} current={sTabCurrent} onChange={handleTabChange} >
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
-                <MarkdownWidget url={'/docs/ai/mnist.md'}/>
+                <MarkdownWidget url={'/docs/ai/mnist-layers-api.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
                 <Row>

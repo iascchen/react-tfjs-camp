@@ -27,9 +27,9 @@ const SentimentSampleDataVis = (props: IProps): JSX.Element => {
     const [yData, setYData] = useState<tf.Tensor[]>()
     const [pData, setPData] = useState<tf.Tensor[]>()
 
-    const [data, setData] = useState()
+    const [data, setData] = useState<any[]>()
 
-    const [columns, setColumns] = useState()
+    const [columns, setColumns] = useState<any[]>()
 
     /***********************
      * useEffect

@@ -38,7 +38,7 @@ const CurveVis = (props: IProps): JSX.Element => {
     const [xData, setXData] = useState<number[]>([])
     const [yData, setYData] = useState<number[]>([])
     const [pData, setPData] = useState<number[]>([])
-    const [data, setData] = useState()
+    const [data, setData] = useState<any[]>()
     const [sampleCount] = useState(props.sampleCount)
 
     /***********************

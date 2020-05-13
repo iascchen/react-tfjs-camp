@@ -16,7 +16,7 @@ const IMAGE_HEIGHT = 360
 
 const ImageUploadWidget = (props: IProps): JSX.Element => {
     const [sImgViewSrc, setImgViewSrc] = useState<string>('/images/cat.jpg')
-    const [sLabel, setLabel] = useState()
+    const [sLabel, setLabel] = useState<string>()
 
     const imageViewRef = useRef<HTMLImageElement>(null)
 

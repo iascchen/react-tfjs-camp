@@ -11,13 +11,13 @@ import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 
-import { formatImageForMobilenet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
-import ImagenetTagsWidget from './ImagenetTagsWidget'
+import { formatImageForMobileNet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
+import ImageNetTagsWidget from './ImageNetTagsWidget'
 
 const { Option } = Select
 const { TabPane } = Tabs
 
-const MobilenetClassifier = (): JSX.Element => {
+const MobileNetClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -84,7 +84,7 @@ const MobilenetClassifier = (): JSX.Element => {
             return
         }
         const [p] = tf.tidy(() => {
-            const batched = formatImageForMobilenet(imageTensor)
+            const batched = formatImageForMobileNet(imageTensor)
             const result = sModel?.predict(batched) as tf.Tensor
             logger(result)
 
@@ -110,18 +110,18 @@ const MobilenetClassifier = (): JSX.Element => {
      ***********************/
 
     return (
-        <AIProcessTabs title={'Mobilenet Classifier'} current={sTabCurrent} onChange={handleTabChange}
+        <AIProcessTabs title={'MobileNet Classifier'} current={sTabCurrent} onChange={handleTabChange}
             invisiblePanes={[AIProcessTabPanes.TRAIN]}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/mobilenet.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <ImagenetTagsWidget />
+                <ImageNetTagsWidget />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>
                     <Col span={12}>
-                        <Card title='Mobilenet Model Info' style={{ margin: '8px' }} size='small'>
+                        <Card title='MobileNet Model Info' style={{ margin: '8px' }} size='small'>
                             <TfvisModelWidget model={sModel}/>
                         </Card>
                     </Col>
@@ -167,4 +167,4 @@ const MobilenetClassifier = (): JSX.Element => {
     )
 }
 
-export default MobilenetClassifier
+export default MobileNetClassifier

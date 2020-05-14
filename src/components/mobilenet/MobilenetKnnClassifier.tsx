@@ -19,7 +19,7 @@ import AIProcessTabs, { AIProcessTabPanes } from '../common/AIProcessTabs'
 import MarkdownWidget from '../common/MarkdownWidget'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 
-import { formatImageForMobilenet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
+import { formatImageForMobileNet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
 import { RcFile, UploadChangeParam } from 'antd/es/upload'
 import { UploadFile } from 'antd/es/upload/interface'
 import TfvisLayerWidget from '../common/tfvis/TfvisLayerWidget'
@@ -30,7 +30,7 @@ const { TabPane } = Tabs
 const KNN_TOPK = 10
 const IMAGE_HEIGHT = 100
 
-const MobilenetKnnClassifier = (): JSX.Element => {
+const MobileNetKnnClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -135,7 +135,7 @@ const MobilenetKnnClassifier = (): JSX.Element => {
                     if (imgBase64) {
                         const _imgData = await getImageDataFromBase64(imgBase64)
                         const _imgTensor = tf.browser.fromPixels(_imgData, 3)
-                        const _imgBatched = formatImageForMobilenet(_imgTensor)
+                        const _imgBatched = formatImageForMobileNet(_imgTensor)
                         const _imgFeature = sModel?.predict(_imgBatched) as tf.Tensor
 
                         // logger('sKnn.addExample', label, _imgFeature)
@@ -172,7 +172,7 @@ const MobilenetKnnClassifier = (): JSX.Element => {
             return
         }
         const [imgFeature] = tf.tidy(() => {
-            const batched = formatImageForMobilenet(imgTensor)
+            const batched = formatImageForMobileNet(imgTensor)
             const imgFeature = sModel?.predict(batched) as tf.Tensor
             // logger(imgFeature)
             return [imgFeature]
@@ -254,7 +254,7 @@ const MobilenetKnnClassifier = (): JSX.Element => {
     }
 
     const dataTrainSetCard = (): JSX.Element => {
-        return <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
+        return <Card title='MobileNet + KNN Train Set' style={{ margin: '8px' }} size='small'>
             <div className='centerContainer'>
                 <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false}>
                     <Button style={{ width: '300', margin: '0 10%' }}>
@@ -282,7 +282,7 @@ const MobilenetKnnClassifier = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'Mobilenet + KNN'} current={sTabCurrent} onChange={handleTabChange}>
+        <AIProcessTabs title={'MobileNet + KNN'} current={sTabCurrent} onChange={handleTabChange}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/mobilenet-knn.md'}/>
             </TabPane>
@@ -300,9 +300,9 @@ const MobilenetKnnClassifier = (): JSX.Element => {
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Col span={12} offset={6}>
-                    <Card title='Mobilenet' style={{ margin: '8px' }} size='small'>
-                        <h3 className='centerContainer'>预训练 Mobilenet 模型 : {sStatus}</h3>
-                        <h3 className='centerContainer'>Mobilenet 的 conv_preds 层输出</h3>
+                    <Card title='MobileNet' style={{ margin: '8px' }} size='small'>
+                        <h3 className='centerContainer'>预训练 MobileNet 模型 : {sStatus}</h3>
+                        <h3 className='centerContainer'>MobileNet 的 conv_preds 层输出</h3>
                         <Card title='conv_preds Layer Info' style={{ margin: '8px' }} size='small'>
                             <TfvisLayerWidget layer={sCurLayer}/>
                         </Card>
@@ -319,7 +319,7 @@ const MobilenetKnnClassifier = (): JSX.Element => {
                         {dataTrainSetCard()}
                     </Col>
                     <Col span={12}>
-                        <Card title='Mobilenet + KNN Train Set' style={{ margin: '8px' }} size='small'>
+                        <Card title='MobileNet + KNN Train Set' style={{ margin: '8px' }} size='small'>
                             <Button onClick={handleTrain} type='primary' style={{ width: '30%', margin: '0 10%' }}>
                                 Train
                             </Button>
@@ -352,4 +352,4 @@ const MobilenetKnnClassifier = (): JSX.Element => {
     )
 }
 
-export default MobilenetKnnClassifier
+export default MobileNetKnnClassifier

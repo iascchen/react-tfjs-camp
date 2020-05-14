@@ -5,7 +5,7 @@ import { Button, Row, Col } from 'antd'
 import { CameraOutlined } from '@ant-design/icons'
 
 import { IKnnPredictResult, ILabelMap, logger, loggerError } from '../../../utils'
-import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
+import { ImageNetClasses } from '../../mobilenet/ImageNetClasses'
 
 import TensorImageThumbWidget from './TensorImageThumbWidget'
 
@@ -74,11 +74,11 @@ const WebCamera = (props: IProps, ref: Ref<IWebCameraHandler>): JSX.Element => {
             const knnRet = props.prediction as IKnnPredictResult
             setLabel(`${knnRet.label} : ${JSON.stringify(knnRet.confidences)}`)
         } else {
-            // Imagenet Classes
+            // ImageNet Classes
             const imagenetRet = props.prediction as tf.Tensor
             const labelIndex = imagenetRet.arraySync() as number
             logger('labelIndex', labelIndex)
-            const _label = props.labelsMap ? props.labelsMap[labelIndex] : ImagenetClasses[labelIndex]
+            const _label = props.labelsMap ? props.labelsMap[labelIndex] : ImageNetClasses[labelIndex]
             setLabel(`${labelIndex.toString()} : ${_label}`)
         }
     }, [props.prediction])

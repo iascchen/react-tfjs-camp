@@ -1,4 +1,4 @@
-# 图像识别 Mobilenet
+# 图像识别 MobileNet
 
 ## 数据
 
@@ -8,10 +8,10 @@ Mobilnet 使用 imagenet 的数据集，进行了训练，能够识别 1000 个�
 
 ## 模型
 
-* 图片分类：直接使用 Mobilenet 预训练模型
-* Teachable Machine：使用 Mobilenet 输出特征，再通过 KNN 方法识别分类。非常适合较小的训练集。
-* 迁移学习，图片分类：使用 Mobilenet 输出特征，增加分类层，形成一个新的复合模型，进行训练。
-* 迁移学习，对象识别：在 Mobilenet 的输出特征基础上，增加用于对象识别的层，进行训练。
+* 图片分类：直接使用 MobileNet 预训练模型
+* Teachable Machine：使用 MobileNet 输出特征，再通过 KNN 方法识别分类。非常适合较小的训练集。
+* 迁移学习，图片分类：使用 MobileNet 输出特征，增加分类层，形成一个新的复合模型，进行训练。
+* 迁移学习，对象识别：在 MobileNet 的输出特征基础上，增加用于对象识别的层，进行训练。
 
 ## 训练
 

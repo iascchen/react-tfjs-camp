@@ -145,7 +145,7 @@ AntD 的 Steps 组件的子元素 Step 下标从 `0` 起始，而此时对应的
 
 ### 处理需要隐藏的 TabPane
 
-在 React-tfjs-camp 的开发过程中，有些 AI 概念内容并不具备完整个五个步骤，所以增加了 `props.invisiblePanes`, 以隐藏相应的 TabPane。在视觉上采用实心图标表示此步为可用，空心图标则不可用。下图显示了在 Mobilenet Calssifier 例子里，由于使用的是预训练模型，不需要展示训练过程。
+在 React-tfjs-camp 的开发过程中，有些 AI 概念内容并不具备完整个五个步骤，所以增加了 `props.invisiblePanes`, 以隐藏相应的 TabPane。在视觉上采用实心图标表示此步为可用，空心图标则不可用。下图显示了在 MobileNet Calssifier 例子里，由于使用的是预训练模型，不需要展示训练过程。
 
 ![ai-process-tabs invisible](../images/ai-process-tabs-2.png)
 

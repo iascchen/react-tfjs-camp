@@ -28,7 +28,7 @@ import ImageUploadWidget from '../common/tensor/ImageUploadWidget'
 import MarkdownWidget from '../common/MarkdownWidget'
 import TensorImageThumbWidget from '../common/tensor/TensorImageThumbWidget'
 
-import { decodeImageTensor, encodeImageTensor, formatImageForMobilenet, MOBILENET_IMAGE_SIZE } from './mobilenetUtils'
+import { decodeImageTensor, encodeImageTensor, formatImageForMobileNet, MOBILENET_IMAGE_SIZE } from './mobilenetUtils'
 import { createModel, createTruncatedMobileNet } from './modelTransfer'
 import { TransferDataset } from './dataTransfer'
 
@@ -53,7 +53,7 @@ const DENSE_UNITS = [10, 100, 200]
 const BATCH_SIZES = [32, 64]
 const LEARNING_RATES = [0.00001, 0.0001, 0.001, 0.003, 0.01, 0.03]
 
-const MobilenetTransfer = (): JSX.Element => {
+const MobileNetTransfer = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -258,7 +258,7 @@ const MobilenetTransfer = (): JSX.Element => {
         setStatus(STATUS.WAITING)
         // logger('handlePredict', imgTensor)
         const [imgPred] = tf.tidy(() => {
-            const batched = formatImageForMobilenet(imgTensor)
+            const batched = formatImageForMobileNet(imgTensor)
             const embeddings = sTruncatedModel?.predict(batched)
             const result = sModel?.predict(embeddings as tf.Tensor) as tf.Tensor
             const imgPred = result.argMax(-1)
@@ -364,7 +364,7 @@ const MobilenetTransfer = (): JSX.Element => {
     const _tensorY = sTrainSet?.ys as tf.Tensor
 
     const dataTrainSetCard = (): JSX.Element => {
-        return <Card title='Mobilenet Transfer Learning Train Set' style={{ margin: '8px' }} size='small'>
+        return <Card title='MobileNet Transfer Learning Train Set' style={{ margin: '8px' }} size='small'>
             <div className='centerContainer'>
                 <Upload onChange={handleJsonChange} action={handleUpload} showUploadList={false}>
                     <Button style={{ width: '300', margin: '0 10%' }}>
@@ -462,7 +462,7 @@ const MobilenetTransfer = (): JSX.Element => {
     }
 
     return (
-        <AIProcessTabs title={'Mobilenet Transfer Learning'} current={sTabCurrent} onChange={handleTabChange}>
+        <AIProcessTabs title={'MobileNet Transfer Learning'} current={sTabCurrent} onChange={handleTabChange}>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                 <MarkdownWidget url={'/docs/ai/mobilenet.md'}/>
             </TabPane>
@@ -484,9 +484,9 @@ const MobilenetTransfer = (): JSX.Element => {
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>
                     <Col span={12}>
-                        <Card title='Mobilenet' style={{ margin: '8px' }} size='small'>
-                            <h3 className='centerContainer'>预训练 Mobilenet 模型 : {sStatus}</h3>
-                            <h3 className='centerContainer'>截取 Mobilenet 到 conv_pw_13_relu 层</h3>
+                        <Card title='MobileNet' style={{ margin: '8px' }} size='small'>
+                            <h3 className='centerContainer'>预训练 MobileNet 模型 : {sStatus}</h3>
+                            <h3 className='centerContainer'>截取 MobileNet 到 conv_pw_13_relu 层</h3>
                             <Card title='Expand Dense Net' style={{ margin: '8px' }} size='small'>
                                 <TfvisModelWidget model={sTruncatedModel}/>
                             </Card>
@@ -495,7 +495,7 @@ const MobilenetTransfer = (): JSX.Element => {
                     <Col span={12}>
                         {modelAdjustCard()}
                         <Card title='+ Expand Dense Net' style={{ margin: '8px' }} size='small'>
-                            <h3 className='centerContainer'>将 Mobilenet 的 conv_pw_13_relu 层输出</h3>
+                            <h3 className='centerContainer'>将 MobileNet 的 conv_pw_13_relu 层输出</h3>
                             <h3 className='centerContainer'>输入到 Dense 网络中</h3>
                             <Card title='Expand Dense Net' style={{ margin: '8px' }} size='small'>
                                 <TfvisModelWidget model={sModel}/>
@@ -558,4 +558,4 @@ const MobilenetTransfer = (): JSX.Element => {
     )
 }
 
-export default MobilenetTransfer
+export default MobileNetTransfer

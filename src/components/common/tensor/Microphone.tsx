@@ -4,7 +4,7 @@ import { MicrophoneIterator } from '@tensorflow/tfjs-data/dist/iterators/microph
 import { Button, message } from 'antd'
 
 import { ILabelMap, logger } from '../../../utils'
-import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
+import { ImageNetClasses } from '../../mobilenet/ImageNetClasses'
 import TensorImageThumbWidget from './TensorImageThumbWidget'
 
 const VIDEO_SHAPE = [480, 360] // [width, height]
@@ -69,7 +69,7 @@ const Microphone = (props: IProps, ref: Ref<IMicrophoneHandler>): JSX.Element =>
         const imagenetRet = props.prediction
         const labelIndex = imagenetRet.arraySync() as number
         logger('labelIndex', labelIndex)
-        const label = props.labelsMap ? props.labelsMap[labelIndex] : ImagenetClasses[labelIndex]
+        const label = props.labelsMap ? props.labelsMap[labelIndex] : ImageNetClasses[labelIndex]
         setLabel(`${labelIndex.toString()} : ${label}`)
         imagenetRet.dispose()
     }, [props.prediction])

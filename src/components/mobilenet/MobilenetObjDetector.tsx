@@ -31,7 +31,7 @@ const PREDICT_BOUNDING_BOX_STYLE = 'rgb(0,0,255)'
 
 const MODEL_URL_NAME = 'mobilenet-simple-obj-detector'
 
-const MobilenetObjDetector = (): JSX.Element => {
+const MobileNetObjDetector = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -469,7 +469,7 @@ const MobilenetObjDetector = (): JSX.Element => {
         <>
             <canvas ref={canvasRef} style={{ border: '2px dashed lightgray', margin: '8px auto' }}
                 height={MOBILENET_IMAGE_SIZE} width={MOBILENET_IMAGE_SIZE} hidden/>
-            <AIProcessTabs title={'Simple Object Detector based Mobilenet'} current={sTabCurrent}
+            <AIProcessTabs title={'Simple Object Detector based MobileNet'} current={sTabCurrent}
                 onChange={handleTabChange}>
                 <TabPane tab='&nbsp;' key={AIProcessTabPanes.INFO}>
                     <MarkdownWidget url={'/docs/ai/mobilenet-obj-detector.md'}/>
@@ -493,9 +493,9 @@ const MobilenetObjDetector = (): JSX.Element => {
                 <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                     <Row>
                         <Col span={12}>
-                            <Card title='Model(Expand from Mobilenet)' style={{ margin: '8px' }} size='small'>
-                                <h3 className='centerContainer'>预训练 Mobilenet 模型 : {sStatus}</h3>
-                                <h3 className='centerContainer'>截取 Mobilenet 到 conv_pw_11_relu 层</h3>
+                            <Card title='Model(Expand from MobileNet)' style={{ margin: '8px' }} size='small'>
+                                <h3 className='centerContainer'>预训练 MobileNet 模型 : {sStatus}</h3>
+                                <h3 className='centerContainer'>截取 MobileNet 到 conv_pw_11_relu 层</h3>
                                 <h3 className='centerContainer'>在其后面增加 sequential_1 全联接层</h3>
                                 <Card title='Expand Dense Net' style={{ margin: '8px' }} size='small'>
                                     <TfvisModelWidget model={sModel}/>
@@ -576,4 +576,4 @@ const MobilenetObjDetector = (): JSX.Element => {
     )
 }
 
-export default MobilenetObjDetector
+export default MobileNetObjDetector

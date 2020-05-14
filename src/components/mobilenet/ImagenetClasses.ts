@@ -16,7 +16,7 @@
  */
 import { ILabelMap } from '../../utils'
 
-export const ImagenetClasses: ILabelMap = {
+export const ImageNetClasses: ILabelMap = {
     0: 'tench, Tinca tinca',
     1: 'goldfish, Carassius auratus',
     2: 'great white shark, white shark, man-eater, man-eating shark, ' +

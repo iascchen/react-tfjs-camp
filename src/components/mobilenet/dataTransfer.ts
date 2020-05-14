@@ -16,7 +16,7 @@
  */
 import * as tf from '@tensorflow/tfjs'
 import { ILabeledImageSet, logger } from '../../utils'
-import { formatImageForMobilenet } from './mobilenetUtils'
+import { formatImageForMobileNet } from './mobilenetUtils'
 
 /**
  * A dataset for webcam controls which allows the user to add example Tensors
@@ -74,7 +74,7 @@ export class TransferDataset {
             const label = labeled.label
             imgs?.forEach(item => {
                 if (item.tensor) {
-                    const batched = formatImageForMobilenet(item.tensor)
+                    const batched = formatImageForMobileNet(item.tensor)
                     const predicted = truncatedMobileNet.predict(batched)
                     this.addExample(predicted as tf.Tensor, this.labels.indexOf(label))
                 }

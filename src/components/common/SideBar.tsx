@@ -39,9 +39,9 @@ const SideBar = (): JSX.Element => {
                         <Link to='/mnist/core'><span> Mnist Core API </span></Link>
                     </Item>
                 </SubMenu>
-                <SubMenu title={<span><EyeOutlined/><span>使用预训练模型 Mobilenet</span></span>}>
+                <SubMenu title={<span><EyeOutlined/><span>使用预训练模型 MobileNet</span></span>}>
                     <Item key='4.1'>
-                        <Link to='/mobilenet/basic'><span> 图片分类器 Mobilenet </span></Link>
+                        <Link to='/mobilenet/basic'><span> 图片分类器 MobileNet </span></Link>
                     </Item>
                     <Item key='4.2'>
                         <Link to='/mobilenet/knn'><span> 结合机器学习 Teachable Machine </span></Link>

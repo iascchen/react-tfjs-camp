@@ -6,7 +6,7 @@ export const MOBILENET_MODEL_PATH = '/preload/model/mobilenet/mobilenet_v1_0.25_
 
 export const MOBILENET_IMAGE_SIZE = 224
 
-export const formatImageForMobilenet = (imgTensor: tf.Tensor): tf.Tensor => {
+export const formatImageForMobileNet = (imgTensor: tf.Tensor): tf.Tensor => {
     const sample = tf.image.resizeBilinear(imgTensor as tf.Tensor3D, [MOBILENET_IMAGE_SIZE, MOBILENET_IMAGE_SIZE])
     // logger(JSON.stringify(sample))
 

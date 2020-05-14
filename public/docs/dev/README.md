@@ -152,7 +152,7 @@
 构建一个 Model Serving 的 Web 服务器（Docker基础）
 使用 tfjs.convertor 进行模型转换
 
-### 简单对象识别，基于 Mobilenet 扩展
+### 简单对象识别，基于 MobileNet 扩展
 
 #### 标注数据的生成
 

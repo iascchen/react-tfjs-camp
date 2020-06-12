@@ -1925,17 +1925,17 @@
   resolved "https://registry.npm.taobao.org/@tensorflow-models/blazeface/download/@tensorflow-models/blazeface-0.0.5.tgz#6261fcc5de61a283ea409b69f6a851f44a809826"
   integrity sha1-YmH8xd5hooPqQJtp9qhR9EqAmCY=
 
-"@tensorflow-models/facemesh@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.npm.taobao.org/@tensorflow-models/facemesh/download/@tensorflow-models/facemesh-0.0.1.tgz#dd620fb49a8ed2fad841471dccd0c73f75deae16"
-  integrity sha1-3WIPtJqO0vrYQUcdzNDHP3XerhY=
+"@tensorflow-models/facemesh@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.npm.taobao.org/@tensorflow-models/facemesh/download/@tensorflow-models/facemesh-0.0.3.tgz#da93d94e61e01b5088ade200f4ed6942d4499da5"
+  integrity sha1-2pPZTmHgG1CIreIA9O1pQtRJnaU=
   dependencies:
     "@tensorflow-models/blazeface" "0.0.5"
 
-"@tensorflow-models/handpose@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.npm.taobao.org/@tensorflow-models/handpose/download/@tensorflow-models/handpose-0.0.3.tgz#e7e7a355dab69341f9fdbefe0bd2a3091944a9bf"
-  integrity sha1-5+ejVdq2k0H5/b7+C9KjCRlEqb8=
+"@tensorflow-models/handpose@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.npm.taobao.org/@tensorflow-models/handpose/download/@tensorflow-models/handpose-0.0.4.tgz#3740629a1b48b72398c173553e5976f2630bb5d7"
+  integrity sha1-N0BimhtItyOYwXNVPll28mMLtdc=
 
 "@tensorflow-models/knn-classifier@^1.2.2":
   version "1.2.2"
@@ -1947,15 +1947,35 @@
   resolved "https://registry.npm.taobao.org/@tensorflow-models/posenet/download/@tensorflow-models/posenet-2.2.1.tgz#2f0a68d909842f59eec195f23c6f3d4cebc53fa8"
   integrity sha1-Lwpo2QmEL1nuwZXyPG89TOvFP6g=
 
-"@tensorflow/tfjs-converter@1.7.4":
-  version "1.7.4"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-converter/download/@tensorflow/tfjs-converter-1.7.4.tgz?cache=0&sync_timestamp=1588805428348&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-converter%2Fdownload%2F%40tensorflow%2Ftfjs-converter-1.7.4.tgz#90838fe9ca2d540f22a65fdcbe2311a01e786380"
-  integrity sha1-kIOP6cotVA8ipl/cviMRoB54Y4A=
+"@tensorflow/tfjs-backend-cpu@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-backend-cpu/download/@tensorflow/tfjs-backend-cpu-2.0.0.tgz#26d3ed8a6d814e751adc22e6036e40ed8940b5ac"
+  integrity sha1-JtPtim2BTnUa3CLmA25A7YlAtaw=
+  dependencies:
+    "@types/seedrandom" "2.4.27"
+    seedrandom "2.4.3"
 
-"@tensorflow/tfjs-core@1.7.4":
-  version "1.7.4"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-core/download/@tensorflow/tfjs-core-1.7.4.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-core%2Fdownload%2F%40tensorflow%2Ftfjs-core-1.7.4.tgz#43a44bc01d46de98ee9f15c0b2a4d9af4723e7ea"
-  integrity sha1-Q6RLwB1G3pjunxXAsqTZr0cj5+o=
+"@tensorflow/tfjs-backend-webgl@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-backend-webgl/download/@tensorflow/tfjs-backend-webgl-2.0.0.tgz#8f53ca3598ff922ee6ad28daf0ccc8089981d105"
+  integrity sha1-j1PKNZj/ki7mrSja8MzICJmB0QU=
+  dependencies:
+    "@tensorflow/tfjs-backend-cpu" "2.0.0"
+    "@types/offscreencanvas" "~2019.3.0"
+    "@types/seedrandom" "2.4.27"
+    "@types/webgl-ext" "0.0.30"
+    "@types/webgl2" "0.0.4"
+    seedrandom "2.4.3"
+
+"@tensorflow/tfjs-converter@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-converter/download/@tensorflow/tfjs-converter-2.0.0.tgz#6242c618202f04d88fa308d68a2dfcdd81ec020c"
+  integrity sha1-YkLGGCAvBNiPowjWii383YHsAgw=
+
+"@tensorflow/tfjs-core@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-core/download/@tensorflow/tfjs-core-2.0.0.tgz#c18e963d0332255dc37d6ff58fa0076402ae00d0"
+  integrity sha1-wY6WPQMyJV3DfW/1j6AHZAKuANA=
   dependencies:
     "@types/offscreencanvas" "~2019.3.0"
     "@types/seedrandom" "2.4.27"
@@ -1964,18 +1984,18 @@
     node-fetch "~2.1.2"
     seedrandom "2.4.3"
 
-"@tensorflow/tfjs-data@1.7.4":
-  version "1.7.4"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-data/download/@tensorflow/tfjs-data-1.7.4.tgz?cache=0&sync_timestamp=1588805428914&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-data%2Fdownload%2F%40tensorflow%2Ftfjs-data-1.7.4.tgz#3aa1cb14ac48a0354acd21d08f177c8a262fbb32"
-  integrity sha1-OqHLFKxIoDVKzSHQjxd8iiYvuzI=
+"@tensorflow/tfjs-data@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-data/download/@tensorflow/tfjs-data-2.0.0.tgz#1bc7ac2fea26f40fa0fc9f4c2225ea262dd9bc7c"
+  integrity sha1-G8esL+om9A+g/J9MIiXqJi3ZvHw=
   dependencies:
     "@types/node-fetch" "^2.1.2"
     node-fetch "~2.1.2"
 
-"@tensorflow/tfjs-layers@1.7.4":
-  version "1.7.4"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-layers/download/@tensorflow/tfjs-layers-1.7.4.tgz?cache=0&sync_timestamp=1588805429132&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40tensorflow%2Ftfjs-layers%2Fdownload%2F%40tensorflow%2Ftfjs-layers-1.7.4.tgz#93cdef70a4f414edb4ee470c49415d216f54ba20"
-  integrity sha1-k83vcKT0FO207kcMSUFdIW9UuiA=
+"@tensorflow/tfjs-layers@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs-layers/download/@tensorflow/tfjs-layers-2.0.0.tgz#cdd2aa013350d88091e2e840a298a272356cb4e3"
+  integrity sha1-zdKqATNQ2ICR4uhAopiicjVstOM=
 
 "@tensorflow/tfjs-vis@^1.4.0":
   version "1.4.0"
@@ -1990,15 +2010,19 @@
     vega-embed "~5.1.2"
     vega-lite "~4.0.0-beta.1"
 
-"@tensorflow/tfjs@^1.7.4":
-  version "1.7.4"
-  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs/download/@tensorflow/tfjs-1.7.4.tgz#ea5483bc4b34f5a4c66d600e456c25b6071ea75e"
-  integrity sha1-6lSDvEs09aTGbWAORWwltgcep14=
+"@tensorflow/tfjs@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.npm.taobao.org/@tensorflow/tfjs/download/@tensorflow/tfjs-2.0.0.tgz#7c014dd91648ab8c95cdc4261b163402493b60f5"
+  integrity sha1-fAFN2RZIq4yVzcQmGxY0Akk7YPU=
   dependencies:
-    "@tensorflow/tfjs-converter" "1.7.4"
-    "@tensorflow/tfjs-core" "1.7.4"
-    "@tensorflow/tfjs-data" "1.7.4"
-    "@tensorflow/tfjs-layers" "1.7.4"
+    "@tensorflow/tfjs-backend-cpu" "2.0.0"
+    "@tensorflow/tfjs-backend-webgl" "2.0.0"
+    "@tensorflow/tfjs-converter" "2.0.0"
+    "@tensorflow/tfjs-core" "2.0.0"
+    "@tensorflow/tfjs-data" "2.0.0"
+    "@tensorflow/tfjs-layers" "2.0.0"
+    core-js "3"
+    regenerator-runtime "^0.13.5"
 
 "@testing-library/dom@^7.9.0":
   version "7.12.0"
@@ -4093,6 +4117,11 @@ core-js-pure@^3.0.0:
   resolved "https://registry.npm.taobao.org/core-js-pure/download/core-js-pure-3.6.4.tgz#4bf1ba866e25814f149d4e9aaa08c36173506e3a"
   integrity sha1-S/G6hm4lgU8UnU6aqgjDYXNQbjo=
 
+core-js@3, core-js@^3.5.0:
+  version "3.6.5"
+  resolved "https://registry.npm.taobao.org/core-js/download/core-js-3.6.5.tgz#7395dc273af37fb2e50e9bd3d9fe841285231d1a"
+  integrity sha1-c5XcJzrzf7LlDpvT2f6EEoUjHRo=
+
 core-js@^1.0.0:
   version "1.2.7"
   resolved "https://registry.npm.taobao.org/core-js/download/core-js-1.2.7.tgz#652294c14651db28fa93bd2d5ff2983a4f08c636"
@@ -4102,11 +4131,6 @@ core-js@^2.4.0:
   version "2.6.11"
   resolved "https://registry.npm.taobao.org/core-js/download/core-js-2.6.11.tgz#38831469f9922bded8ee21c9dc46985e0399308c"
   integrity sha1-OIMUafmSK97Y7iHJ3EaYXgOZMIw=
-
-core-js@^3.5.0:
-  version "3.6.5"
-  resolved "https://registry.npm.taobao.org/core-js/download/core-js-3.6.5.tgz#7395dc273af37fb2e50e9bd3d9fe841285231d1a"
-  integrity sha1-c5XcJzrzf7LlDpvT2f6EEoUjHRo=
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -10963,7 +10987,7 @@ regenerator-runtime@^0.11.0:
   resolved "https://registry.npm.taobao.org/regenerator-runtime/download/regenerator-runtime-0.11.1.tgz#be05ad7f9bf7d22e056f9726cee5017fbf19e2e9"
   integrity sha1-vgWtf5v30i4Fb5cmzuUBf78Z4uk=
 
-regenerator-runtime@^0.13.3, regenerator-runtime@^0.13.4:
+regenerator-runtime@^0.13.3, regenerator-runtime@^0.13.4, regenerator-runtime@^0.13.5:
   version "0.13.5"
   resolved "https://registry.npm.taobao.org/regenerator-runtime/download/regenerator-runtime-0.13.5.tgz#d878a1d094b4306d10b9096484b33ebd55e26697"
   integrity sha1-2Hih0JS0MG0QuQlkhLM+vVXiZpc=

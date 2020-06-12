@@ -12,12 +12,12 @@ import MarkdownWidget from '../common/MarkdownWidget'
 import WebCamera, { IWebCameraHandler } from '../common/tensor/WebCamera'
 
 import { formatImageForMobileNet, MOBILENET_IMAGE_SIZE, MOBILENET_MODEL_PATH } from './mobilenetUtils'
-import ImageNetTagsWidget from './ImageNetTagsWidget'
+import ImagenetTagsWidget from './ImagenetTagsWidget'
 
 const { Option } = Select
 const { TabPane } = Tabs
 
-const MobileNetClassifier = (): JSX.Element => {
+const MobilenetClassifier = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -116,7 +116,7 @@ const MobileNetClassifier = (): JSX.Element => {
                 <MarkdownWidget url={'/docs/ai/mobilenet.md'}/>
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.DATA}>
-                <ImageNetTagsWidget />
+                <ImagenetTagsWidget />
             </TabPane>
             <TabPane tab='&nbsp;' key={AIProcessTabPanes.MODEL}>
                 <Row>
@@ -167,4 +167,4 @@ const MobileNetClassifier = (): JSX.Element => {
     )
 }
 
-export default MobileNetClassifier
+export default MobilenetClassifier

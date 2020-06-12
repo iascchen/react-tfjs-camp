@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { Col, Row, Select, Tag, Tooltip } from 'antd'
 
 import { logger } from '../../utils'
-import { ImageNetClasses } from './ImageNetClasses'
+import { ImagenetClasses } from './ImagenetClasses'
 
 const { Option } = Select
 
 const LANGUAGES = ['en', 'zh']
 
-const ImageNetTagsWidget = (): JSX.Element => {
+const ImagenetTagsWidget = (): JSX.Element => {
     /***********************
      * useState
      ***********************/
@@ -53,8 +53,8 @@ const ImageNetTagsWidget = (): JSX.Element => {
                 <h2> 1000 Classes of ImageNet </h2>
             </Col>
             <Col span={24}>
-                {Object.keys(ImageNetClasses).map((key, index) => {
-                    const tag = ImageNetClasses[index]
+                {Object.keys(ImagenetClasses).map((key, index) => {
+                    const tag = ImagenetClasses[index]
                     const isLongTag = tag.length > 20
                     const tagElem = (
                         <Tag key={tag}>
@@ -74,4 +74,4 @@ const ImageNetTagsWidget = (): JSX.Element => {
     )
 }
 
-export default ImageNetTagsWidget
+export default ImagenetTagsWidget

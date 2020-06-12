@@ -8,10 +8,10 @@ import Iris from './components/iris/Iris'
 import MnistLayersApiImpl from './components/mnist/MnistLayersApiImpl'
 import MnistCoreApiImpl from './components/mnist/MnistCoreApiImpl'
 
-import MobileNetClassifier from './components/mobilenet/MobileNetClassifier'
-import MobileNetKnnClassifier from './components/mobilenet/MobileNetKnnClassifier'
-import MobileNetTransfer from './components/mobilenet/MobileNetTransfer'
-import MobileNetObjDetector from './components/mobilenet/MobileNetObjDetector'
+import MobilenetClassifier from './components/mobilenet/MobilenetClassifier'
+import MobilenetKnnClassifier from './components/mobilenet/MobilenetKnnClassifier'
+import MobilenetTransfer from './components/mobilenet/MobilenetTransfer'
+import MobilenetObjDetector from './components/mobilenet/MobilenetObjDetector'
 
 import JenaWeather from './components/rnn/JenaWeather'
 import SentimentImdb from './components/rnn/SentimentImdb'
@@ -34,10 +34,10 @@ const routes: RouteConfig[] = [
     { path: '/mnist/layers', component: MnistLayersApiImpl },
     { path: '/mnist/core', component: MnistCoreApiImpl },
 
-    { path: '/mobilenet/basic', component: MobileNetClassifier },
-    { path: '/mobilenet/knn', component: MobileNetKnnClassifier },
-    { path: '/mobilenet/transfer', component: MobileNetTransfer },
-    { path: '/mobilenet/objdetector', component: MobileNetObjDetector },
+    { path: '/mobilenet/basic', component: MobilenetClassifier },
+    { path: '/mobilenet/knn', component: MobilenetKnnClassifier },
+    { path: '/mobilenet/transfer', component: MobilenetTransfer },
+    { path: '/mobilenet/objdetector', component: MobilenetObjDetector },
 
     { path: '/rnn/jena', component: JenaWeather },
     { path: '/rnn/sentiment', component: SentimentImdb },

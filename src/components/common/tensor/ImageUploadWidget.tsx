@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs'
 import { Button, Row } from 'antd'
 
 import PicturesWall from '../../common/PicturesWall'
-import { ImageNetClasses } from '../../mobilenet/ImageNetClasses'
+import { ImagenetClasses } from '../../mobilenet/ImagenetClasses'
 import { IKnnPredictResult, ILabelMap, logger } from '../../../utils'
 
 interface IProps {
@@ -34,7 +34,7 @@ const ImageUploadWidget = (props: IProps): JSX.Element => {
             const imagenetPred = props.prediction as tf.Tensor
             const labelIndex = imagenetPred.arraySync() as number
             logger('labelIndex', labelIndex)
-            const _label = props.labelsMap ? props.labelsMap[labelIndex] : ImageNetClasses[labelIndex]
+            const _label = props.labelsMap ? props.labelsMap[labelIndex] : ImagenetClasses[labelIndex]
             setLabel(`${labelIndex.toString()} : ${_label}`)
         }
     }, [props.prediction])
